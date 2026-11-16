@@ -139,8 +139,11 @@ footer.appfoot{max-width:1240px;margin:0 auto;padding:6px 14px 22px;color:var(--
       <label class="fl" for="photoFiles">Page Photos (jpg / png — ek ya zyada)</label>
       <input type="file" id="photoFiles" accept="image/*" multiple>
       <div id="photoPreviews" style="margin-top:8px"></div>
-      <button type="button" class="btn big" id="btnFreeAi" style="margin-top:10px">🤖 Free AI se Photo Parhein — Bina Key (Moondream AI)</button>
-      <div class="hint">Ye free online AI hai — <b>koi API key nahi chahiye</b>. Photo internet par free AI server (Hugging Face) ko jati hai, sawal parh kar wapas bhejti hai. English / mixed safhon par sab se acha chalta hai; Urdu safhon ke liye neeche wala OCR (urd) behtar rahe ga.</div>
+      <button type="button" class="btn big" id="btnGot" style="margin-top:10px">📄 Document AI se Photo Parhein — Bina Key (GOT-OCR, printed safhe ke liye sab se saaf)</button>
+      <div class="hint">Ye <b>khaas documents parhne wala free AI (GOT-OCR 2.0)</b> hai — <b>koi API key nahi chahiye</b>. Chhapai (printed) wale safhe, khaas taur par English/Math walay, ye sab se saaf parhta hai. Photo internet par free AI server (Hugging Face) ko jati hai. CPU server hai, 1 photo par 1–4 minute lag sakte hain. Urdu likhai is par kamzor hai — Urdu safhe ke liye neeche wala OCR (urd) ya Moondream azmayein.</div>
+      <div class="hint" id="gotStatus"></div>
+      <button type="button" class="btn" id="btnFreeAi" style="margin-top:6px">🤖 Free AI se Photo Parhein — Bina Key (Moondream AI)</button>
+      <div class="hint">Ye aam-maksad free online AI hai — <b>koi API key nahi chahiye</b>. Photo internet par free AI server (Hugging Face) ko jati hai, sawal parh kar wapas bhejti hai. Urdu/mixed safhon par kabhi ye behtar parh leta hai; printed English safhe ke liye upar wala Document AI (GOT-OCR) pehle azmayein.</div>
       <div class="hint" id="aiStatus"></div>
       <div class="row2">
         <div><label class="fl" for="ocrLang">Photo ki Zaban</label>
@@ -164,6 +167,8 @@ footer.appfoot{max-width:1240px;margin:0 auto;padding:6px 14px 22px;color:var(--
       <div class="hint">Key kahin upload nahi hoti aur code mein nahi hai — sirf is browser ke localStorage mein save hoti hai, aur photo seedha Google Gemini ko jati hai. Key na ho to upar walay Free AI / OCR tareeqay istemal karein.</div>
       <div class="hint" id="geminiStatus" style="color:var(--warn)"></div>
       <h3>📝 Review — Sawal Check Karein</h3>
+      <div class="hint" style="border:1px solid var(--warn);border-radius:7px;padding:7px 9px">⚠ <b>Quality note:</b> Photo se nikla text hamesha 100% durust nahi hota — khaas taur par <b>math ke symbols</b> ({x | x &lt; 12} jaisi set notation) aur mili-juli Urdu+English lines mein ghaltiyan aam hain. Jis sawal par ⚠ nishan ho, us ka text mashkook hai — wo khud se select bhi nahi hoga. <b>Har sawal photo se mila kar check karein, phir hi shamil karein.</b></div>
+      <div class="hint" id="candQuality"></div>
       <div id="candList"><div class="hint">Abhi koi sawal nahi. Photo par OCR ya Gemini chalayein to sawal yahan aayenge.</div></div>
       <div style="margin-top:8px">
         <button type="button" class="btn" id="btnAddSelected">✔ Select kiye hue Paper mein Shamil Karein</button>
@@ -209,7 +214,7 @@ footer.appfoot{max-width:1240px;margin:0 auto;padding:6px 14px 22px;color:var(--
   </div>
 </div>
 
-<footer class="appfoot">© KEPS Academy — Paper Generator, free for teachers. Papers aur drafts sirf aap ke browser mein save hote hain, kahin upload nahi hote.<br>Photo → sawal ka tareeqa open-source projects se mutasir hai: QuillQuiz (browser mein Tesseract.js OCR) aur Exameow (Apache-2.0, local-first photo se sawal). Free AI photo route: Moondream2 demo (Hugging Face, vikhyatk) — koi key nahi.</footer>
+<footer class="appfoot">© KEPS Academy — Paper Generator, free for teachers. Papers aur drafts sirf aap ke browser mein save hote hain, kahin upload nahi hote.<br>Photo → sawal ka tareeqa open-source projects se mutasir hai: QuillQuiz (browser mein Tesseract.js OCR) aur Exameow (Apache-2.0, local-first photo se sawal). Free AI photo routes: GOT-OCR 2.0 document AI (Hugging Face, Solo448 — printed safhon ke liye) aur Moondream2 demo (Hugging Face, vikhyatk) — dono bina key.</footer>
 
 <div id="printRoot"></div>
 
@@ -769,7 +774,62 @@ function downloadPDF(kind) {
 var photoCandidates = [];
 var GEMINI_LS = "kpg_gemini_key";
 var MD_BASE = "https://vikhyatk-moondream2.hf.space";
-var MD_PROMPT = "Read this textbook page carefully. List every question written on the page, exactly as written, one question per line, numbered like 1. 2. 3. If a question has options, write each option on its own line starting with a) b) c) d). Do not add explanations. If there are no questions, list the important statements as questions.";
+var GOT_BASE = "https://solo448-ocr-multilingual-got.hf.space";
+/* Sakht transcription prompt: purana prompt "statements ko sawal bana do" jaisi
+   hidayat deta tha jis se AI apni taraf se text ghar leta aur scripts mila deta
+   tha. Ab sirf hu-ba-hu naqal (verbatim) ki hidayat hai. */
+var VLM_PROMPT = "Transcribe the questions on this page EXACTLY as printed, line by line, word by word. Do NOT translate anything. Do NOT rewrite, summarize or explain. Do NOT mix languages or scripts - copy every word in the same script it is printed in. Keep math in plain text exactly as printed, for example {x | x < 12}, x^2, A = {1, 2, 3}. Keep the original numbering, one question per line, numbered like 1. 2. 3. If a question has options, put each option on its own line starting with a) b) c) d). Output ONLY the transcribed questions, nothing else - no introduction, no comments.";
+
+/* OCR/VLM text ki hifazati safai: sirf structural fixes, koi lafz nahi gharha jata.
+   - full-width nishan aam ASCII mein (，（）｛｝｜ -> , ( ) { } |)
+   - code fences / "Transcription:" jaisi wrapper lines hatana (VLM kabhi laga deta hai)
+   - { 1 , 2 , 3 } jaisi set lists ke andar ki fazool spaces durust
+   - digits ke darmiyan aya O/o -> 0 (masalan 1O0 -> 100), ye OCR ki aam ghalti hai
+   - sawalia nishan se pehle ki space hatana */
+function cleanupOcrText(text) {
+  var t = String(text || "");
+  t = t.replace(/```[a-z]*\s*/gi, "");
+  t = t.replace(/[\uFF0C]/g, ",").replace(/[\uFF08]/g, "(").replace(/[\uFF09]/g, ")")
+       .replace(/[\uFF5B]/g, "{").replace(/[\uFF5D]/g, "}").replace(/[\uFF5C]/g, "|")
+       .replace(/[\uFF0E]/g, ".").replace(/[\uFF1A]/g, ":").replace(/[\uFF1F]/g, "?");
+  t = t.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFD]/g, "");
+  var lines = t.split(/\r?\n/).map(function (ln) { return ln.replace(/\s+$/g, ""); });
+  while (lines.length && /^\s*(here is|here are|the (transcription|text|questions)|transcription|output)\b[^?？]{0,60}:?\s*$/i.test(lines[0])) lines.shift();
+  t = lines.join("\n");
+  t = t.replace(/\{[^{}]*\}/g, function (m) {
+    if (!/^[\d\s,.\-+|]*$/.test(m.slice(1, -1))) return m;
+    return m.replace(/\s*,\s*/g, ", ").replace(/\{\s+/g, "{").replace(/\s+\}/g, "}");
+  });
+  t = t.replace(/(\d)[Oo](\d)/g, "$10$2");
+  t = t.replace(/[ \t]+\?/g, "?").replace(/[ \t]+؟/g, "؟");
+  t = t.replace(/\n{3,}/g, "\n\n");
+  return t;
+}
+
+/* Candidate ke text ki quality ka andaza (koi AI nahi, sirf nishaniyan):
+   - ek hi lafz mein Latin + Arabic script mila hua (garble ki sab se wazeh nishani)
+   - lambe "symbol runs" (3+ ghair-harf nishan lagatar)
+   - bohat lambe token (milaye hue alfaz)
+   score < 0.55 ho to candidate mashkook mana jata hai. */
+function candidateQuality(c) {
+  var text = [c.q || ""].concat(c.opts || []).join(" ");
+  var tokens = text.split(/\s+/).filter(Boolean);
+  if (!tokens.length) return { score: 0, bad: true };
+  var mixed = 0, longTok = 0, dense = 0;
+  tokens.forEach(function (tk) {
+    if (/[A-Za-z]/.test(tk) && /[\u0600-\u06FF]/.test(tk)) mixed++;
+    if (tk.length > 25) longTok++;
+    /* ghana token: harf + number + math nishan ek hi lafz mein gheesa hua
+       (masalan "RA2x+1=0", "{xlxePAx<12}") — saaf math mein ye alag alag
+       token hote hain ("{x", "|", "x", "<", "12}") is liye ye nishani
+       garble ko saaf text se alag karti hai */
+    if (tk.length >= 4 && /[A-Za-z]/.test(tk) && /\d/.test(tk) && /[+\-=<>{}|^]/.test(tk)) dense++;
+  });
+  var runs = (text.match(/[^\p{L}\p{N}\s.,;:()\[\]{}|+\-=<>'"/?؟!*]{3,}/gu) || []).length;
+  var junk = (text.match(/[\uFFFD\u0000-\u0008]/g) || []).length;
+  var score = 1 - Math.min(0.6, mixed * 0.15) - Math.min(0.45, dense * 0.18) - Math.min(0.3, runs * 0.12) - Math.min(0.2, longTok * 0.08) - Math.min(0.5, junk * 0.25);
+  return { score: Math.max(0, score), bad: score < 0.55, mixed: mixed, runs: runs, dense: dense };
+}
 
 function parseOcrCandidates(text) {
   var out = [], cur = null;
@@ -807,15 +867,21 @@ function parseOcrCandidates(text) {
 
 function renderCandidates() {
   var box = document.getElementById("candList");
+  var qnote = document.getElementById("candQuality");
   if (!photoCandidates.length) {
     box.innerHTML = '<div class="hint">Abhi koi sawal nahi. Photo par Free AI, OCR ya Gemini chalayein to sawal yahan aayenge.</div>';
+    if (qnote) qnote.textContent = "";
     return;
   }
+  var badCount = 0;
+  photoCandidates.forEach(function (c) { if (candidateQuality(c).bad) badCount++; });
+  if (qnote) qnote.textContent = badCount ? ("⚠ " + badCount + " / " + photoCandidates.length + " sawalon ka text mashkook lag raha hai (⚠ nishan walay) — ye khud se select nahi hue; photo se mila kar theek karein, phir tick karein.") : "";
   var html = "";
   photoCandidates.forEach(function (c, i) {
-    html += '<div class="qrow" data-cand="' + i + '"><input type="checkbox" data-cf="sel"' + (c.checked === false ? "" : " checked") + ' style="margin-top:4px">';
+    var qual = candidateQuality(c);
+    html += '<div class="qrow" data-cand="' + i + '"' + (qual.bad ? ' style="border:1px solid var(--warn);border-radius:7px"' : "") + '><input type="checkbox" data-cf="sel"' + (c.checked === false ? "" : " checked") + ' style="margin-top:4px">';
     html += '<div style="flex:1"><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">' +
-      '<b>#' + (i + 1) + '</b>' +
+      '<b>#' + (i + 1) + '</b>' + (qual.bad ? '<span style="color:var(--warn);font-size:12px">⚠ text mashkook — photo se check karein</span>' : "") +
       '<select data-cf="type"><option value="mcq"' + (c.type === "mcq" ? " selected" : "") + '>MCQ</option><option value="short"' + (c.type === "short" ? " selected" : "") + '>Short</option></select>' +
       '<button type="button" class="mini" data-cact="del">🗑</button></div>';
     html += '<textarea data-cf="q" rows="2">' + esc(c.q) + "</textarea>";
@@ -834,7 +900,12 @@ function renderCandidates() {
   box.innerHTML = html;
 }
 function setCandidates(list) {
-  list.forEach(function (c) { if (c.checked === undefined) c.checked = true; });
+  list.forEach(function (c) {
+    if (c.checked === undefined) c.checked = true;
+    /* Mashkook (garbled) text wala sawal khud se select NAHI hota —
+       pehle teacher check karke khud tick kare. Kuch bhi auto-add nahi hota. */
+    if (candidateQuality(c).bad) c.checked = false;
+  });
   photoCandidates = list;
   renderCandidates();
 }
@@ -943,7 +1014,7 @@ function runFreeAi(files) {
     chain = chain.then(function () {
       return gradioUpload(MD_BASE, f).then(function (fd) {
         st.textContent = "🤖 Photo " + (i + 1) + "/" + files.length + " — AI parh raha hai…";
-        return gradioCall(MD_BASE, "answer_question", [fd, MD_PROMPT], function () {
+        return gradioCall(MD_BASE, "answer_question", [fd, VLM_PROMPT], function () {
           st.textContent = "🤖 Photo " + (i + 1) + "/" + files.length + " — AI jawab bana raha hai…";
         }, 420000);
       }).then(function (data) {
@@ -956,10 +1027,10 @@ function runFreeAi(files) {
     });
   });
   return chain.then(function () {
-    var joined = texts.join("\n");
+    var joined = cleanupOcrText(texts.join("\n"));
     var cands = parseOcrCandidates(joined);
     if (!cands.length) {
-      st.textContent = "⚠ AI ne koi sawal nahi nikala. Photo saaf aur seedhi ho to dobara koshish karein, warna neeche OCR wala tareeqa use karein.";
+      st.textContent = "⚠ AI ne koi sawal nahi nikala. Photo saaf aur seedhi ho to dobara koshish karein, warna upar Document AI (GOT-OCR) ya neeche OCR wala tareeqa use karein.";
       return 0;
     }
     setCandidates(cands);
@@ -968,7 +1039,99 @@ function runFreeAi(files) {
   });
 }
 
-/* ---- Route B: Local OCR (Tesseract.js, offline) ---- */
+/* ---- Route A1: Document AI — GOT-OCR 2.0 (CPU space, bina key) ----
+   Solo448/OCR_MULTILINGUAL-GOT: stage RUNNING, hardware cpu-basic (ZeroGPU
+   NAHI, is liye koi quota nahi). /config se verified signature:
+   run_GOT inputs = [image, mode, fine-grained type, color, box text],
+   outputs = [textbox (OCR text), html]. Mode "plain texts OCR" rakha hai
+   taake math plain text mein aye, masalan {x | x < 12}. GOT-OCR printed
+   documents ke liye train hua model hai — Moondream (aam VLM) se zyada
+   hu-ba-hu naqal karta hai. Urdu script is ki training mein kamzor hai. */
+function runGotOcr(files) {
+  var st = document.getElementById("gotStatus");
+  if (!files.length) { st.textContent = "⚠ Pehle page ki photo select karein."; return Promise.resolve(0); }
+  st.textContent = "📄 Document AI ko photo bhej rahe hain… (CPU server hai, 1 photo par 1–4 minute lag sakte hain)";
+  var texts = [];
+  var chain = Promise.resolve();
+  files.forEach(function (f, i) {
+    chain = chain.then(function () {
+      return gradioUpload(GOT_BASE, f).then(function (fd) {
+        st.textContent = "📄 Photo " + (i + 1) + "/" + files.length + " — Document AI parh raha hai…";
+        return gradioCall(GOT_BASE, "run_GOT", [fd, "plain texts OCR", "box", "red", ""], function () {
+          st.textContent = "📄 Photo " + (i + 1) + "/" + files.length + " — text nikala ja raha hai…";
+        }, 600000);
+      }).then(function (data) {
+        var txt = (data && data[0]) ? String(data[0]) : "";
+        if (txt) texts.push(txt);
+      }).catch(function (e) {
+        texts.push("");
+        st.textContent = "⚠ Photo " + (i + 1) + " par Document AI fail: " + (e && e.message ? e.message : e) + " — baqi koshish jari hai…";
+      });
+    });
+  });
+  return chain.then(function () {
+    var joined = cleanupOcrText(texts.join("\n"));
+    var cands = parseOcrCandidates(joined);
+    if (!cands.length) {
+      st.textContent = "⚠ Document AI ne koi sawal nahi nikala. Photo saaf aur seedhi ho to dobara koshish karein, warna Moondream ya OCR wala tareeqa use karein.";
+      return 0;
+    }
+    setCandidates(cands);
+    st.textContent = "✔ Document AI ne " + cands.length + " sawal nikale — neeche Review mein photo se mila kar check karein, phir shamil karein.";
+    return cands.length;
+  });
+}
+
+/* ---- Route B: Local OCR (Tesseract.js, offline) ----
+   Pehle image tayyar ki jati hai: chhoti ho to barha (upscale) karna,
+   grayscale, contrast barhana aur halki threshold — ye Tesseract ki
+   accuracy mein sab se bara farq dalta hai. PSM 3 (fully automatic page
+   segmentation) document safhe ke liye rakha hai: PSM 1 ko OSD data
+   chahiye jo urd ke sath nahi aata, aur PSM 6 aksar multi-block safhe
+   ki tartib bigaar deta hai. */
+function preprocessForOcr(file) {
+  return new Promise(function (resolve) {
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function () {
+      try {
+        var w = img.naturalWidth, h = img.naturalHeight;
+        if (!w || !h) throw new Error("bad image");
+        var scale = 1;
+        if (w < 1000) scale = 2; else if (w < 2000) scale = 2000 / w;
+        if (w * scale > 3000) scale = 3000 / w;
+        var cw = Math.round(w * scale), ch = Math.round(h * scale);
+        var cv = document.createElement("canvas");
+        cv.width = cw; cv.height = ch;
+        var ctx = cv.getContext("2d");
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(img, 0, 0, cw, ch);
+        URL.revokeObjectURL(url);
+        var id = ctx.getImageData(0, 0, cw, ch), px = id.data;
+        var min = 255, max = 0, i, g;
+        for (i = 0; i < px.length; i += 40) { /* sample se min/max andaza */
+          g = (px[i] * 299 + px[i + 1] * 587 + px[i + 2] * 114) / 1000;
+          if (g < min) min = g; if (g > max) max = g;
+        }
+        var range = Math.max(40, max - min);
+        for (i = 0; i < px.length; i += 4) {
+          g = (px[i] * 299 + px[i + 1] * 587 + px[i + 2] * 114) / 1000;
+          var v = (g - min) * 255 / range; /* contrast stretch */
+          v = v < 70 ? v * 0.55 : (v > 195 ? 195 + (v - 195) * 1.6 : v); /* halki threshold */
+          if (v < 0) v = 0; if (v > 255) v = 255;
+          px[i] = px[i + 1] = px[i + 2] = v;
+        }
+        ctx.putImageData(id, 0, 0);
+        if (cv.toBlob) cv.toBlob(function (b) { resolve(b || file); }, "image/png");
+        else resolve(file);
+      } catch (e) { try { URL.revokeObjectURL(url); } catch (e2) {} resolve(file); }
+    };
+    img.onerror = function () { try { URL.revokeObjectURL(url); } catch (e) {} resolve(file); };
+    img.src = url;
+  });
+}
+
 function runOcr(files) {
   var st = document.getElementById("ocrStatus");
   if (!files.length) { st.textContent = "⚠ Pehle page ki photo select karein."; return Promise.resolve(0); }
@@ -981,18 +1144,23 @@ function runOcr(files) {
   var worker = null;
   return window.Tesseract.createWorker(lang).then(function (w) {
     worker = w;
+    var psm = (w.setParameters ? w.setParameters({ tessedit_pageseg_mode: "3" }) : Promise.resolve());
+    return Promise.resolve(psm).catch(function () {}).then(function () {
     var texts = [];
     var chain = Promise.resolve();
     files.forEach(function (f, i) {
       chain = chain.then(function () {
-        st.textContent = "🔍 Photo " + (i + 1) + "/" + files.length + " parhi ja rahi hai…";
-        return worker.recognize(f).then(function (res) { texts.push((res && res.data && res.data.text) || ""); });
+        st.textContent = "🔍 Photo " + (i + 1) + "/" + files.length + " tayyar karke parhi ja rahi hai…";
+        return preprocessForOcr(f).then(function (imgBlob) {
+          return worker.recognize(imgBlob);
+        }).then(function (res) { texts.push((res && res.data && res.data.text) || ""); });
       });
     });
     return chain.then(function () { return texts; });
+    });
   }).then(function (texts) {
     if (worker) { try { worker.terminate(); } catch (e) {} }
-    var cands = parseOcrCandidates(texts.join("\n"));
+    var cands = parseOcrCandidates(cleanupOcrText(texts.join("\n")));
     if (!cands.length) {
       st.textContent = "⚠ OCR se koi sawal nahi mila. Photo saaf, seedhi aur roshni mein li hui ho to behtar result aayega.";
       return 0;
@@ -1035,7 +1203,7 @@ function parseGeminiJson(txt) {
 }
 function geminiExtract(file, key) {
   return fileToBase64(file).then(function (b64) {
-    var prompt = "Extract ALL questions from this textbook page image. Return ONLY a JSON array. Each item: {\"type\":\"mcq\" or \"short\", \"q\":\"question text exactly as written\", \"opts\":[\"A\",\"B\",\"C\",\"D\"] (only for mcq, else []), \"ans\": correct option index 0-3 if printed or -1}. Keep Urdu text in Urdu script. No extra text outside the JSON array.";
+    var prompt = "Transcribe ALL questions from this textbook page image EXACTLY as printed - word by word, do NOT translate, rewrite or invent anything, and do NOT mix scripts: copy every word in the same script it is printed in (Urdu words stay in Urdu script, English stays English). Keep math in plain text exactly as printed, e.g. {x | x < 12}. Return ONLY a JSON array. Each item: {\"type\":\"mcq\" or \"short\", \"q\":\"question text exactly as written\", \"opts\":[\"A\",\"B\",\"C\",\"D\"] (only for mcq, else []), \"ans\": correct option index 0-3 if printed or -1}. No extra text outside the JSON array.";
     return fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + encodeURIComponent(key), {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: file.type || "image/jpeg", data: b64 } }] }] })
@@ -1078,6 +1246,7 @@ function runGemini(files) {
 function bindPhoto() {
   var inp = document.getElementById("photoFiles");
   inp.addEventListener("change", function () { showPreviews(selectedPhotoFiles()); });
+  document.getElementById("btnGot").addEventListener("click", function () { runGotOcr(selectedPhotoFiles()); });
   document.getElementById("btnFreeAi").addEventListener("click", function () { runFreeAi(selectedPhotoFiles()); });
   document.getElementById("btnOcr").addEventListener("click", function () { runOcr(selectedPhotoFiles()); });
   document.getElementById("btnGemini").addEventListener("click", function () { runGemini(selectedPhotoFiles()); });
