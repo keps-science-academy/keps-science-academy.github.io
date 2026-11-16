@@ -98,13 +98,39 @@ footer.appfoot{max-width:1240px;margin:0 auto;padding:6px 14px 22px;color:var(--
 #userBar .spacer{flex:1}
 .rolebadge{display:inline-block;background:var(--brand);color:#fff;border-radius:10px;padding:1px 9px;font-size:11.5px;font-weight:700;margin-left:5px}
 .rolebadge.admin{background:var(--ok)}
-#loginGate{position:fixed;inset:0;z-index:200;background:linear-gradient(135deg,var(--brand2),var(--brand));display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:26px 14px}
-.login-card{background:#fff;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.35);max-width:400px;width:100%;padding:24px 22px;margin:auto 0}
-.login-card .lg-brand{font-size:21px;font-weight:700;color:var(--brand2);text-align:center}
-.login-card .lg-sub{text-align:center;color:var(--mut);font-size:13px;margin:4px 0 14px}
-.login-card label.fl{margin-top:10px}
-.login-card input[type=text],.login-card input[type=password]{width:100%;padding:10px;border:1px solid var(--line);border-radius:7px;font:inherit;font-size:14.5px;background:#fff;color:var(--ink)}
-.login-card input:focus{outline:2px solid #9ec7e8;border-color:var(--brand)}
+#loginGate{position:fixed;inset:0;z-index:200;background:linear-gradient(135deg,#e9eaf8,#dde4f6 55%,#eef2f5);display:flex;overflow:auto;padding:22px 14px}
+.lg-shell{display:flex;width:100%;max-width:1020px;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 24px 60px rgba(43,16,120,.28);margin:auto}
+.lg-brand-panel{flex:1.05;background:linear-gradient(160deg,#6d3df0 0%,#4c1d95 58%,#2a0a5e 100%);color:#fff;padding:38px 36px;display:flex;flex-direction:column}
+.lg-logo{font-size:22px;font-weight:800;letter-spacing:.2px}
+.lg-logo-sub{font-size:12.5px;opacity:.75;margin-top:2px}
+.lg-head{font-size:31px;line-height:1.18;font-weight:800;margin:42px 0 12px}
+.lg-desc{font-size:14.5px;line-height:1.55;opacity:.88;margin:0 0 24px}
+.lg-points{list-style:none;margin:auto 0 0;padding:0}
+.lg-points li{font-size:14px;font-weight:600;margin:9px 0;display:flex;gap:9px;align-items:center}
+.lg-points .tick{display:inline-flex;width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.18);align-items:center;justify-content:center;font-size:12px;flex:none}
+.login-card{flex:1;background:#fff;padding:38px 36px}
+.login-card .lg-welcome{font-size:24px;font-weight:800;color:var(--ink)}
+.login-card .lg-sub{color:var(--mut);font-size:13.5px;margin:5px 0 16px}
+.lg-tabs{display:flex;background:#eef0f6;border-radius:10px;padding:4px;gap:4px;margin-bottom:4px}
+.lg-tab{flex:1;border:0;background:transparent;padding:9px 6px;border-radius:7px;font:inherit;font-size:13.5px;font-weight:700;color:var(--mut);cursor:pointer}
+.lg-tab.on{background:linear-gradient(135deg,#6d3df0,#4c1d95);color:#fff;box-shadow:0 3px 10px rgba(76,29,149,.35)}
+.login-card label.fl{margin-top:12px}
+.login-card input[type=text],.login-card input[type=password]{width:100%;padding:11px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:14.5px;background:#fff;color:var(--ink)}
+.login-card input:focus{outline:2px solid #b7a6f5;border-color:#6d3df0}
+#btnLogin{width:100%;margin:16px 0 4px;padding:12px;background:linear-gradient(135deg,#6d3df0,#4c1d95);border-color:#4c1d95;font-size:15px;border-radius:9px}
+#btnLogin:hover{background:linear-gradient(135deg,#5b31d6,#3f1580)}
+.lg-setupnotice{background:#fff3cd;border:1px solid #e3c766;color:#5f4b00;border-radius:9px;padding:10px 12px;font-size:13px;margin-top:14px}
+.lg-bypass{display:inline-block;margin-top:9px;font-size:13px;font-weight:700;color:#4c1d95}
+.lg-secure{text-align:center;color:var(--mut);font-size:12px;margin-top:16px}
+@media (max-width:760px){
+  #loginGate{padding:12px 10px}
+  .lg-shell{flex-direction:column}
+  .lg-brand-panel{padding:22px 20px}
+  .lg-head{font-size:23px;margin:18px 0 8px}
+  .lg-desc{margin-bottom:10px}
+  .lg-points li{margin:5px 0}
+  .login-card{padding:24px 20px 26px}
+}
 .auth-err{display:none;background:#fdeceb;border:1px solid var(--warn);color:var(--warn);border-radius:7px;padding:7px 10px;font-size:13px;margin-top:10px}
 .auth-ok{display:none;background:#e6f4ea;border:1px solid var(--ok);color:var(--ok);border-radius:7px;padding:7px 10px;font-size:13px;margin-top:10px}
 @keyframes kpgShake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
@@ -433,26 +459,53 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
 <footer class="appfoot">© KEPS Academy — Paper Generator, free for teachers. Papers aur drafts sirf aap ke browser mein save hote hain, kahin upload nahi hote.<br>Photo se sawal: Qwen2.5-VL AI (Hugging Face par free chalta hua model) photo parh kar MCQs, Short aur Long sawal bana kar deta hai — bina kisi API key ke.</footer>
 
 <div id="loginGate" style="display:none">
-  <div class="login-card" id="loginCard">
-    <div class="lg-brand">📄 KEPS Academy</div>
-    <div class="lg-sub">Paper Generator — sirf registered teachers ke liye hai.<br>Apne username aur password se login karein.</div>
-    <div class="auth-err" id="liError"></div>
-    <label class="fl" for="liUser">Username</label>
-    <input type="text" id="liUser" placeholder="e.g. Keps" autocomplete="username">
-    <label class="fl" for="liPass">Password</label>
-    <input type="password" id="liPass" placeholder="Apna password" autocomplete="current-password">
-    <button type="button" class="btn big" id="btnLogin">🔐 Login Karein</button>
-    <div style="text-align:center;margin-top:14px">
-      <a href="#" id="liSetupToggle" style="font-size:12.5px;color:var(--mut)">🔧 Server Setup (owner ke liye)</a>
-    </div>
-    <div class="setupbox" id="liSetupBox" style="display:none">
-      <label class="fl" for="liSrvUrl">Server URL (/exec)</label>
-      <input type="text" id="liSrvUrl" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off">
-      <div style="margin-top:7px">
-        <button type="button" class="btn small" id="btnLiSrvSave">💾 URL Save Karein</button>
-        <button type="button" class="btn small danger" id="btnLiSrvClear">URL Hatayein</button>
+  <div class="lg-shell">
+    <aside class="lg-brand-panel">
+      <div>
+        <div class="lg-logo">📄 KEPS Academy</div>
+        <div class="lg-logo-sub">Paper Generator</div>
       </div>
-      <div class="hint" id="liSrvMsg"></div>
+      <h2 class="lg-head">Exam paper creation for modern educators.</h2>
+      <p class="lg-desc">Board-pattern papers, pairing schemes, aur print-ready exam layouts — ek fast, preview-first workflow ke sath.</p>
+      <ul class="lg-points">
+        <li><span class="tick">✔</span> Print-ready paper layouts</li>
+        <li><span class="tick">✔</span> Urdu (Jameel Noori) aur English support</li>
+        <li><span class="tick">✔</span> Secure teacher &amp; institute access</li>
+      </ul>
+    </aside>
+    <div class="login-card" id="loginCard">
+      <div class="lg-welcome">Welcome Back</div>
+      <div class="lg-sub" id="lgTabHint">Sign in to your account to continue.</div>
+      <div class="lg-tabs">
+        <button type="button" class="lg-tab on" id="tabUserLogin">👤 User Login</button>
+        <button type="button" class="lg-tab" id="tabAdminLogin">🛠 Admin Login</button>
+      </div>
+      <div class="auth-err" id="liError"></div>
+      <label class="fl" for="liUser">Username</label>
+      <input type="text" id="liUser" placeholder="e.g. Keps" autocomplete="username">
+      <label class="fl" for="liPass">Password</label>
+      <input type="password" id="liPass" placeholder="Apna password" autocomplete="current-password">
+      <button type="button" class="btn big" id="btnLogin">Sign In</button>
+      <div class="lg-setupnotice" id="lgSetupNotice" style="display:none">
+        ⚠ <b>Login system ki setup baqi hai</b> — server URL abhi set nahi hai, is liye login nahi ho sakta.
+        <div style="margin-top:8px">
+          <button type="button" class="btn small" id="btnLgSetup">🔧 Server Setup</button>
+        </div>
+        <a href="#" class="lg-bypass" id="liBypass">Setup mode: bina login ke generator kholein →</a>
+      </div>
+      <div style="text-align:center;margin-top:14px">
+        <a href="#" id="liSetupToggle" style="font-size:12.5px;color:var(--mut)">🔧 Server Setup (owner ke liye)</a>
+      </div>
+      <div class="setupbox" id="liSetupBox" style="display:none">
+        <label class="fl" for="liSrvUrl">Server URL (/exec)</label>
+        <input type="text" id="liSrvUrl" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off">
+        <div style="margin-top:7px">
+          <button type="button" class="btn small" id="btnLiSrvSave">💾 URL Save Karein</button>
+          <button type="button" class="btn small danger" id="btnLiSrvClear">URL Hatayein</button>
+        </div>
+        <div class="hint" id="liSrvMsg"></div>
+      </div>
+      <div class="lg-secure">🔒 Secured — KEPS Academy, Ahmad Pur Sial, Jhang</div>
     </div>
   </div>
 </div>
@@ -2439,8 +2492,18 @@ function bindPhoto() {
    store NAHI hota.
    - Server ka /exec URL localStorage mein rehta hai (owner ek dafa
      login screen ki Server Setup se lagata hai — rebuild nahi chahiye).
-   - Jab tak URL set nahi: SETUP MODE — site khuli rehti hai aur banner
-     + Server Setup card nazar aata hai (owner kabhi lock out nahi hota).
+   - Site HAMESHA split-screen login page par khulti hai (left: KEPS
+     branding panel, right: sign-in form). Form par do ALAG tabs hain:
+     "👤 User Login" aur "🛠 Admin Login" — backend ek hi login action
+     hai, lekin role tab se match na kare to session NAHI banta
+     (admin account User tab se, teacher account Admin tab se reject).
+     URL mein ?admin=1 ho to Admin tab pehle se selected khulta hai
+     (owner ka private bookmark; role check phir bhi server-side hai).
+   - Jab tak URL set nahi: login page par setup notice + "Server
+     Setup" button + ek bypass link ("Setup mode: bina login ke
+     generator kholein") — bypass se purana SETUP MODE khulta hai
+     (site khuli + banner + Server Setup card; owner kabhi lock out
+     nahi hota). URL set hote hi bypass gayab — sirf login chalega.
    - URL set ho to: login gate. Session sessionStorage mein rehta hai.
    - Admin account backend (Code.gs) ki seed se banta hai — website ki
      is file mein koi password NAHI hai, aur koi "pehli setup" wala
@@ -2451,6 +2514,8 @@ var AUTH_URL_LS = "kpg_server_url_v1";
 var AUTH_SESS_SS = "kpg_session_v1";
 var authSession = null; // {user, role, token}
 var _authVerified = false;
+var loginTab = "user"; // login form ka active tab: "user" | "admin"
+var setupBypass = false; // true = setup mode mein login page bypass karke app khuli hai (sirf tab, jab URL set na ho; memory mein rehta hai, reload par login page wapas)
 
 function authEl(id) { return document.getElementById(id); }
 function authServerUrl() {
@@ -2520,8 +2585,9 @@ function authedPayload(extra) {
   return p;
 }
 
-/* Teen halatein: "setup" (URL nahi — site khuli + banner), "locked"
-   (URL hai, login nahi — gate), "open" (login hai — user bar + views).
+/* Teen halatein: "setup" (URL nahi — pehle login page setup notice ke
+   sath; bypass ke baad site khuli + banner), "locked" (URL hai, login
+   nahi — gate), "open" (login hai — user bar + views).
    Login ke baad teen ALAG views hain: "generator" (paper builder),
    "mypanel" (har user ka apna panel) aur "admin" (sirf admin role) —
    showView() un ke darmiyan switch karta hai. */
@@ -2555,11 +2621,54 @@ function showView(name) {
   return currentView;
 }
 
+/* Login form ke tabs — User / Admin alag. Tab sirf form ka mode hai;
+   asal role backend ke jawab se aata hai aur doLogin() mein tab se
+   match karna lazmi hai, warna session nahi banta. */
+function setLoginTab(t) {
+  loginTab = t === "admin" ? "admin" : "user";
+  var tu = authEl("tabUserLogin"), ta = authEl("tabAdminLogin");
+  if (tu) tu.classList.toggle("on", loginTab === "user");
+  if (ta) ta.classList.toggle("on", loginTab === "admin");
+  var hint = authEl("lgTabHint");
+  if (hint) hint.textContent = loginTab === "admin"
+    ? "Admin account se sign in karein — sirf admin ke liye."
+    : "Sign in to your account to continue.";
+  authShowErr("liError", "");
+  return loginTab;
+}
+/* ?admin=1 — owner ka private bookmark: Admin tab pehle se selected. */
+function loginTabFromUrl() {
+  try { return /[?&]admin=1([&#]|$)/.test(String(window.location.search || "")) ? "admin" : "user"; }
+  catch (e) { return "user"; }
+}
+/* Setup mode ka bypass — login page se purani khuli site (banner +
+   Server Setup card) mein dakhla. Sirf tab asar karta hai jab URL
+   set na ho; URL lagte hi applyAuthUI isay nazar-andaz kar deta hai. */
+function enterSetupBypass() {
+  setupBypass = true;
+  return applyAuthUI();
+}
+
 function applyAuthUI() {
   var url = authServerUrl();
   var gate = authEl("loginGate"), banner = authEl("setupBanner"),
       setupCard = authEl("serverSetupCard"), ubar = authEl("userBar");
+  var notice = authEl("lgSetupNotice");
   if (!url) {
+    /* Login page har haal mein pehle dikhta hai; setup notice +
+       bypass sirf isi (bina URL wali) halat mein nazar aate hain. */
+    if (notice) notice.style.display = "";
+    if (!setupBypass) {
+      document.body.classList.add("kpg-locked");
+      gate.style.display = "";
+      banner.style.display = "none";
+      setupCard.style.display = "none";
+      ubar.style.display = "none";
+      authEl("viewMyPanel").style.display = "none";
+      authEl("viewAdmin").style.display = "none";
+      authEl("liSrvUrl").value = "";
+      return "setup";
+    }
     document.body.classList.remove("kpg-locked");
     gate.style.display = "none";
     banner.style.display = "";
@@ -2568,10 +2677,9 @@ function applyAuthUI() {
     authEl("appWrap").style.display = "";
     authEl("viewMyPanel").style.display = "none";
     authEl("viewAdmin").style.display = "none";
-    var inp = authEl("srvUrlInput");
-    if (inp && !inp.value) inp.value = "";
     return "setup";
   }
+  if (notice) notice.style.display = "none";
   var sess = authSession || authLoadSession();
   if (!sess) {
     document.body.classList.add("kpg-locked");
@@ -2687,10 +2795,22 @@ function doLogin() {
   var btn = authEl("btnLogin");
   btn.disabled = true;
   btn.textContent = "⏳ Login ho raha hai…";
-  function done() { btn.disabled = false; btn.textContent = "🔐 Login Karein"; }
+  function done() { btn.disabled = false; btn.textContent = "Sign In"; }
   return apiCall({ action: "login", user: u, pass: p }).then(function (r) {
     done();
     if (r && r.ok) {
+      /* Tab ↔ role ki sakhti: ghalat tab se sahi password bhi andar
+         nahi jane deta — session tabhi banta hai jab role tab se
+         match kare. */
+      var isAdm = r.role === "admin";
+      if (loginTab === "admin" && !isAdm) {
+        authShowErr("liError", "⚠ Ye admin account nahi hai — User Login se dakhil hon.");
+        return false;
+      }
+      if (loginTab === "user" && isAdm) {
+        authShowErr("liError", "⚠ Ye admin account hai — Admin Login se dakhil hon.");
+        return false;
+      }
       authSaveSession({ user: r.user, role: r.role, token: r.token, created: r.created || "" });
       authEl("liPass").value = "";
       applyAuthUI();
@@ -2843,12 +2963,18 @@ function saveServerUrlFrom(inputId, msgId) {
     return false;
   }
   authSetServerUrl(u);
+  setupBypass = false; /* URL lag gaya — ab sirf login chalega */
   if (msg) msg.textContent = "✔ Server URL save ho gaya.";
   applyAuthUI();
   return true;
 }
 
 function bindAuth() {
+  /* Login tabs + ?admin=1 preselect (sirf admin ki taraf force hota
+     hai taake pehle se chuna hua tab reset na ho). */
+  authEl("tabUserLogin").addEventListener("click", function () { setLoginTab("user"); });
+  authEl("tabAdminLogin").addEventListener("click", function () { setLoginTab("admin"); });
+  if (loginTabFromUrl() === "admin") setLoginTab("admin");
   authEl("btnLogin").addEventListener("click", function () { doLogin(); });
   ["liUser", "liPass"].forEach(function (id) {
     authEl(id).addEventListener("keydown", function (e) { if (e.key === "Enter") doLogin(); });
@@ -2858,10 +2984,23 @@ function bindAuth() {
     var box = authEl("liSetupBox");
     box.style.display = box.style.display === "none" ? "" : "none";
   });
+  /* Setup notice wala Server Setup button — wahi setup box kholta hai. */
+  authEl("btnLgSetup").addEventListener("click", function () {
+    var box = authEl("liSetupBox");
+    box.style.display = "";
+    var inp = authEl("liSrvUrl");
+    if (inp) inp.focus();
+  });
+  /* Setup mode ka bypass — bina login ke generator (sirf bina URL ke). */
+  authEl("liBypass").addEventListener("click", function (e) {
+    e.preventDefault();
+    enterSetupBypass();
+  });
   authEl("btnLiSrvSave").addEventListener("click", function () { saveServerUrlFrom("liSrvUrl", "liSrvMsg"); });
   authEl("btnLiSrvClear").addEventListener("click", function () {
     authSetServerUrl("");
     authSaveSession(null);
+    setupBypass = false;
     authEl("liSrvUrl").value = "";
     applyAuthUI();
   });
@@ -3061,6 +3200,9 @@ window.KPG = {
   getSession: function () { return authSession; },
   apiCall: apiCall, applyAuthUI: applyAuthUI,
   doLogin: doLogin, doLogout: doLogout, doChangePassword: doChangePassword,
+  setLoginTab: setLoginTab, getLoginTab: function () { return loginTab; },
+  loginTabFromUrl: loginTabFromUrl,
+  enterSetupBypass: enterSetupBypass, isSetupBypass: function () { return setupBypass; },
   showView: showView, getView: function () { return currentView; },
   renderMyPanel: renderMyPanel, renderMyDrafts: renderMyDrafts, maskServerUrl: maskServerUrl,
   loadAdminUsers: loadAdminUsers, renderAdminUsers: renderAdminUsers,
