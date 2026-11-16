@@ -12,6 +12,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <script src="https://js.puter.com/v2/"></script>
 <style>
+/* Jameel Noori Nastaleeq — professional Urdu publishing font, self-hosted
+   (fonts/ folder, same repo). Noto Nastaliq Urdu (Google Fonts) is the
+   fallback if this file ever fails to load. */
+@font-face{font-family:"Jameel Noori Nastaleeq";src:url("fonts/JameelNooriNastaleeq.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap}
 :root{--ink:#1c2733;--mut:#5b6b7a;--line:#d7dee5;--brand:#0b5fa5;--brand2:#084a82;--bg:#eef2f5;--card:#ffffff;--ok:#177245;--warn:#b3261e;--chip:#e7f1f8}
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
@@ -61,7 +65,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid #9ec7e8;border-color:v
 .paper{background:#fff;color:#000;border:1px solid #bbb;box-shadow:0 2px 10px rgba(0,0,0,.12);padding:16mm 13mm;font-family:"Noto Sans","Times New Roman",Times,Arial,"Noto Nastaliq Urdu",sans-serif;font-size:13.5px;line-height:1.5;min-height:200px}
 /* Urdu-script text ONLY: Nastaliq font + tall line-height. Layout/flow of the
    page hamesha LTR rehta hai — ye class sirf font badalti hai, direction nahi. */
-.urdu-text{font-family:"Noto Nastaliq Urdu","Noto Sans",serif;line-height:2}
+.urdu-text{font-family:"Jameel Noori Nastaleeq","Noto Nastaliq Urdu","Noto Sans",serif;line-height:2}
 .p-head{border-top:4px double #000;border-bottom:4px double #000;padding:7px 4px 9px;text-align:center}
 .p-school{font-size:21px;font-weight:700;letter-spacing:.3px}
 .p-school.urdu-text{font-size:19px}
@@ -80,6 +84,33 @@ input:focus,select:focus,textarea:focus{outline:2px solid #9ec7e8;border-color:v
 .keytable td{border:1px solid #000;padding:4px 10px;text-align:center;font-weight:600}
 .empty-note{color:#888;text-align:center;padding:26px 10px;font-family:"Segoe UI",sans-serif;font-size:13.5px}
 footer.appfoot{max-width:1240px;margin:0 auto;padding:6px 14px 22px;color:var(--mut);font-size:12.5px;text-align:center}
+/* ===== LOGIN / ADMIN ===== */
+#setupBanner{background:#fff3cd;border-bottom:2px solid #e3c766;color:#5f4b00;padding:10px 16px;font-size:13.5px;text-align:center}
+#userBar{background:#fff;border-bottom:1px solid var(--line);padding:7px 16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13.5px}
+#userBar .spacer{flex:1}
+.rolebadge{display:inline-block;background:var(--brand);color:#fff;border-radius:10px;padding:1px 9px;font-size:11.5px;font-weight:700;margin-left:5px}
+.rolebadge.admin{background:var(--ok)}
+#loginGate{position:fixed;inset:0;z-index:200;background:linear-gradient(135deg,var(--brand2),var(--brand));display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:26px 14px}
+.login-card{background:#fff;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.35);max-width:400px;width:100%;padding:24px 22px;margin:auto 0}
+.login-card .lg-brand{font-size:21px;font-weight:700;color:var(--brand2);text-align:center}
+.login-card .lg-sub{text-align:center;color:var(--mut);font-size:13px;margin:4px 0 14px}
+.login-card label.fl{margin-top:10px}
+.login-card input[type=text],.login-card input[type=password]{width:100%;padding:10px;border:1px solid var(--line);border-radius:7px;font:inherit;font-size:14.5px;background:#fff;color:var(--ink)}
+.login-card input:focus{outline:2px solid #9ec7e8;border-color:var(--brand)}
+.auth-err{display:none;background:#fdeceb;border:1px solid var(--warn);color:var(--warn);border-radius:7px;padding:7px 10px;font-size:13px;margin-top:10px}
+.auth-ok{display:none;background:#e6f4ea;border:1px solid var(--ok);color:var(--ok);border-radius:7px;padding:7px 10px;font-size:13px;margin-top:10px}
+@keyframes kpgShake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-7px)}40%,80%{transform:translateX(7px)}}
+.shake{animation:kpgShake .45s ease}
+.setupbox{border-top:1px dashed var(--line);margin-top:14px;padding-top:10px}
+.usertable{width:100%;border-collapse:collapse;font-size:13.5px;margin:8px 0}
+.usertable th,.usertable td{border:1px solid var(--line);padding:5px 7px;text-align:left;vertical-align:middle}
+.usertable th{background:var(--chip);color:var(--brand2)}
+.usertable input[type=password],.usertable input[type=text]{padding:4px 6px;font-size:13px}
+body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,body.kpg-locked #viewMyPanel,body.kpg-locked #viewAdmin{display:none !important}
+/* ===== VIEWS (Generator / My Panel / Admin Panel — alag screens) ===== */
+.viewpage{max-width:900px;margin:0 auto;padding:14px 14px 4px}
+#userBar .btn.navon{background:var(--brand2);border-color:var(--brand2);color:#fff}
+.statrow{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 2px}
 /* ===== PRINT ===== */
 #printRoot{display:none}
 @page{size:A4;margin:11mm}
@@ -97,9 +128,31 @@ footer.appfoot{max-width:1240px;margin:0 auto;padding:6px 14px 22px;color:var(--
   <p>Free test paper maker for teachers — MCQs, Short &amp; Long Questions • English / اردو / Bilingual • Live A4 preview • PDF download • 100% Free</p>
 </header>
 
-<div class="wrap">
+<div id="setupBanner" style="display:none">⚠ <b>Login system ki setup baqi hai</b> — site abhi sab ke liye khuli hai. Server lagane ke liye neeche wala <b>Server Setup</b> card dekhein (SETUP-URDU guide ke steps).</div>
+
+<div id="userBar" style="display:none">
+  <span>👤 <b id="ubUser"></b><span class="rolebadge" id="ubRole"></span></span>
+  <span class="spacer"></span>
+  <button type="button" class="btn small ghost" id="btnNavGenerator">📄 Paper Generator</button>
+  <button type="button" class="btn small ghost" id="btnNavMy">👤 My Panel</button>
+  <button type="button" class="btn small" id="btnAdminPanel" style="display:none">🛠 Admin Panel</button>
+  <button type="button" class="btn small ghost" id="btnLogout">🚪 Logout</button>
+</div>
+
+<div class="wrap" id="appWrap">
   <!-- ============ LEFT: BUILDER ============ -->
   <div>
+    <div class="card" id="serverSetupCard" style="display:none">
+      <h2>🔧 Server Setup (Login System)</h2>
+      <p class="hint" style="margin-top:0">Login system ke liye Google Apps Script wala server chahiye (bilkul free). Pehle <b>backend/Code.gs</b> deploy karein (SETUP-URDU.txt ke steps), phir us ka <b>/exec URL</b> yahan paste kar dein. URL save hote hi login lazmi ho jayega.</p>
+      <label class="fl" for="srvUrlInput">Server URL (/exec)</label>
+      <input type="text" id="srvUrlInput" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off">
+      <div style="margin-top:7px">
+        <button type="button" class="btn" id="btnSrvSave">💾 URL Save Karein</button>
+      </div>
+      <div class="hint" id="srvSetupMsg"></div>
+    </div>
+
     <div class="card" id="setupCard">
       <h2>1️⃣ Paper Setup</h2>
       <label class="fl" for="inSchool">School / Institute Name</label>
@@ -230,7 +283,100 @@ footer.appfoot{max-width:1240px;margin:0 auto;padding:6px 14px 22px;color:var(--
   </div>
 </div>
 
+<!-- ============ MY PANEL (user view — har logged-in user, admin ko bhi) ============ -->
+<div id="viewMyPanel" class="viewpage" style="display:none">
+  <div class="card">
+    <h2>👤 My Panel — Mera Account</h2>
+    <table class="usertable">
+      <tr><th style="width:170px">Username</th><td><b id="mpUser">—</b></td></tr>
+      <tr><th>Role</th><td><span class="rolebadge" id="mpRole">—</span></td></tr>
+      <tr><th>Account bana</th><td id="mpCreated">—</td></tr>
+    </table>
+    <div style="margin-top:6px">
+      <button type="button" class="btn ghost" id="btnMpLogout">🚪 Logout</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>💾 Mere Save Papers (Drafts)</h2>
+    <div class="hint" style="margin-top:0">Is browser mein save kiye gaye papers — <b>Open</b> dabayein to paper Paper Generator mein khul jayega.</div>
+    <div id="mpDraftsList" style="margin-top:8px"></div>
+    <div class="hint" id="mpDraftMsg"></div>
+  </div>
+
+  <div class="card" id="passCard" style="display:none">
+    <h2>🔑 Apna Password Badlein</h2>
+    <label class="fl" for="cpOld">Purana Password</label>
+    <input type="password" id="cpOld" autocomplete="current-password">
+    <label class="fl" for="cpNew">Naya Password (kam az kam 6 harf)</label>
+    <input type="password" id="cpNew" autocomplete="new-password">
+    <div style="margin-top:8px">
+      <button type="button" class="btn" id="btnCpSave">Password Badlein</button>
+      <button type="button" class="btn ghost" id="btnCpCancel">Wapas Generator Par</button>
+    </div>
+    <div class="hint" id="cpMsg"></div>
+  </div>
+</div>
+
+<!-- ============ ADMIN PANEL (alag view — sirf admin role) ============ -->
+<div id="viewAdmin" class="viewpage" style="display:none">
+  <div class="card" id="adminCard">
+    <h2>🛠 Admin Panel — Users</h2>
+    <div class="hint" style="margin-top:0">Sirf admin dekh sakta hai. Teachers ke accounts yahan se banayein — wo apne username/password se login karke generator use kar sakenge.</div>
+    <div class="statrow">
+      <span class="chip">👥 Kul Users: <b id="admStatUsers">0</b></span>
+      <span class="chip">🛡 Admins: <b id="admStatAdmins">0</b></span>
+    </div>
+    <h3>➕ Naya User Banayein</h3>
+    <div class="row3">
+      <div><label class="fl" for="admNewUser">Username</label><input type="text" id="admNewUser" placeholder="e.g. teacher1" autocomplete="off"></div>
+      <div><label class="fl" for="admNewPass">Password</label><input type="password" id="admNewPass" placeholder="kam az kam 6 harf" autocomplete="new-password"></div>
+      <div><label class="fl" for="admNewRole">Role</label><select id="admNewRole"><option value="user">user (teacher)</option><option value="admin">admin</option></select></div>
+    </div>
+    <div style="margin-top:8px"><button type="button" class="btn" id="btnAdmAdd">➕ User Banayein</button></div>
+    <div class="hint" id="admMsg"></div>
+    <h3>👥 Users ki List</h3>
+    <table class="usertable">
+      <thead><tr><th>Username</th><th>Role</th><th>Banaya</th><th>Naya Password</th><th>Actions</th></tr></thead>
+      <tbody id="adminUsersBody"><tr><td colspan="5">Loading…</td></tr></tbody>
+    </table>
+    <button type="button" class="btn small ghost" id="btnAdmRefresh">↻ List Refresh</button>
+  </div>
+
+  <div class="card">
+    <h2>🔧 Server Setup Info</h2>
+    <div class="hint" style="margin-top:0">Login server ka mojooda URL (chhupa kar dikhaya gaya hai):</div>
+    <div style="margin:6px 0"><code id="admSrvUrl" style="word-break:break-all">—</code></div>
+    <div class="hint">Server URL badalna ho to <b>logout karke login screen</b> par "Server Setup" wale hisse se badlein — is panel se URL change nahi hota.</div>
+  </div>
+</div>
+
 <footer class="appfoot">© KEPS Academy — Paper Generator, free for teachers. Papers aur drafts sirf aap ke browser mein save hote hain, kahin upload nahi hote.<br>Photo se sawal: Qwen2.5-VL AI (Hugging Face par free chalta hua model) photo parh kar MCQs, Short aur Long sawal bana kar deta hai — bina kisi API key ke.</footer>
+
+<div id="loginGate" style="display:none">
+  <div class="login-card" id="loginCard">
+    <div class="lg-brand">📄 KEPS Academy</div>
+    <div class="lg-sub">Paper Generator — sirf registered teachers ke liye hai.<br>Apne username aur password se login karein.</div>
+    <div class="auth-err" id="liError"></div>
+    <label class="fl" for="liUser">Username</label>
+    <input type="text" id="liUser" placeholder="e.g. Keps" autocomplete="username">
+    <label class="fl" for="liPass">Password</label>
+    <input type="password" id="liPass" placeholder="Apna password" autocomplete="current-password">
+    <button type="button" class="btn big" id="btnLogin">🔐 Login Karein</button>
+    <div style="text-align:center;margin-top:14px">
+      <a href="#" id="liSetupToggle" style="font-size:12.5px;color:var(--mut)">🔧 Server Setup (owner ke liye)</a>
+    </div>
+    <div class="setupbox" id="liSetupBox" style="display:none">
+      <label class="fl" for="liSrvUrl">Server URL (/exec)</label>
+      <input type="text" id="liSrvUrl" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off">
+      <div style="margin-top:7px">
+        <button type="button" class="btn small" id="btnLiSrvSave">💾 URL Save Karein</button>
+        <button type="button" class="btn small danger" id="btnLiSrvClear">URL Hatayein</button>
+      </div>
+      <div class="hint" id="liSrvMsg"></div>
+    </div>
+  </div>
+</div>
 
 <div id="printRoot"></div>
 
@@ -254,14 +400,14 @@ var DEFAULT_NOTES_UR = {
   short: "",
   long: ""
 };
-/* Fixed paper labels per medium. Medium SIRF lafz badalta hai — labels ki
-   jagah aur page ka LTR flow har medium mein ek jaisa rehta hai. */
+/* Paper HEADER ke fixed labels — owner ki hidayat: header (school line,
+   Subject/Class band, aur poori info table: Paper Code, Date, Time,
+   Total Marks, Student Name, Roll No) HAR medium mein ENGLISH hi rehta
+   hai, Urdu medium mein bhi. Medium switching SIRF header ke neeche wale
+   hisse par lagti hai (section headings, instructions, attempt lines —
+   dekhein secHeadTitle aur paperHTML ka note/attempt hissa). Answer Key
+   ka title band bhi header hai — "ANSWER KEY" har medium mein English. */
 function paperLabels(medium) {
-  if (medium === "ur") return {
-    urdu: true, subject: "مضمون", clazz: "جماعت", code: "پیپر کوڈ", date: "تاریخ",
-    time: "وقت", total: "کل نمبر", student: "طالب علم کا نام", roll: "رول نمبر",
-    keyWord: "جوابی کلید", codeWord: "کوڈ"
-  };
   return {
     urdu: false, subject: "Subject", clazz: "Class", code: "Paper Code", date: "Date",
     time: "Time", total: "Total Marks", student: "Student Name", roll: "Roll No",
@@ -434,10 +580,22 @@ function getDrafts() {
   try { var d = JSON.parse(localStorage.getItem(LS_DRAFTS) || "{}"); return (d && typeof d === "object") ? d : {}; }
   catch (e) { return {}; }
 }
+/* Drafts ki save-date alag key mein rehti hai (draft ka format nahi
+   badalta) — My Panel ki list mein tareekh dikhane ke liye. */
+var LS_DRAFTS_META = "kpg_drafts_meta_v1";
+function getDraftMeta() {
+  try { var m = JSON.parse(localStorage.getItem(LS_DRAFTS_META) || "{}"); return (m && typeof m === "object") ? m : {}; }
+  catch (e) { return {}; }
+}
 function saveDraft(name) {
   var drafts = getDrafts();
   drafts[name] = JSON.parse(JSON.stringify(state));
   try { localStorage.setItem(LS_DRAFTS, JSON.stringify(drafts)); } catch (e) {}
+  try {
+    var meta = getDraftMeta();
+    meta[name] = new Date().toISOString();
+    localStorage.setItem(LS_DRAFTS_META, JSON.stringify(meta));
+  } catch (e) {}
 }
 function loadDraft(name) {
   var drafts = getDrafts();
@@ -450,6 +608,10 @@ function loadDraft(name) {
 function deleteDraft(name) {
   var drafts = getDrafts();
   if (drafts[name]) { delete drafts[name]; try { localStorage.setItem(LS_DRAFTS, JSON.stringify(drafts)); } catch (e) {} }
+  try {
+    var meta = getDraftMeta();
+    if (meta[name]) { delete meta[name]; localStorage.setItem(LS_DRAFTS_META, JSON.stringify(meta)); }
+  } catch (e) {}
 }
 
 /* ================= SAMPLE ================= */
@@ -487,7 +649,8 @@ function paperHTML(st) {
   var L = paperLabels(su.medium);
   var shown = st.sections.filter(function (s) { return s.questions.length > 0; });
   /* Paper ka container HAR medium mein dir="ltr" — flow left-to-right hi
-     rehta hai; medium sirf labels ke lafz aur Urdu text ka font badalta hai. */
+     rehta hai. Header hamesha English (paperLabels); medium sirf header
+     ke neeche (section headings, instructions, attempt lines) badalta hai. */
   var h = '<div class="paper" dir="ltr">';
   h += '<div class="p-head"><div class="p-school' + (hasUrdu(su.school) ? " urdu-text" : "") + '" dir="auto">' + esc(su.school || "School Name") + "</div>";
   h += '<div class="p-band">' + labSpan(L.subject, L.urdu) + " <span" + langAttrs(su.subject) + ">" + esc(su.subject || "—") + "</span>" +
@@ -544,7 +707,9 @@ function keyHTML(st) {
   var keys = buildKey(st);
   var su = st.setup;
   var L = paperLabels(su.medium);
-  /* Answer key bhi har medium mein LTR flow mein — sirf lafz/font badalte hain. */
+  /* Answer key bhi har medium mein LTR flow mein. Title band (header)
+     hamesha English "ANSWER KEY"; medium sirf neeche ke section
+     headings par lagti hai. */
   var h = '<div class="paper" dir="ltr">';
   h += '<div class="p-head"><div class="p-school' + (hasUrdu(su.school) ? " urdu-text" : "") + '" dir="auto">' + esc(su.school || "School Name") + "</div>";
   h += '<div class="p-band">' + (L.urdu ? '<span class="urdu-text" dir="auto">' + L.keyWord + "</span>" : L.keyWord) +
@@ -1756,6 +1921,487 @@ function bindPhoto() {
   document.getElementById("btnCandNone").addEventListener("click", function () { photoCandidates.forEach(function (c) { c.checked = false; }); renderCandidates(); });
 }
 
+/* ================= LOGIN / ADMIN =================
+   Website band (gated) hai: teachers sirf apne username/password se
+   login karke generator use kar sakte hain. Users ek Google Apps Script
+   backend (backend/Code.gs) par check hote hain — users ki list owner
+   ki private Google Sheet mein rehti hai, website par koi password
+   store NAHI hota.
+   - Server ka /exec URL localStorage mein rehta hai (owner ek dafa
+     login screen ki Server Setup se lagata hai — rebuild nahi chahiye).
+   - Jab tak URL set nahi: SETUP MODE — site khuli rehti hai aur banner
+     + Server Setup card nazar aata hai (owner kabhi lock out nahi hota).
+   - URL set ho to: login gate. Session sessionStorage mein rehta hai.
+   - Admin account backend (Code.gs) ki seed se banta hai — website ki
+     is file mein koi password NAHI hai, aur koi "pehli setup" wala
+     rasta bhi nahi: deploy ke foran baad admin login chalta hai.
+   - Login ke baad teen alag views: Paper Generator, My Panel (har
+     user), Admin Panel (sirf admin) — showView() switch karta hai. */
+var AUTH_URL_LS = "kpg_server_url_v1";
+var AUTH_SESS_SS = "kpg_session_v1";
+var authSession = null; // {user, role, token}
+var _authVerified = false;
+
+function authEl(id) { return document.getElementById(id); }
+function authServerUrl() {
+  try { return String(localStorage.getItem(AUTH_URL_LS) || "").trim(); } catch (e) { return ""; }
+}
+function authSetServerUrl(u) {
+  try {
+    if (u) localStorage.setItem(AUTH_URL_LS, String(u).trim());
+    else localStorage.removeItem(AUTH_URL_LS);
+  } catch (e) {}
+}
+function authValidUrl(u) {
+  return /^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(String(u || "").trim());
+}
+function authLoadSession() {
+  try {
+    var s = JSON.parse(sessionStorage.getItem(AUTH_SESS_SS) || "null");
+    if (s && s.user && s.token) { authSession = s; return s; }
+  } catch (e) {}
+  authSession = null;
+  return null;
+}
+function authSaveSession(s) {
+  authSession = s || null;
+  try {
+    if (s) sessionStorage.setItem(AUTH_SESS_SS, JSON.stringify(s));
+    else sessionStorage.removeItem(AUTH_SESS_SS);
+  } catch (e) {}
+}
+
+/* Backend ko ek request — hamesha JSON jawab ki koshish; network ya
+   jawab ka masla ho to saaf Roman-Urdu error throw hota hai. */
+function apiCall(payload, timeoutMs) {
+  var url = authServerUrl();
+  if (!url) return Promise.reject(new Error("Server URL set nahi hai — pehle Server Setup karein."));
+  var ctrl = null, signal;
+  try {
+    if (typeof AbortController !== "undefined") { ctrl = new AbortController(); signal = ctrl.signal; }
+  } catch (e) {}
+  var timedOut = false;
+  var timer = setTimeout(function () {
+    timedOut = true;
+    try { if (ctrl) ctrl.abort(); } catch (e) {}
+  }, timeoutMs || 30000);
+  return fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(payload),
+    signal: signal
+  }).then(function (r) { return r.text(); }).then(function (txt) {
+    clearTimeout(timer);
+    try { return JSON.parse(txt); }
+    catch (e) { throw new Error("Server ka jawab samajh nahi aaya — Server URL check karein."); }
+  }).catch(function (err) {
+    clearTimeout(timer);
+    if (timedOut) throw new Error("Server ne bohat der laga di — internet check karke dobara try karein.");
+    if (err && /samajh nahi aaya/.test(String(err.message || ""))) throw err;
+    throw new Error("Server se rabta nahi ho saka — internet ya Server URL check karein.");
+  });
+}
+function authedPayload(extra) {
+  var p = {
+    user: authSession ? authSession.user : "",
+    token: authSession ? authSession.token : ""
+  };
+  for (var k in extra) p[k] = extra[k];
+  return p;
+}
+
+/* Teen halatein: "setup" (URL nahi — site khuli + banner), "locked"
+   (URL hai, login nahi — gate), "open" (login hai — user bar + views).
+   Login ke baad teen ALAG views hain: "generator" (paper builder),
+   "mypanel" (har user ka apna panel) aur "admin" (sirf admin role) —
+   showView() un ke darmiyan switch karta hai. */
+var currentView = "generator";
+function isAdminSession() { return !!(authSession && authSession.role === "admin"); }
+
+/* Sirf display toggle — koi data load nahi hota, builder ki state
+   (state object + preview) bilkul nahi chhedi jati. */
+function applyViewVisibility() {
+  if (currentView === "admin" && !isAdminSession()) currentView = "generator";
+  authEl("appWrap").style.display = currentView === "generator" ? "" : "none";
+  authEl("viewMyPanel").style.display = currentView === "mypanel" ? "" : "none";
+  authEl("viewAdmin").style.display = currentView === "admin" ? "" : "none";
+  var map = { generator: "btnNavGenerator", mypanel: "btnNavMy", admin: "btnAdminPanel" };
+  ["btnNavGenerator", "btnNavMy", "btnAdminPanel"].forEach(function (id) {
+    var b = authEl(id);
+    if (b) b.classList.toggle("navon", map[currentView] === id);
+  });
+}
+
+/* View switch — page reload nahi hota. Admin view par role guard hai:
+   teacher agar kisi tareeqay se bhi admin view mange to generator
+   par wapas bhej diya jata hai. */
+function showView(name) {
+  if (name !== "generator" && name !== "mypanel" && name !== "admin") name = "generator";
+  if (name === "admin" && !isAdminSession()) name = "generator";
+  currentView = name;
+  applyViewVisibility();
+  if (name === "mypanel") renderMyPanel();
+  if (name === "admin") { refreshAdminSrvInfo(); loadAdminUsers(); }
+  return currentView;
+}
+
+function applyAuthUI() {
+  var url = authServerUrl();
+  var gate = authEl("loginGate"), banner = authEl("setupBanner"),
+      setupCard = authEl("serverSetupCard"), ubar = authEl("userBar");
+  if (!url) {
+    document.body.classList.remove("kpg-locked");
+    gate.style.display = "none";
+    banner.style.display = "";
+    setupCard.style.display = "";
+    ubar.style.display = "none";
+    authEl("appWrap").style.display = "";
+    authEl("viewMyPanel").style.display = "none";
+    authEl("viewAdmin").style.display = "none";
+    var inp = authEl("srvUrlInput");
+    if (inp && !inp.value) inp.value = "";
+    return "setup";
+  }
+  var sess = authSession || authLoadSession();
+  if (!sess) {
+    document.body.classList.add("kpg-locked");
+    gate.style.display = "";
+    banner.style.display = "none";
+    setupCard.style.display = "none";
+    ubar.style.display = "none";
+    authEl("viewMyPanel").style.display = "none";
+    authEl("viewAdmin").style.display = "none";
+    authEl("liSrvUrl").value = url;
+    return "locked";
+  }
+  document.body.classList.remove("kpg-locked");
+  gate.style.display = "none";
+  banner.style.display = "none";
+  setupCard.style.display = "none";
+  ubar.style.display = "";
+  authEl("ubUser").textContent = sess.user;
+  var rb = authEl("ubRole");
+  rb.textContent = sess.role;
+  rb.className = "rolebadge" + (sess.role === "admin" ? " admin" : "");
+  authEl("btnAdminPanel").style.display = sess.role === "admin" ? "" : "none";
+  applyViewVisibility();
+  return "open";
+}
+
+/* Page load par ek dafa session ko server se verify kar lein —
+   password badal gaya ho to purana session khud khatam ho jata hai. */
+function authVerifySessionOnce() {
+  if (_authVerified) return;
+  _authVerified = true;
+  if (!authServerUrl() || !authSession) return;
+  apiCall(authedPayload({ action: "me" })).then(function (r) {
+    if (!r || !r.ok) { authSaveSession(null); applyAuthUI(); }
+  }).catch(function () { /* network masla ho to session rehne dein */ });
+}
+
+/* ---------- My Panel (user view) ---------- */
+function fmtDateShort(s) {
+  var t = String(s || "");
+  if (/^\d{4}-\d{2}-\d{2}/.test(t)) return t.slice(0, 10);
+  return t;
+}
+function renderMyPanel() {
+  var sess = authSession || authLoadSession();
+  if (!sess) return;
+  authEl("mpUser").textContent = sess.user;
+  var rb = authEl("mpRole");
+  rb.textContent = sess.role;
+  rb.className = "rolebadge" + (sess.role === "admin" ? " admin" : "");
+  /* Account banne ki tareekh sirf tab, jab backend ne bheji ho. */
+  authEl("mpCreated").textContent = sess.created ? fmtDateShort(sess.created) : "—";
+  authEl("passCard").style.display = "";
+  renderMyDrafts();
+}
+var mpDraftNames = [];
+function draftQuestionCount(st) {
+  var n = 0;
+  ((st && st.sections) || []).forEach(function (s) { n += ((s && s.questions) || []).length; });
+  return n;
+}
+function renderMyDrafts() {
+  var box = authEl("mpDraftsList");
+  if (!box) return;
+  var drafts = getDrafts();
+  var meta = getDraftMeta();
+  mpDraftNames = Object.keys(drafts);
+  if (!mpDraftNames.length) {
+    box.innerHTML = '<div class="hint">Abhi koi saved draft nahi hai. Paper Generator mein ja kar "Save Draft" dabayein.</div>';
+    return;
+  }
+  box.innerHTML = mpDraftNames.map(function (name, i) {
+    var st = drafts[name] || {};
+    var when = meta[name] ? fmtDateShort(meta[name]) : (st.setup && st.setup.date ? st.setup.date : "—");
+    var sub = "📅 " + esc(when) + " • " + draftQuestionCount(st) + " sawal" +
+      (st.setup && st.setup.subject ? " • " + esc(st.setup.subject) : "") +
+      (st.setup && st.setup.clazz ? " (" + esc(st.setup.clazz) + ")" : "");
+    return '<div class="qrow"><div class="qt"><b>' + esc(name) + '</b><div class="hint">' + sub + "</div></div>" +
+      '<div class="qb"><button type="button" class="mini" data-mpopen="' + i + '">📂 Open</button>' +
+      '<button type="button" class="mini" data-mpdel="' + i + '">🗑 Delete</button></div></div>';
+  }).join("");
+}
+
+/* ---------- Admin view helpers ---------- */
+/* Server URL poora kabhi panel mein nahi dikhate — darmiyan chhupa kar. */
+function maskServerUrl(u) {
+  u = String(u || "");
+  if (!u) return "— (set nahi hai)";
+  if (u.length <= 48) return u;
+  return u.slice(0, 43) + "…" + u.slice(u.length - 5);
+}
+function refreshAdminSrvInfo() {
+  var el = authEl("admSrvUrl");
+  if (el) el.textContent = maskServerUrl(authServerUrl());
+}
+
+function authShowErr(id, msg) {
+  var e = authEl(id);
+  if (!e) return;
+  e.textContent = msg || "";
+  e.style.display = msg ? "" : "none";
+  if (msg && id === "liError") {
+    var c = authEl("loginCard");
+    if (c) { c.classList.remove("shake"); void c.offsetWidth; c.classList.add("shake"); }
+  }
+}
+
+function doLogin() {
+  var u = authEl("liUser").value.trim();
+  var p = authEl("liPass").value;
+  authShowErr("liError", "");
+  if (!u || !p) { authShowErr("liError", "⚠ Username aur password likhein."); return Promise.resolve(false); }
+  var btn = authEl("btnLogin");
+  btn.disabled = true;
+  btn.textContent = "⏳ Login ho raha hai…";
+  function done() { btn.disabled = false; btn.textContent = "🔐 Login Karein"; }
+  return apiCall({ action: "login", user: u, pass: p }).then(function (r) {
+    done();
+    if (r && r.ok) {
+      authSaveSession({ user: r.user, role: r.role, token: r.token, created: r.created || "" });
+      authEl("liPass").value = "";
+      applyAuthUI();
+      showView("generator");
+      if (authSession && authSession.role === "admin") loadAdminUsers();
+      return true;
+    }
+    authShowErr("liError", "⚠ " + ((r && r.error) || "Login nahi ho saka."));
+    return false;
+  }).catch(function (e) {
+    done();
+    authShowErr("liError", "⚠ " + e.message);
+    return false;
+  });
+}
+
+function doLogout() {
+  authSaveSession(null);
+  currentView = "generator";
+  applyAuthUI();
+}
+
+function doChangePassword() {
+  var oldP = authEl("cpOld").value, newP = authEl("cpNew").value;
+  var msg = authEl("cpMsg");
+  if (!oldP || newP.length < 6) {
+    msg.textContent = "⚠ Purana password likhein aur naya kam az kam 6 harf ka rakhein.";
+    return Promise.resolve(false);
+  }
+  return apiCall(authedPayload({ action: "change_my_password", oldpass: oldP, newpass: newP })).then(function (r) {
+    if (r && r.ok) {
+      if (r.token && authSession) {
+        authSaveSession({ user: authSession.user, role: authSession.role, token: r.token, created: authSession.created || "" });
+      }
+      authEl("cpOld").value = ""; authEl("cpNew").value = "";
+      msg.textContent = "✔ " + (r.msg || "Password badal gaya.");
+      return true;
+    }
+    msg.textContent = "⚠ " + ((r && r.error) || "Password nahi badla.");
+    return false;
+  }).catch(function (e) {
+    msg.textContent = "⚠ " + e.message;
+    return false;
+  });
+}
+
+/* ---------- Admin Panel ---------- */
+function renderAdminUsers(users) {
+  var tb = authEl("adminUsersBody");
+  if (!tb) return;
+  users = users || [];
+  /* Stats row — kul users / kul admins. */
+  var adminCount = 0;
+  users.forEach(function (u) { if (u.role === "admin") adminCount++; });
+  var su = authEl("admStatUsers"), sa = authEl("admStatAdmins");
+  if (su) su.textContent = String(users.length);
+  if (sa) sa.textContent = String(adminCount);
+  if (!users.length) {
+    tb.innerHTML = '<tr><td colspan="5">Abhi koi user nahi.</td></tr>';
+    return;
+  }
+  var h = "";
+  users.forEach(function (u) {
+    var self = authSession && String(u.user).toLowerCase() === String(authSession.user).toLowerCase();
+    var created = String(u.created || "");
+    if (/^\d{4}-\d{2}-\d{2}/.test(created)) created = created.slice(0, 10);
+    /* Delete ke guards UI mein bhi: apna account kabhi nahi, aur
+       aakhri admin bhi nahi (server bhi yehi rokta hai). */
+    var delPart;
+    if (self) delPart = "";
+    else if (u.role === "admin" && adminCount <= 1) delPart = ' <span class="hint">(aakhri admin — delete nahi ho sakta)</span>';
+    else delPart = ' <button type="button" class="btn small danger" data-admdel="' + esc(u.user) + '">Delete</button>';
+    h += "<tr><td><b>" + esc(u.user) + "</b>" + (self ? ' <span class="hint">(aap)</span>' : "") + "</td>" +
+      "<td>" + esc(u.role || "user") + "</td><td>" + esc(created) + "</td>" +
+      '<td><input type="password" data-admpass="' + esc(u.user) + '" placeholder="naya password" autocomplete="new-password"></td>' +
+      '<td><button type="button" class="btn small ghost" data-admreset="' + esc(u.user) + '">Reset</button>' +
+      delPart + "</td></tr>";
+  });
+  tb.innerHTML = h;
+}
+function loadAdminUsers() {
+  if (!authSession || authSession.role !== "admin") return Promise.resolve(false);
+  return apiCall(authedPayload({ action: "admin_list" })).then(function (r) {
+    if (r && r.ok) { renderAdminUsers(r.users || []); return true; }
+    authEl("admMsg").textContent = "⚠ " + ((r && r.error) || "Users ki list nahi aayi.");
+    return false;
+  }).catch(function (e) {
+    authEl("admMsg").textContent = "⚠ " + e.message;
+    return false;
+  });
+}
+function admAddUser() {
+  var nu = authEl("admNewUser").value.trim();
+  var np = authEl("admNewPass").value;
+  var role = authEl("admNewRole").value;
+  var msg = authEl("admMsg");
+  if (nu.length < 3) { msg.textContent = "⚠ Username kam az kam 3 harf ka rakhein."; return Promise.resolve(false); }
+  if (np.length < 6) { msg.textContent = "⚠ Password kam az kam 6 harf ka rakhein."; return Promise.resolve(false); }
+  return apiCall(authedPayload({ action: "admin_add", newuser: nu, newpass: np, newrole: role })).then(async function (r) {
+    if (r && r.ok) {
+      msg.textContent = "✔ " + (r.msg || "User ban gaya.");
+      authEl("admNewUser").value = ""; authEl("admNewPass").value = "";
+      await loadAdminUsers();
+      return true;
+    }
+    msg.textContent = "⚠ " + ((r && r.error) || "User nahi bana.");
+    return false;
+  }).catch(function (e) {
+    msg.textContent = "⚠ " + e.message;
+    return false;
+  });
+}
+function admSetPass(target, newpass) {
+  var msg = authEl("admMsg");
+  if (!newpass || newpass.length < 6) {
+    msg.textContent = "⚠ " + target + " ke liye naya password kam az kam 6 harf ka likhein.";
+    return Promise.resolve(false);
+  }
+  return apiCall(authedPayload({ action: "admin_setpass", target: target, newpass: newpass })).then(function (r) {
+    if (r && r.ok) { msg.textContent = "✔ " + (r.msg || "Password badal gaya."); return true; }
+    msg.textContent = "⚠ " + ((r && r.error) || "Password nahi badla.");
+    return false;
+  }).catch(function (e) {
+    msg.textContent = "⚠ " + e.message;
+    return false;
+  });
+}
+function admDeleteUser(target) {
+  var msg = authEl("admMsg");
+  return apiCall(authedPayload({ action: "admin_del", deluser: target })).then(async function (r) {
+    if (r && r.ok) {
+      msg.textContent = "✔ " + (r.msg || "User delete ho gaya.");
+      await loadAdminUsers();
+      return true;
+    }
+    msg.textContent = "⚠ " + ((r && r.error) || "User delete nahi hua.");
+    return false;
+  }).catch(function (e) {
+    msg.textContent = "⚠ " + e.message;
+    return false;
+  });
+}
+
+/* ---------- Server URL save (do jagah: setup card + gate ka box) ---------- */
+function saveServerUrlFrom(inputId, msgId) {
+  var u = authEl(inputId).value.trim();
+  var msg = authEl(msgId);
+  if (!authValidUrl(u)) {
+    if (msg) msg.textContent = "⚠ URL theek nahi lag raha — https://script.google.com/macros/s/.../exec wali poori link lagayein.";
+    return false;
+  }
+  authSetServerUrl(u);
+  if (msg) msg.textContent = "✔ Server URL save ho gaya.";
+  applyAuthUI();
+  return true;
+}
+
+function bindAuth() {
+  authEl("btnLogin").addEventListener("click", function () { doLogin(); });
+  ["liUser", "liPass"].forEach(function (id) {
+    authEl(id).addEventListener("keydown", function (e) { if (e.key === "Enter") doLogin(); });
+  });
+  authEl("liSetupToggle").addEventListener("click", function (e) {
+    e.preventDefault();
+    var box = authEl("liSetupBox");
+    box.style.display = box.style.display === "none" ? "" : "none";
+  });
+  authEl("btnLiSrvSave").addEventListener("click", function () { saveServerUrlFrom("liSrvUrl", "liSrvMsg"); });
+  authEl("btnLiSrvClear").addEventListener("click", function () {
+    authSetServerUrl("");
+    authSaveSession(null);
+    authEl("liSrvUrl").value = "";
+    applyAuthUI();
+  });
+  authEl("btnSrvSave").addEventListener("click", function () { saveServerUrlFrom("srvUrlInput", "srvSetupMsg"); });
+  authEl("btnLogout").addEventListener("click", function () { doLogout(); });
+  authEl("btnMpLogout").addEventListener("click", function () { doLogout(); });
+  /* View navigation — teen alag screens. */
+  authEl("btnNavGenerator").addEventListener("click", function () { showView("generator"); });
+  authEl("btnNavMy").addEventListener("click", function () { showView("mypanel"); });
+  authEl("btnAdminPanel").addEventListener("click", function () { showView("admin"); });
+  authEl("btnCpCancel").addEventListener("click", function () { showView("generator"); });
+  authEl("btnCpSave").addEventListener("click", function () { doChangePassword(); });
+  /* My Panel ki drafts list — Open / Delete (builder wale save/load/
+     delete functions hi reuse hote hain). */
+  authEl("mpDraftsList").addEventListener("click", function (e) {
+    var ob = e.target.closest("[data-mpopen]");
+    var db = e.target.closest("[data-mpdel]");
+    var msg = authEl("mpDraftMsg");
+    if (ob) {
+      var name = mpDraftNames[parseInt(ob.getAttribute("data-mpopen"), 10)];
+      if (name && loadDraft(name)) {
+        renderAll();
+        showView("generator");
+      } else if (msg) { msg.textContent = "⚠ Draft nahi khula."; }
+    } else if (db) {
+      var dn = mpDraftNames[parseInt(db.getAttribute("data-mpdel"), 10)];
+      if (dn && window.confirm("Draft \"" + dn + "\" delete kar dein?")) {
+        deleteDraft(dn);
+        renderDrafts();
+        renderMyDrafts();
+        if (msg) msg.textContent = "Draft delete ho gaya: " + dn;
+      }
+    }
+  });
+  authEl("btnAdmRefresh").addEventListener("click", function () { loadAdminUsers(); });
+  authEl("btnAdmAdd").addEventListener("click", function () { admAddUser(); });
+  authEl("adminUsersBody").addEventListener("click", function (e) {
+    var rb = e.target.closest("[data-admreset]");
+    var db = e.target.closest("[data-admdel]");
+    if (rb) {
+      var user = rb.getAttribute("data-admreset");
+      var inp = authEl("adminUsersBody").querySelector('[data-admpass="' + user + '"]');
+      admSetPass(user, inp ? inp.value : "").then(function (ok) { if (ok && inp) inp.value = ""; });
+    } else if (db) {
+      var du = db.getAttribute("data-admdel");
+      if (window.confirm("User \"" + du + "\" delete kar dein? Ye wapas nahi aayega.")) admDeleteUser(du);
+    }
+  });
+}
+
 /* ================= TEST HOOKS ================= */
 window.KPG = {
   getState: function () { return state; },
@@ -1782,7 +2428,18 @@ window.KPG = {
   pdfEdgesFromImageData: pdfEdgesFromImageData, pdfCaptureDefective: pdfCaptureDefective,
   pdfCheckCaptureImage: pdfCheckCaptureImage, attemptPdfCapture: attemptPdfCapture,
   pdfPageSlices: pdfPageSlices, pdfDocFromImage: pdfDocFromImage, loadPngImage: loadPngImage,
-  PDF_A4_W: PDF_A4_W, PDF_MIN_BYTES: PDF_MIN_BYTES, PDF_A4_RATIO: PDF_A4_RATIO
+  PDF_A4_W: PDF_A4_W, PDF_MIN_BYTES: PDF_MIN_BYTES, PDF_A4_RATIO: PDF_A4_RATIO,
+  AUTH_URL_LS: AUTH_URL_LS, AUTH_SESS_SS: AUTH_SESS_SS,
+  authServerUrl: authServerUrl, authSetServerUrl: authSetServerUrl, authValidUrl: authValidUrl,
+  authLoadSession: authLoadSession, authSaveSession: authSaveSession,
+  getSession: function () { return authSession; },
+  apiCall: apiCall, applyAuthUI: applyAuthUI,
+  doLogin: doLogin, doLogout: doLogout, doChangePassword: doChangePassword,
+  showView: showView, getView: function () { return currentView; },
+  renderMyPanel: renderMyPanel, renderMyDrafts: renderMyDrafts, maskServerUrl: maskServerUrl,
+  loadAdminUsers: loadAdminUsers, renderAdminUsers: renderAdminUsers,
+  admAddUser: admAddUser, admSetPass: admSetPass, admDeleteUser: admDeleteUser,
+  saveServerUrlFrom: saveServerUrlFrom
 };
 
 /* ================= INIT ================= */
@@ -1790,6 +2447,8 @@ function init() {
   if (!loadPersisted()) { state = defaultState(); persist(); }
   renderAll();
   bindSetup(); bindSections(); bindActions(); bindPhoto();
+  bindAuth(); applyAuthUI(); authVerifySessionOnce();
+  if (authSession && authSession.role === "admin") loadAdminUsers();
 }
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
 else init();
