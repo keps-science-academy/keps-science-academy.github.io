@@ -782,7 +782,24 @@ function printHTML(kind) {
    alag dalte hain. Bana hua PDF blob size se check hota hai; khaali/
    chhota blob ya koi bhi ghalti ho to khud print wala tareeqa khul
    jata hai aur status line mein bata bhi dete hain. Answer Key PDF
-   bhi bilkul isi raste se banta hai. */
+   bhi bilkul isi raste se banta hai.
+   TEESRI bugfix (shift/crop): live test mein PNG mukammal tha lekin
+   paper takreeban ek-tihai RIGHT shift tha aur right kinara crop —
+   header "KEPS S..." par ruk jata tha, (B)/(D) options ghayab thay.
+   ASAL WAJAH: clone par margin:"0 auto" laga tha aur stage poori
+   viewport jitna chaura tha; html-to-image clone ki COMPUTED style
+   copy karta hai, aur computed margin-left "auto" nahi rehta — wo
+   (stageWidth-794)/2 ≈ 264px ban kar clone mein bake ho jata hai.
+   Phir SVG viewport sirf 794px ka hota hai, to paper 264px right
+   khisak jata hai aur baqi hissa viewport se bahar crop ho jata hai.
+   Fix: capture ke waqt clone ki geometry bilkul saaf — margin:0,
+   position ke left/top 0, stage padding:0 — aur toPng ka size hamesha
+   node ke apne offsetWidth/offsetHeight se. Is ke upar ek pixel
+   self-check bhi hai: bani hui tasveer ke sab se left/right ghair-safed
+   columns nap kar agar content 8% se zyada right se shuru ho ya right
+   kinare ko chhoo raha ho to capture kharab mana jata hai — ek dafa
+   fresh clone se dobara koshish, phir bhi kharab ho to print wala
+   tareeqa; shift wali PDF khamoshi se kabhi nahi bhejte. */
 var PDF_A4_W = 794;      /* A4 @ 96dpi: 210mm ≈ 794px (lambai content ke hisaab se) */
 var PDF_MIN_BYTES = 8192;
 var PDF_A4_RATIO = 297 / 210;   /* A4 height/width — page slicing ke liye */
@@ -796,21 +813,28 @@ function buildPdfClone(kind) {
   /* Clone ab VISIBLE full-screen overlay mein khara hota hai — asal
      viewport layout hi wo geometry hai jo browser-native renderer
      (html-to-image) sahi capture karta hai. Off-screen position ya
-     transform bilkul nahi. Capture ke baad overlay hata dete hain. */
+     transform bilkul nahi. Capture ke baad overlay hata dete hain.
+     GEOMETRY (fix #3): stage padding 0, display block, text-align
+     left — aur neeche paper ka margin 0 (auto NAHI), taake computed
+     style mein koi centering offset clone mein bake na ho. */
   var stage = document.createElement("div");
   stage.id = "pdfStage";
   stage.setAttribute("role", "status");
-  stage.style.cssText = "position:fixed;inset:0;background:#ffffff;z-index:99999;overflow:auto;padding:20px 0 28px;";
+  stage.style.cssText = "position:fixed;inset:0;background:#ffffff;z-index:99999;overflow:auto;padding:0;display:block;text-align:left;";
   var note = document.createElement("div");
   note.textContent = "⏳ PDF tayyar ho raha hai…";
   note.style.cssText = "text-align:center;font:600 15px/1.4 system-ui,sans-serif;color:#333333;margin:0 0 12px;";
   stage.appendChild(note);
   var holder = document.createElement("div");
+  holder.style.cssText = "display:block;text-align:left;margin:0;padding:0;";
   holder.innerHTML = kind === "key" ? keyHTML(state) : paperHTML(state);
   var paper = holder.querySelector(".paper");
   if (paper) {
     paper.style.width = PDF_A4_W + "px";
-    paper.style.margin = "0 auto";
+    paper.style.margin = "0";
+    paper.style.position = "relative";
+    paper.style.left = "0";
+    paper.style.top = "0";
     paper.style.border = "none";
     paper.style.boxShadow = "none";
     paper.style.background = "#ffffff";
@@ -898,24 +922,58 @@ function pdfDocFromImage(img) {
   });
   return doc;
 }
-function downloadPDF(kind) {
-  var fname = (state.setup.code || "paper") + (kind === "key" ? "-answer-key" : "-paper") + ".pdf";
-  if (!window.htmlToImage || !window.jspdf || !window.jspdf.jsPDF) { pdfPrintFallback(kind, "PDF library load nahi hui (internet check karein)"); return Promise.resolve(false); }
-  pdfStatus("⏳ PDF ban raha hai…");
-  var built = null;
-  return Promise.resolve()
-    .then(function () {
-      built = buildPdfClone(kind);
-      if (document.fonts && document.fonts.ready) return document.fonts.ready;
-      return null;
-    })
+/* ---- Capture self-check (fix #3): tasveer ke ghair-safed kinare ----
+   pdfEdgesFromImageData: har column ko scan karke sab se left aur sab
+   se right wo column deta hai jahan content (ghair-safed pixel) hai.
+   pdfCaptureDefective (pure): khaali capture, ya content ka 8% se
+   zyada right se shuru hona, ya right kinare (2px ke andar) ko chhoona
+   — teeno kharab capture ki nishani hain. */
+function pdfEdgesFromImageData(data, w, h) {
+  var left = -1, right = -1;
+  for (var x = 0; x < w; x++) {
+    var dark = false;
+    for (var y = 0; y < h; y += 2) {
+      var i = (y * w + x) * 4;
+      if (data[i + 3] > 10 && (data[i] < 248 || data[i + 1] < 248 || data[i + 2] < 248)) { dark = true; break; }
+    }
+    if (dark) { if (left < 0) left = x; right = x; }
+  }
+  return { left: left, right: right };
+}
+function pdfCaptureDefective(left, right, width) {
+  if (!width || left < 0 || right < 0) return true;
+  if (left > Math.round(width * 0.08)) return true;
+  if (right >= width - 2) return true;
+  return false;
+}
+function pdfCheckCaptureImage(img) {
+  var W = img.naturalWidth || img.width;
+  var H = img.naturalHeight || img.height;
+  if (!W || !H) return { defective: true, left: -1, right: -1, width: W || 0 };
+  var c = document.createElement("canvas");
+  c.width = W;
+  c.height = H;
+  var ctx = c.getContext("2d");
+  if (!ctx || typeof ctx.getImageData !== "function") throw new Error("capture check nahi ho saka");
+  ctx.drawImage(img, 0, 0, W, H);
+  var d = ctx.getImageData(0, 0, W, H);
+  var e = pdfEdgesFromImageData(d.data, W, H);
+  return { defective: pdfCaptureDefective(e.left, e.right, W), left: e.left, right: e.right, width: W };
+}
+/* Ek capture koshish: saaf geometry wala clone -> toPng (size sirf node
+   ke offsetWidth/offsetHeight se) -> PNG -> pixel self-check.
+   Resolve: {img, built, defective}. Hard ghalti par reject (stage saaf
+   karke). */
+function attemptPdfCapture(kind) {
+  var built = buildPdfClone(kind);
+  var fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve(null);
+  return Promise.resolve(fontsReady)
     .then(function () { return waitFrames(2); })
     .then(function () {
       var el = built.el;
-      var w = el.offsetWidth || PDF_A4_W;
-      var h = el.scrollHeight || el.offsetHeight || 1123;
       return window.htmlToImage.toPng(el, {
-        pixelRatio: 2, backgroundColor: "#ffffff", width: w, height: h
+        pixelRatio: 2, backgroundColor: "#ffffff",
+        width: el.offsetWidth, height: el.offsetHeight
       });
     })
     .then(function (dataUrl) {
@@ -923,9 +981,37 @@ function downloadPDF(kind) {
       return loadPngImage(dataUrl);
     })
     .then(function (img) {
-      var doc = pdfDocFromImage(img);
-      var blob = doc.output("blob");
+      var chk;
+      try { chk = pdfCheckCaptureImage(img); }
+      catch (e) { chk = { defective: true, left: -1, right: -1, width: 0 }; }
+      return { img: img, built: built, defective: !!chk.defective, chk: chk };
+    })
+    .catch(function (err) {
       removePdfStage(built);
+      throw err;
+    });
+}
+function downloadPDF(kind) {
+  var fname = (state.setup.code || "paper") + (kind === "key" ? "-answer-key" : "-paper") + ".pdf";
+  if (!window.htmlToImage || !window.jspdf || !window.jspdf.jsPDF) { pdfPrintFallback(kind, "PDF library load nahi hui (internet check karein)"); return Promise.resolve(false); }
+  pdfStatus("⏳ PDF ban raha hai…");
+  return attemptPdfCapture(kind)
+    .then(function (res) {
+      if (!res.defective) return res;
+      /* Pehli tasveer shift/crop ayi — fresh clone se EK dafa dobara.
+         Dobara bhi kharab ho to shift wali PDF nahi bhejte. */
+      removePdfStage(res.built);
+      pdfStatus("⏳ PDF ban raha hai… (tasveer theek nahi ayi, dobara koshish)");
+      return attemptPdfCapture(kind);
+    })
+    .then(function (res) {
+      removePdfStage(res.built);
+      if (res.defective) {
+        pdfPrintFallback(kind, "PDF ki tasveer do dafa shift/crop ayi, is liye kharab PDF nahi bheja");
+        return false;
+      }
+      var doc = pdfDocFromImage(res.img);
+      var blob = doc.output("blob");
       if (!blob || typeof blob.size !== "number" || blob.size < PDF_MIN_BYTES) {
         pdfPrintFallback(kind, "PDF khaali bana (file size bohat chhota)");
         return false;
@@ -935,7 +1021,7 @@ function downloadPDF(kind) {
       return true;
     })
     .catch(function () {
-      removePdfStage(built);
+      removePdfStage(null);
       pdfPrintFallback(kind, "PDF banane mein ghalti hui");
       return false;
     });
@@ -1624,6 +1710,8 @@ window.KPG = {
   renderAll: renderAll, renderSections: renderSections, renderPreview: renderPreview,
   buildPdfClone: buildPdfClone, removePdfStage: removePdfStage,
   downloadPDF: downloadPDF, printHTML: printHTML, pdfStatus: pdfStatus,
+  pdfEdgesFromImageData: pdfEdgesFromImageData, pdfCaptureDefective: pdfCaptureDefective,
+  pdfCheckCaptureImage: pdfCheckCaptureImage, attemptPdfCapture: attemptPdfCapture,
   pdfPageSlices: pdfPageSlices, pdfDocFromImage: pdfDocFromImage, loadPngImage: loadPngImage,
   PDF_A4_W: PDF_A4_W, PDF_MIN_BYTES: PDF_MIN_BYTES, PDF_A4_RATIO: PDF_A4_RATIO
 };
