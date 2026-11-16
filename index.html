@@ -10,13 +10,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;600;700&family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
 <script src="https://js.puter.com/v2/"></script>
 <style>
 /* Jameel Noori Nastaleeq — professional Urdu publishing font, self-hosted
    (fonts/ folder, same repo). Noto Nastaliq Urdu (Google Fonts) is the
    fallback if this file ever fails to load. */
 @font-face{font-family:"Jameel Noori Nastaleeq";src:url("fonts/JameelNooriNastaleeq.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap}
-:root{--ink:#1c2733;--mut:#5b6b7a;--line:#d7dee5;--brand:#0b5fa5;--brand2:#084a82;--bg:#eef2f5;--card:#ffffff;--ok:#177245;--warn:#b3261e;--chip:#e7f1f8}
+:root{--ink:#1c2733;--mut:#5b6b7a;--line:#d7dee5;--brand:#0b5fa5;--brand2:#084a82;--bg:#eef2f5;--card:#ffffff;--ok:#177245;--warn:#b3261e;--chip:#e7f1f8;--ur-scale:1.32}
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
 body{font-family:"Segoe UI",system-ui,-apple-system,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.45}
@@ -65,7 +66,14 @@ input:focus,select:focus,textarea:focus{outline:2px solid #9ec7e8;border-color:v
 .paper{background:#fff;color:#000;border:1px solid #bbb;box-shadow:0 2px 10px rgba(0,0,0,.12);padding:16mm 13mm;font-family:"Noto Sans","Times New Roman",Times,Arial,"Noto Nastaliq Urdu",sans-serif;font-size:13.5px;line-height:1.5;min-height:200px}
 /* Urdu-script text ONLY: Nastaliq font + tall line-height. Layout/flow of the
    page hamesha LTR rehta hai — ye class sirf font badalti hai, direction nahi. */
-.urdu-text{font-family:"Jameel Noori Nastaleeq","Noto Nastaliq Urdu","Noto Sans",serif;line-height:2}
+.urdu-text{font-family:"Jameel Noori Nastaleeq","Noto Nastaliq Urdu","Noto Sans",serif;line-height:2;font-size:calc(1em * var(--ur-scale))}
+/* Jameel Noori ke glyphs usi pt par Latin/Noto se chhote nazar aate hain —
+   owner ke chhape papers mein Urdu hamesha bara hota hai. Is liye paper ke
+   andar har Urdu span ko --ur-scale ka bump milta hai (sirf .urdu-text
+   spans par — usi line ka Latin hissa nahi badalta). Ye rule .p-note /
+   .p-sec-sub ke font-size par jeet-ta hai; .p-school.urdu-text (neeche,
+   barabar specificity) school naam ko apne 19px par rakhta hai. */
+.paper .urdu-text{font-size:calc(1em * var(--ur-scale))}
 .p-head{border-top:4px double #000;border-bottom:4px double #000;padding:7px 4px 9px;text-align:center}
 .p-school{font-size:21px;font-weight:700;letter-spacing:.3px}
 .p-school.urdu-text{font-size:19px}
@@ -110,6 +118,18 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
 /* ===== VIEWS (Generator / My Panel / Admin Panel — alag screens) ===== */
 .viewpage{max-width:900px;margin:0 auto;padding:14px 14px 4px}
 #userBar .btn.navon{background:var(--brand2);border-color:var(--brand2);color:#fff}
+/* ===== PAIRING SCHEME ===== */
+.chbadge{display:inline-block;background:#e8f1f8;border:1px solid #b9cdd9;color:var(--brand2);border-radius:5px;padding:0 6px;font-size:11px;font-weight:700;margin-left:6px}
+.sch-prog{border:1px solid var(--line);border-radius:8px;padding:9px 11px;margin-top:10px;background:#fbfdff;font-size:13px}
+.sch-prog .sp-sec{margin:5px 0}
+.sch-prog .sp-slot{display:inline-block;background:var(--chip);border:1px solid #c4dcee;border-radius:12px;padding:1px 9px;font-size:12px;font-weight:600;margin:2px 3px 2px 0}
+.sch-prog .sp-slot.full{background:#e6f4ea;border-color:var(--ok);color:var(--ok)}
+.sch-prog .sp-slot.over{background:#fdeceb;border-color:var(--warn);color:var(--warn)}
+.sch-prog .sp-warn{color:var(--warn);font-weight:600;margin-top:5px}
+.sch-prog .sp-ok{color:var(--ok);font-weight:600;margin-top:5px}
+.schrow{display:grid;grid-template-columns:1.2fr 1fr .62fr .5fr .55fr .5fr auto;gap:5px;margin:5px 0;align-items:center}
+.schrow input,.schrow select{padding:6px 7px;font-size:13px}
+.schrow .mini{border:1px solid var(--line);background:#fff;border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer}
 .statrow{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 2px}
 /* ===== PRINT ===== */
 #printRoot{display:none}
@@ -177,6 +197,65 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
         <span class="chip">Questions: <span id="sumQuestions">0</span></span>
         <span class="chip">Total Marks: <span id="sumMarks">0</span></span>
       </div>
+    </div>
+
+    <div class="card" id="schemeCard">
+      <h2>📐 Pairing Scheme</h2>
+      <p class="hint" style="margin-top:0">Board ki <b>pairing scheme</b> lagayein — paper ka dhacha (kis chapter/unit se kitne MCQ, Short, Long) scheme ke mutabiq khud ban jayega. Phir har sawal ke sath us ka <b>chapter tag</b> lagayein; neeche wali <b>Scheme Progress</b> batati rahegi ke kaun sa hissa kitna mukammal hai. Chapter tag sirf editor ke liye hai — <b>paper par print nahi hota</b>.</p>
+
+      <label class="fl" for="schemePreset">Tayyar Scheme (built-in)</label>
+      <div class="row2">
+        <select id="schemePreset"></select>
+        <button type="button" class="btn" id="btnSchemeApplyPreset">✔ Ye Scheme Lagayein</button>
+      </div>
+
+      <h3>📤 Scheme Upload Karein (photo / PDF / text)</h3>
+      <label class="fl" for="schemeFile">Scheme ki file — image (PNG/JPG), PDF ya .txt</label>
+      <input type="file" id="schemeFile" accept="image/*,.pdf,.txt,text/plain,application/pdf">
+      <div class="hint" id="schemeFileStatus"></div>
+      <label class="fl" for="schemeText">Ya scheme ka text yahan paste karein</label>
+      <textarea id="schemeText" rows="4" placeholder="Pairing scheme ka text yahan paste karein — phir AI wala button dabayein, AI use parh kar scheme bana dega."></textarea>
+      <div style="margin-top:6px">
+        <button type="button" class="btn" id="btnSchemeAiParse">🤖 AI se Scheme Parhein</button>
+        <span class="hint" id="schemeAiStatus"></span>
+      </div>
+      <div class="hint">AI wala tareeqa photo/PDF/text parh kar scheme banata hai — is ke liye <b>FREE Puter sign in</b> chahiye (upar Photo wale hisse wala hi account). Scheme lagane se pehle neeche progress mein check kar lein; ghalti ho to Manual Editor se theek kar lein.</div>
+
+      <details style="margin-top:10px">
+        <summary style="cursor:pointer;font-size:13.5px;font-weight:600;color:var(--brand2)">✍️ Manual Scheme Editor (bina AI — khud scheme banayein)</summary>
+        <div style="margin-top:8px">
+          <div class="row3">
+            <div><label class="fl" for="schEdName">Scheme ka Naam</label><input type="text" id="schEdName" placeholder="e.g. 9th Math Board Scheme"></div>
+            <div><label class="fl" for="schEdClass">Class</label><input type="text" id="schEdClass" placeholder="e.g. 9th"></div>
+            <div><label class="fl" for="schEdSubject">Subject</label><input type="text" id="schEdSubject" placeholder="e.g. Mathematics"></div>
+          </div>
+          <label class="fl">Rows — har row = ek section ka ek chapter hissa (Section | Chapter/Unit | Type | Given | Attempt | Marks each)</label>
+          <div id="schemeRows"></div>
+          <div style="margin-top:6px">
+            <button type="button" class="btn small ghost" id="btnSchemeAddRow">＋ Row Shamil Karein</button>
+            <button type="button" class="btn small" id="btnSchemeBuildRows">✔ In Rows se Scheme Banayein aur Lagayein</button>
+          </div>
+          <div class="hint">Ek hi Section naam ki rows ek section mein jud jati hain — un ke chapter hisse (slots) alag alag bante hain. Attempt khaali chhor dein to sab sawal ginay jayenge.</div>
+          <div class="hint" id="schemeEdMsg"></div>
+        </div>
+      </details>
+
+      <div id="schemeProgress"></div>
+      <div style="margin-top:8px">
+        <button type="button" class="btn small danger" id="btnSchemeClear" style="display:none">Scheme Hatayein (paper waisa hi rahega)</button>
+      </div>
+
+      <h3>💾 My Schemes (is browser mein save)</h3>
+      <div class="row2">
+        <input type="text" id="mySchemeName" placeholder="Scheme ka naam, e.g. Meri 9th Math Scheme">
+        <button type="button" class="btn" id="btnMySchemeSave">💾 Current Scheme Save Karein</button>
+      </div>
+      <div class="row3" style="margin-top:8px">
+        <select id="mySchemesList"><option value="">— meri schemes —</option></select>
+        <button type="button" class="btn ghost" id="btnMySchemeLoad">Load</button>
+        <button type="button" class="btn danger" id="btnMySchemeDelete">Delete</button>
+      </div>
+      <div class="hint" id="mySchemeMsg"></div>
     </div>
 
     <div class="card">
@@ -383,7 +462,7 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
 <script>
 "use strict";
 /* ================= STATE ================= */
-var LS_CUR = "kpg_current_v1", LS_DRAFTS = "kpg_drafts_v1";
+var LS_CUR = "kpg_current_v1", LS_DRAFTS = "kpg_drafts_v1", LS_SCHEMES = "kpg_schemes_v1";
 var LETTERS = ["A", "B", "C", "D"];
 var _uid = 1;
 function uid() { return "s" + (_uid++) + "_" + Date.now().toString(36); }
@@ -452,7 +531,8 @@ function defaultState() {
       school: "KEPS Science Academy, Ahmad Pur Sial, Jhang",
       clazz: "", subject: "", code: "", date: "", time: "2 Hours", medium: "en"
     },
-    sections: [makeSection("mcq"), makeSection("short"), makeSection("long")]
+    sections: [makeSection("mcq"), makeSection("short"), makeSection("long")],
+    scheme: null /* active pairing scheme (ya null) — drafts/persist ke sath rehta hai */
   };
 }
 var state = defaultState();
@@ -513,7 +593,9 @@ function shuffleMcqOptions(q, rng) {
     var t = idx[i]; idx[i] = idx[j]; idx[j] = t;
   }
   var opts = idx.map(function (k) { return q.opts[k]; });
-  return { q: q.q, opts: opts, ans: idx.indexOf(q.ans) };
+  var out = { q: q.q, opts: opts, ans: idx.indexOf(q.ans) };
+  if (q.chapter) out.chapter = q.chapter; /* scheme chapter tag shuffle mein bhi rahe */
+  return out;
 }
 
 /* ---- Bulk paste parsers ---- */
@@ -572,7 +654,7 @@ function loadPersisted() {
     var raw = localStorage.getItem(LS_CUR);
     if (!raw) return false;
     var s = JSON.parse(raw);
-    if (s && s.setup && Array.isArray(s.sections)) { state = s; return true; }
+    if (s && s.setup && Array.isArray(s.sections)) { state = s; if (state.scheme === undefined) state.scheme = null; return true; }
   } catch (e) {}
   return false;
 }
@@ -601,6 +683,7 @@ function loadDraft(name) {
   var drafts = getDrafts();
   if (!drafts[name]) return false;
   state = JSON.parse(JSON.stringify(drafts[name]));
+  if (state.scheme === undefined) state.scheme = null; /* purane drafts mein scheme nahi hota — backward compatible */
   editCtx = null; formBuf = {}; bulkBuf = {};
   persist();
   return true;
@@ -612,6 +695,417 @@ function deleteDraft(name) {
     var meta = getDraftMeta();
     if (meta[name]) { delete meta[name]; localStorage.setItem(LS_DRAFTS_META, JSON.stringify(meta)); }
   } catch (e) {}
+}
+
+/* ================= PAIRING SCHEME =================
+   Scheme JSON shape:
+   { name, class, subject, totalMarks,
+     sections: [ { title, type: "mcq|short|long", given, attempt, marksEach,
+                   slots: [ { chapter, count } ] } ] }
+   attempt = "" matlab sab ginay jayenge. Scheme state ke andar rehta hai
+   (state.scheme) — drafts aur current-paper storage ke sath khud save/load
+   hota hai; purane drafts (baghair scheme) par null mana jata hai.
+   Sawal ka chapter tag (q.chapter) sirf editor metadata hai — paperHTML /
+   keyHTML use kabhi print nahi karte. */
+function schSlots(pairs) { return pairs.map(function (p) { return { chapter: p[0], count: p[1] }; }); }
+function schSec(title, type, given, attempt, marksEach, pairs) {
+  return { title: title, type: type, given: given, attempt: attempt, marksEach: marksEach, slots: schSlots(pairs) };
+}
+function tarjumaSchemePreset(clazz) {
+  return {
+    name: clazz + " Tarjuma-tul-Quran — Board Pattern (50)", "class": clazz, subject: "Tarjuma-tul-Quran", totalMarks: 50,
+    sections: [
+      schSec("MCQs (Objective)", "mcq", 10, "", 1, [["Surah (koi si)", 10]]),
+      schSec("Short Questions", "short", 8, 5, 2, [["Surah (koi si)", 8]]),
+      schSec("الفاظ معانی (Words Meanings)", "short", 8, 5, 1, [["Surah (koi si)", 8]]),
+      schSec("آیات کا ترجمہ (Translation of Verses)", "short", 5, 3, 5, [["Surah (koi si)", 5]]),
+      schSec("تفصیلی سوال (Detailed Question)", "long", 1, "", 10, [["Surah (koi si)", 1]])
+    ]
+  };
+}
+/* Tayyar verified schemes — owner ke records se (board pairing schemes).
+   9th Math: Unit 8 (Logic) kahin examined nahi. Longs ke (a)/(b) hisse do
+   chapters se hote hain, is liye un ke slot labels jor kar likhe hain
+   (e.g. "U1 + U2 (Q5)") — ek long sawal ek hi tag leta hai. */
+var SCHEME_PRESETS = [
+  {
+    name: "9th Math — Board Pairing Scheme (75)", "class": "9th", subject: "Mathematics", totalMarks: 75,
+    sections: [
+      schSec("MCQs (Objective)", "mcq", 15, "", 1, [["U1: Real Numbers", 1], ["U2: Logarithms", 1], ["U3: Sets & Functions", 2], ["U4: Factorization", 2], ["U5: Linear Equations & Inequalities", 1], ["U6: Trigonometry", 2], ["U7: Coordinate Geometry", 1], ["U9: Similar Figures", 1], ["U10: Graphs of Functions", 1], ["U11: Loci & Construction", 1], ["U12: Information Handling", 1], ["U13: Probability", 1]]),
+      schSec("Short Questions — Q2", "short", 9, 6, 2, [["U1: Real Numbers", 2], ["U2: Logarithms", 2], ["U3: Sets & Functions", 2], ["U4: Factorization", 2], ["U5: Linear Equations & Inequalities", 1]]),
+      schSec("Short Questions — Q3", "short", 9, 6, 2, [["U6: Trigonometry", 3], ["U7: Coordinate Geometry", 3], ["U9: Similar Figures", 3]]),
+      schSec("Short Questions — Q4", "short", 9, 6, 2, [["U10: Graphs of Functions", 2], ["U11: Loci & Construction", 2], ["U12: Information Handling", 2], ["U13: Probability", 3]]),
+      schSec("Long Questions — Q5 to Q7 (koi se 2)", "long", 3, 2, 8, [["U1 + U2 (Q5)", 1], ["U3 + U4 (Q6)", 1], ["U5 + U6 (Q7)", 1]]),
+      schSec("Long Questions — Q8 to Q9 (koi sa 1)", "long", 2, 1, 8, [["U7+U10 + U9 (Q8)", 1], ["U12 + U11+U13 (Q9)", 1]])
+    ]
+  },
+  {
+    name: "10th Math — Board Pairing Scheme (75)", "class": "10th", subject: "Mathematics", totalMarks: 75,
+    sections: [
+      schSec("MCQs (Objective)", "mcq", 15, "", 1, [["U1: Complex Numbers", 1], ["U2: Quadratic Equations & Inequalities", 1], ["U3: Matrices and Determinants", 1], ["U4: Functions and Graphs", 1], ["U5: Algebraic Fractions", 1], ["U6: Vectors in Plane", 1], ["U7: Trigonometry", 1], ["U8: Chords and Arcs of a Circle", 1], ["U9: Tangent and Angles of a Circle", 2], ["U10: Practical Geometry of Circles", 1], ["U11: Information Handling", 2], ["U12: Probability", 2]]),
+      schSec("Short Questions — Q2", "short", 9, 6, 2, [["U1: Complex Numbers", 3], ["U2: Quadratic Equations & Inequalities", 2], ["U3: Matrices and Determinants", 2], ["U4: Functions and Graphs", 2]]),
+      schSec("Short Questions — Q3", "short", 9, 6, 2, [["U5: Algebraic Fractions", 2], ["U6: Vectors in Plane", 3], ["U7: Trigonometry", 2], ["U8: Chords and Arcs of a Circle", 2]]),
+      schSec("Short Questions — Q4", "short", 9, 6, 2, [["U9: Tangent and Angles of a Circle", 2], ["U10: Practical Geometry of Circles", 2], ["U11: Information Handling", 3], ["U12: Probability", 2]]),
+      schSec("Long Questions — Q5 to Q7 (koi se 2)", "long", 3, 2, 8, [["Koi sa Unit", 3]]),
+      schSec("Long Questions — Q8 to Q9 (koi sa 1)", "long", 2, 1, 8, [["Koi sa Unit", 2]])
+    ]
+  },
+  {
+    name: "10th Physics — Board Pairing Scheme (60)", "class": "10th", subject: "Physics", totalMarks: 60,
+    sections: [
+      schSec("MCQs (Objective)", "mcq", 12, "", 1, [["Ch 10: Thermal Physics", 1], ["Ch 11: Transfer of Thermal Energy", 1], ["Ch 12: Waves", 1], ["Ch 13: Sound", 1], ["Ch 14: Light", 1], ["Ch 15: Electrostatics", 1], ["Ch 16: Electricity", 1], ["Ch 17: Electromagnetism", 1], ["Ch 18: EM Induction & EM Waves", 1], ["Ch 19: Electronics", 1], ["Ch 20: Atomic & Nuclear Physics", 1], ["Ch 21: Space & Environment", 1]]),
+      schSec("Short Questions — Q2 (Ch 10–13)", "short", 8, 5, 2, [["Ch 10: Thermal Physics", 2], ["Ch 11: Transfer of Thermal Energy", 2], ["Ch 12: Waves", 2], ["Ch 13: Sound", 2]]),
+      schSec("Short Questions — Q3 (Ch 14–17)", "short", 8, 5, 2, [["Ch 14: Light", 2], ["Ch 15: Electrostatics", 2], ["Ch 16: Electricity", 2], ["Ch 17: Electromagnetism", 2]]),
+      schSec("Short Questions — Q4 (Ch 18–21)", "short", 8, 5, 2, [["Ch 18: EM Induction & EM Waves", 2], ["Ch 19: Electronics", 2], ["Ch 20: Atomic & Nuclear Physics", 2], ["Ch 21: Space & Environment", 2]]),
+      schSec("Long Questions — Q5 to Q7 (koi se 2)", "long", 3, 2, 9, [["Ch 10–13 (Q5)", 1], ["Ch 14–17 (Q6)", 1], ["Ch 18–21 (Q7)", 1]])
+    ]
+  },
+  {
+    name: "10th Pakistan Studies — Board Pattern (100)", "class": "10th", subject: "Pakistan Studies", totalMarks: 100,
+    sections: [
+      schSec("MCQs (Objective)", "mcq", 20, "", 1, [["Ch 1", 2], ["Ch 2", 2], ["Ch 3", 4], ["Ch 4", 3], ["Ch 5", 2], ["Ch 6", 2], ["Ch 7", 3], ["Ch 8", 2]]),
+      schSec("Short Questions — Q2 (Ch 1, 2, 6)", "short", 10, 9, 2, [["Ch 1", 4], ["Ch 2", 3], ["Ch 6", 3]]),
+      schSec("Short Questions — Q3 (Ch 4, 7)", "short", 8, 7, 2, [["Ch 4", 4], ["Ch 7", 4]]),
+      schSec("Short Questions — Q4 (Ch 3, 5, 8)", "short", 10, 9, 2, [["Ch 3", 4], ["Ch 5", 3], ["Ch 8", 3]]),
+      schSec("Long Questions (koi se 3)", "long", 5, 3, 10, [["Koi sa Chapter", 5]])
+    ]
+  },
+  tarjumaSchemePreset("9th"),
+  tarjumaSchemePreset("10th")
+];
+
+/* Kisi bhi (AI / manual / preset) scheme ko ek hi saaf shape mein lao —
+   ghalat values theek, type ke naam normalize, total khud hisaab agar na ho. */
+function normalizeScheme(o) {
+  if (!o || typeof o !== "object" || !Array.isArray(o.sections)) return null;
+  var secs = [];
+  o.sections.forEach(function (s) {
+    if (!s || typeof s !== "object") return;
+    var type = String(s.type || "").toLowerCase();
+    if (type !== "mcq" && type !== "short" && type !== "long") {
+      if (/mcq|objective|معروضی/.test(type)) type = "mcq";
+      else if (/long|detailed|تفصیلی/.test(type)) type = "long";
+      else type = "short";
+    }
+    var slots = [];
+    if (Array.isArray(s.slots)) s.slots.forEach(function (sl) {
+      if (!sl || typeof sl !== "object") return;
+      var ch = String(sl.chapter || sl.unit || sl.name || "").trim();
+      var ct = parseInt(sl.count, 10);
+      if (ch && !isNaN(ct) && ct > 0) slots.push({ chapter: ch, count: ct });
+    });
+    var given = parseInt(s.given, 10);
+    if (isNaN(given) || given < 0) given = slots.reduce(function (a, sl) { return a + sl.count; }, 0);
+    var att = parseInt(s.attempt, 10);
+    var marks = Number(s.marksEach != null ? s.marksEach : (s.marks != null ? s.marks : (type === "mcq" ? 1 : 2)));
+    if (isNaN(marks) || marks < 0) marks = type === "mcq" ? 1 : 2;
+    secs.push({
+      title: String(s.title || SECTION_NAMES[type] || "Section"), type: type,
+      given: given, attempt: (isNaN(att) || att <= 0 || att >= given) ? "" : att,
+      marksEach: marks, note: String(s.note || ""), slots: slots
+    });
+  });
+  if (!secs.length) return null;
+  var total = parseInt(o.totalMarks, 10);
+  if (isNaN(total) || total <= 0) {
+    total = secs.reduce(function (a, s) { var eff = s.attempt === "" ? s.given : s.attempt; return a + eff * s.marksEach; }, 0);
+  }
+  return {
+    name: String(o.name || "Pairing Scheme"), "class": String(o["class"] || o.clazz || ""),
+    subject: String(o.subject || ""), totalMarks: total, sections: secs
+  };
+}
+
+/* AI ke scheme jawab ka tolerant parser (parseAiQuestions wali soch):
+   seedha JSON, warna text ke andar ke mukammal objects mein se sab se
+   bara normalize hone wala scheme utha lo. */
+function parseAiScheme(text) {
+  var s = String(text || "").replace(/```(?:json)?/gi, "").trim();
+  if (!s) return null;
+  var a = s.indexOf("{"), b = s.lastIndexOf("}");
+  if (a >= 0 && b > a) {
+    try { var sc = normalizeScheme(JSON.parse(s.slice(a, b + 1))); if (sc) return sc; } catch (e) {}
+  }
+  var best = null, bestLen = -1;
+  salvageBalancedObjects(s).forEach(function (o) {
+    var n = normalizeScheme(o);
+    if (n) {
+      var len = n.sections.reduce(function (x, sec) { return x + sec.slots.length; }, 0) + n.sections.length * 10;
+      if (len > bestLen) { best = n; bestLen = len; }
+    }
+  });
+  return best;
+}
+function buildSchemePrompt() {
+  return "You are given a school exam PAIRING SCHEME (a marks-distribution table that says how many questions of each type come from each chapter/unit of a book).\n" +
+    "Read it carefully and convert it into the JSON structure below. Use ONLY the numbers given in the scheme; do not invent chapters or counts.\n" +
+    "Rules: type is one of \"mcq\", \"short\", \"long\". \"given\" = how many questions are GIVEN in that section, \"attempt\" = how many the student must ATTEMPT (if all are attempted, use the same number as given). \"marksEach\" = marks per question. \"slots\" list each chapter/unit of that section with \"count\" = how many of the given questions come from that chapter/unit; the slot counts of a section should add up to its \"given\" where the scheme says so.\n" +
+    "Return ONLY valid JSON, no explanation, no markdown. Format exactly like this:\n" +
+    '{"name":"9th Math Scheme","class":"9th","subject":"Mathematics","totalMarks":75,"sections":[{"title":"MCQs","type":"mcq","given":15,"attempt":15,"marksEach":1,"slots":[{"chapter":"Unit 1","count":2}]},{"title":"Short Q2","type":"short","given":9,"attempt":6,"marksEach":2,"slots":[{"chapter":"Unit 1","count":3}]}]}';
+}
+
+/* Manual editor ki rows se scheme: har row = ek section ka ek chapter
+   hissa. Ek hi section naam ki rows ek section mein jud jati hain;
+   section ka given us ki rows ke given ka majmooa, attempt/marks pehli
+   row se. rows: [{section, chapter, type, given, attempt, marksEach}] */
+function schemeFromRows(rows, meta) {
+  meta = meta || {};
+  var order = [], byTitle = {};
+  (rows || []).forEach(function (r) {
+    if (!r) return;
+    var title = String(r.section || "").trim();
+    var chapter = String(r.chapter || "").trim();
+    var given = parseInt(r.given, 10);
+    if (!title || !chapter || isNaN(given) || given <= 0) return;
+    if (!byTitle[title]) {
+      byTitle[title] = {
+        title: title, type: String(r.type || "short").toLowerCase(),
+        attempt: r.attempt, marksEach: r.marksEach, _given: 0, slots: []
+      };
+      order.push(byTitle[title]);
+    }
+    var sec = byTitle[title];
+    sec._given += given;
+    var found = null;
+    sec.slots.forEach(function (sl) { if (sl.chapter === chapter) found = sl; });
+    if (found) found.count += given; else sec.slots.push({ chapter: chapter, count: given });
+  });
+  var secs = order.map(function (sec) {
+    return { title: sec.title, type: sec.type, given: sec._given, attempt: sec.attempt, marksEach: sec.marksEach, slots: sec.slots };
+  });
+  return normalizeScheme({ name: meta.name || "Meri Scheme", "class": meta["class"] || "", subject: meta.subject || "", sections: secs });
+}
+
+function getActiveScheme() { return (state && state.scheme) ? state.scheme : null; }
+/* Scheme ke tamam chapter labels (tartib ke sath, dohraye baghair) */
+function schemeChapters(scheme) {
+  var out = [], seen = {};
+  if (!scheme) return out;
+  scheme.sections.forEach(function (sec) {
+    sec.slots.forEach(function (sl) { if (!seen[sl.chapter]) { seen[sl.chapter] = 1; out.push(sl.chapter); } });
+  });
+  return out;
+}
+
+/* Scheme lagao: class/subject set, sections scheme ke mutabiq banao
+   (har naye section par schemeIdx — progress isi se judti hai), purane
+   sawal hat jayenge (naya dhacha). Code auto banega. */
+function applyScheme(scheme) {
+  var sc = normalizeScheme(JSON.parse(JSON.stringify(scheme || {})));
+  if (!sc) return false;
+  if (sc["class"]) state.setup.clazz = sc["class"];
+  if (sc.subject) state.setup.subject = sc.subject;
+  state.setup.code = autoCode(state.setup.subject, state.setup.clazz);
+  _lastAutoCode = state.setup.code;
+  state.sections = sc.sections.map(function (ss, i) {
+    var sec = makeSection(ss.type);
+    sec.title = ss.title;
+    sec.marksEach = ss.marksEach;
+    sec.attempt = ss.attempt === "" ? "" : String(ss.attempt);
+    if (ss.note) sec.note = ss.note;
+    sec.schemeIdx = i;
+    return sec;
+  });
+  state.scheme = sc;
+  editCtx = null; formBuf = {}; bulkBuf = {};
+  renderAll(); persist();
+  return true;
+}
+function clearScheme() {
+  state.scheme = null;
+  state.sections.forEach(function (sec) { delete sec.schemeIdx; });
+  renderAll(); persist();
+}
+
+/* Scheme ke mutabiq progress: har scheme-section ke liye bharay hue
+   sawal (state sections jinka schemeIdx wahi hai), per-chapter slot
+   counts, counted marks (attempt ka asar), overfill/incomplete flags.
+   Scheme se bahir ke sections ke marks bhi kul mein shamil hain. */
+function schemeProgress(st) {
+  var sc = st && st.scheme;
+  if (!sc) return null;
+  var out = { name: sc.name, totalMarks: sc.totalMarks, countedMarks: 0, complete: true, over: false, sections: [] };
+  sc.sections.forEach(function (ss, i) {
+    var qs = [];
+    st.sections.forEach(function (sec) { if (sec.schemeIdx === i) sec.questions.forEach(function (q) { qs.push(q); }); });
+    var filled = qs.length;
+    var slots = ss.slots.map(function (sl) {
+      var f = 0;
+      qs.forEach(function (q) { if ((q.chapter || "") === sl.chapter) f++; });
+      return { chapter: sl.chapter, need: sl.count, filled: f, done: f >= sl.count, over: f > sl.count };
+    });
+    var tagged = 0;
+    qs.forEach(function (q) { if (q.chapter) tagged++; });
+    var eff = (ss.attempt !== "" && ss.attempt < filled) ? ss.attempt : filled;
+    var secOver = filled > ss.given || slots.some(function (s) { return s.over; });
+    var secDone = filled >= ss.given && slots.every(function (s) { return s.done; });
+    out.countedMarks += eff * ss.marksEach;
+    if (secOver) out.over = true;
+    if (!secDone) out.complete = false;
+    out.sections.push({
+      title: ss.title, type: ss.type, given: ss.given, attempt: ss.attempt, marksEach: ss.marksEach,
+      filled: filled, marks: eff * ss.marksEach, slots: slots,
+      untagged: filled - tagged, done: secDone, over: secOver
+    });
+  });
+  st.sections.forEach(function (sec) {
+    if (sec.schemeIdx === undefined || sec.schemeIdx === null || !sc.sections[sec.schemeIdx]) {
+      out.countedMarks += sectionCountedMarks(sec).marks;
+    }
+  });
+  return out;
+}
+
+function renderSchemeProgress() {
+  var box = document.getElementById("schemeProgress");
+  if (!box) return;
+  var clearBtn = document.getElementById("btnSchemeClear");
+  var p = schemeProgress(state);
+  if (!p) { box.innerHTML = ""; if (clearBtn) clearBtn.style.display = "none"; return; }
+  if (clearBtn) clearBtn.style.display = "";
+  var h = '<div class="sch-prog"><b>📐 Active Scheme:</b> ' + esc(p.name) + " &nbsp;·&nbsp; <b>Marks:</b> " + p.countedMarks + " / " + p.totalMarks;
+  p.sections.forEach(function (s) {
+    h += '<div class="sp-sec"><b>' + esc(s.title) + "</b> — " + s.filled + "/" + s.given + " sawal";
+    s.slots.forEach(function (sl) {
+      h += ' <span class="sp-slot' + (sl.over ? " over" : (sl.done ? " full" : "")) + '">' + esc(sl.chapter) + ": " + sl.filled + "/" + sl.need + (sl.done && !sl.over ? " ✓" : "") + "</span>";
+    });
+    if (s.untagged > 0) h += ' <span class="sp-slot">⚠ ' + s.untagged + " sawal baghair chapter tag</span>";
+    h += "</div>";
+  });
+  if (p.over) h += '<div class="sp-warn">⚠ Kuch hisse scheme se zyada bhar gaye hain. Ye sirf warning hai — paper phir bhi ban jayega; chahein to extra sawal hata dein.</div>';
+  else if (!p.complete) h += '<div class="sp-warn">ℹ Paper abhi scheme ke mutabiq adhoora hai — upar wali progress dekh kar baqi sawal shamil karein.</div>';
+  else h += '<div class="sp-ok">✔ Paper scheme ke mutabiq mukammal hai.</div>';
+  h += "</div>";
+  box.innerHTML = h;
+}
+
+/* ---- My Schemes (localStorage) ---- */
+function getMySchemes() {
+  try { var d = JSON.parse(localStorage.getItem(LS_SCHEMES) || "{}"); return (d && typeof d === "object") ? d : {}; }
+  catch (e) { return {}; }
+}
+function saveMyScheme(name, scheme) {
+  var sc = normalizeScheme(JSON.parse(JSON.stringify(scheme || {})));
+  if (!name || !sc) return false;
+  var all = getMySchemes();
+  all[name] = sc;
+  try { localStorage.setItem(LS_SCHEMES, JSON.stringify(all)); } catch (e) {}
+  return true;
+}
+function deleteMyScheme(name) {
+  var all = getMySchemes();
+  if (all[name]) { delete all[name]; try { localStorage.setItem(LS_SCHEMES, JSON.stringify(all)); } catch (e) {} }
+}
+function renderMySchemes() {
+  var sel = document.getElementById("mySchemesList");
+  if (!sel) return;
+  var all = getMySchemes();
+  var cur = sel.value;
+  sel.innerHTML = '<option value="">— meri schemes —</option>' + Object.keys(all).map(function (n) {
+    return '<option value="' + esc(n) + '"' + (n === cur ? " selected" : "") + ">" + esc(n) + "</option>";
+  }).join("");
+}
+function renderSchemePresets() {
+  var sel = document.getElementById("schemePreset");
+  if (!sel) return;
+  sel.innerHTML = SCHEME_PRESETS.map(function (p, i) {
+    return '<option value="' + i + '">' + esc(p.name) + "</option>";
+  }).join("");
+}
+
+/* ---- Scheme upload: PDF se text (pdf.js), AI parse (Puter) ---- */
+function pdfFileToText(file) {
+  if (!window.pdfjsLib || typeof window.pdfjsLib.getDocument !== "function") {
+    return Promise.reject(new Error("PDF library (pdf.js) load nahi hui — internet check karke page refresh karein"));
+  }
+  try {
+    if (window.pdfjsLib.GlobalWorkerOptions && !window.pdfjsLib.GlobalWorkerOptions.workerSrc) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    }
+  } catch (e) {}
+  return file.arrayBuffer().then(function (buf) {
+    return window.pdfjsLib.getDocument({ data: buf }).promise;
+  }).then(function (pdf) {
+    var chain = Promise.resolve("");
+    var pages = [];
+    for (var i = 1; i <= pdf.numPages; i++) pages.push(i);
+    pages.forEach(function (pn) {
+      chain = chain.then(function (acc) {
+        return pdf.getPage(pn).then(function (page) { return page.getTextContent(); }).then(function (tc) {
+          return acc + tc.items.map(function (it) { return it.str; }).join(" ") + "\n";
+        });
+      });
+    });
+    return chain;
+  });
+}
+/* Sirf text ke liye Puter chat (photo wale puterChatOnce jaisa hi —
+   pehle mazboot model, fail ho to default model). */
+function puterChatText(prompt) {
+  function attempt(opts) {
+    return Promise.resolve().then(function () { return window.puter.ai.chat(prompt, undefined, false, opts); })
+      .then(function (resp) {
+        var t = puterRespText(resp);
+        if (!t) throw new Error("AI ne khaali jawab diya");
+        return t;
+      });
+  }
+  return attempt({ model: PUTER_MODEL, temperature: 0.3 }).catch(function () { return attempt({ temperature: 0.3 }); });
+}
+/* Scheme AI se parho: {file: imageFile} ya {text: "..."} — kamyabi par
+   scheme khud lag jata hai. Returns: Promise<scheme|null> */
+function runSchemeAiParse(src) {
+  var st = document.getElementById("schemeAiStatus");
+  function say(m) { if (st) st.textContent = m; }
+  if (!puterReady()) { say("⚠ Puter library load nahi hui — internet check karke page refresh karein."); return Promise.resolve(null); }
+  function go() {
+    var prompt = buildSchemePrompt();
+    var call;
+    if (src && src.file) {
+      say("🤖 AI scheme ki photo parh raha hai…");
+      call = puterChatOnce(prompt, src.file);
+    } else {
+      var text = String((src && src.text) || "").trim();
+      if (!text) { say("⚠ Pehle scheme ka text paste karein ya file select karein."); return Promise.resolve(null); }
+      say("🤖 AI scheme parh raha hai…");
+      call = puterChatText(prompt + "\n\nPAIRING SCHEME TEXT:\n" + text.slice(0, 12000));
+    }
+    return call.then(function (txt) {
+      var sc = parseAiScheme(txt);
+      if (!sc) { say("⚠ AI ke jawab se scheme nahi bani — text saaf likha ho to dobara koshish karein, ya Manual Editor use karein."); return null; }
+      applyScheme(sc);
+      say("✔ Scheme lag gayi: " + sc.name + " — neeche progress check kar lein.");
+      return sc;
+    }).catch(function (e) {
+      say("⚠ Scheme parse fail: " + (e && e.message ? e.message : e));
+      return null;
+    });
+  }
+  if (puterSignedIn()) return go();
+  say("🔐 Pehle FREE Puter sign in chahiye — popup khul raha hai…");
+  return puterDoSignIn().then(function (ok) {
+    if (!ok) { say("⚠ Pehle FREE Puter account se sign in karein (Photo wale hisse ka Sign In button) — baghair sign in ke AI nahi chalega."); return null; }
+    return go();
+  });
+}
+
+/* ---- Manual scheme editor (rows) ---- */
+var schemeEditRows = [];
+function renderSchemeRows() {
+  var box = document.getElementById("schemeRows");
+  if (!box) return;
+  if (!schemeEditRows.length) schemeEditRows.push({ section: "", chapter: "", type: "mcq", given: "", attempt: "", marksEach: "" });
+  box.innerHTML = schemeEditRows.map(function (r, i) {
+    return '<div class="schrow">' +
+      '<input type="text" data-srow="' + i + '" data-sf="section" placeholder="Section, e.g. Short Q2" value="' + esc(r.section) + '">' +
+      '<input type="text" data-srow="' + i + '" data-sf="chapter" placeholder="Chapter/Unit, e.g. Unit 1" value="' + esc(r.chapter) + '">' +
+      '<select data-srow="' + i + '" data-sf="type">' +
+      ["mcq", "short", "long"].map(function (t) { return '<option value="' + t + '"' + (r.type === t ? " selected" : "") + ">" + t.toUpperCase() + "</option>"; }).join("") + "</select>" +
+      '<input type="number" min="0" data-srow="' + i + '" data-sf="given" placeholder="Given" value="' + esc(r.given) + '">' +
+      '<input type="number" min="0" data-srow="' + i + '" data-sf="attempt" placeholder="Attempt" value="' + esc(r.attempt) + '">' +
+      '<input type="number" min="0" step="0.5" data-srow="' + i + '" data-sf="marksEach" placeholder="Marks" value="' + esc(r.marksEach) + '">' +
+      '<button type="button" class="mini" data-sdel="' + i + '" title="Row delete">🗑</button></div>';
+  }).join("");
 }
 
 /* ================= SAMPLE ================= */
@@ -739,7 +1233,7 @@ function keyHTML(st) {
 
 /* ================= SECTIONS BUILDER UI ================= */
 function bufFor(id) {
-  if (!formBuf[id]) formBuf[id] = { q: "", o0: "", o1: "", o2: "", o3: "", ans: "0" };
+  if (!formBuf[id]) formBuf[id] = { q: "", o0: "", o1: "", o2: "", o3: "", ans: "0", chapter: "" };
   return formBuf[id];
 }
 function renderSections() {
@@ -764,6 +1258,7 @@ function renderSections() {
     /* questions list */
     sec.questions.forEach(function (q, qi) {
       html += '<div class="qrow"><span class="qn">' + (qi + 1) + '.</span><span class="qt" dir="auto">' + esc(q.q);
+      if (q.chapter) html += '<span class="chbadge">📐 ' + esc(q.chapter) + "</span>";
       if (sec.type === "mcq") {
         html += '<span class="ansbadge">Key: ' + (q.ans >= 0 ? LETTERS[q.ans] : "?") + "</span><br><small>" +
           q.opts.map(function (o, oi) { return "(" + LETTERS[oi] + ") " + esc(o); }).join(" &nbsp; ") + "</small>";
@@ -779,6 +1274,16 @@ function renderSections() {
     if (editing) html += '<div class="editing-note">✎ Question #' + (editCtx.idx + 1) + ' edit ho raha hai — neeche badal kar "Save Edit" dabayein.</div>';
     html += '<label class="fl">' + (editing ? "Edit Question" : "Naya Sawal") + '</label>' +
       '<textarea data-form="q" rows="2" placeholder="Sawal yahan likhein (Urdu ya English)">' + esc(buf.q) + "</textarea>";
+    if (state.scheme) {
+      /* Chapter/unit tag — sirf scheme progress ke liye, paper par print nahi hota */
+      var chOpts = schemeChapters(state.scheme);
+      var curCh = buf.chapter || "";
+      if (curCh && curCh !== "Other" && chOpts.indexOf(curCh) < 0) chOpts.push(curCh);
+      html += '<label class="fl">Chapter / Unit Tag (scheme — paper par print nahi hoga)</label><select data-form="chapter">' +
+        '<option value=""' + (curCh === "" ? " selected" : "") + ">— chapter nahi —</option>" +
+        chOpts.map(function (c) { return '<option value="' + esc(c) + '"' + (curCh === c ? " selected" : "") + ">" + esc(c) + "</option>"; }).join("") +
+        '<option value="Other"' + (curCh === "Other" ? " selected" : "") + ">Other</option></select>";
+    }
     if (sec.type === "mcq") {
       html += '<div class="optgrid">' +
         [0, 1, 2, 3].map(function (oi) {
@@ -835,8 +1340,8 @@ function renderDrafts() {
     return '<option value="' + esc(n) + '"' + (n === cur ? " selected" : "") + ">" + esc(n) + "</option>";
   }).join("");
 }
-function renderAll() { renderSetup(); renderSections(); renderPreview(); renderDrafts(); }
-function refreshLight() { renderPreview(); persist(); }
+function renderAll() { renderSetup(); renderSections(); renderPreview(); renderDrafts(); renderSchemeProgress(); }
+function refreshLight() { renderPreview(); persist(); renderSchemeProgress(); }
 
 /* ================= EVENTS: SETUP ================= */
 function bindSetup() {
@@ -907,29 +1412,34 @@ function bindSections() {
       var q = sec.questions[qi];
       var b = bufFor(sec.id);
       b.q = q.q;
+      b.chapter = q.chapter || "";
       if (sec.type === "mcq") { for (var oi = 0; oi < 4; oi++) b["o" + oi] = q.opts[oi] || ""; b.ans = String(q.ans); }
       editCtx = { secId: sec.id, idx: qi };
       renderSections();
     }
-    else if (act === "q-cancel-edit") { editCtx = null; formBuf[sec.id] = { q: "", o0: "", o1: "", o2: "", o3: "", ans: "0" }; renderSections(); }
+    else if (act === "q-cancel-edit") { editCtx = null; formBuf[sec.id] = { q: "", o0: "", o1: "", o2: "", o3: "", ans: "0", chapter: "" }; renderSections(); }
     else if (act === "q-save-edit" && editCtx) {
       var b2 = bufFor(sec.id); var q2 = sec.questions[editCtx.idx];
       if (!b2.q.trim()) { alert("Sawal khaali hai — pehle sawal likhein."); return; }
       q2.q = b2.q.trim();
+      if (b2.chapter) q2.chapter = b2.chapter; else delete q2.chapter;
       if (sec.type === "mcq") { q2.opts = [b2.o0, b2.o1, b2.o2, b2.o3].map(function (x) { return (x || "").trim(); }); q2.ans = parseInt(b2.ans, 10); if (isNaN(q2.ans)) q2.ans = 0; }
-      editCtx = null; formBuf[sec.id] = { q: "", o0: "", o1: "", o2: "", o3: "", ans: "0" };
+      editCtx = null; formBuf[sec.id] = { q: "", o0: "", o1: "", o2: "", o3: "", ans: "0", chapter: "" };
       renderSections(); refreshLight();
     }
     else if (act === "q-add") {
       var b3 = bufFor(sec.id);
       if (!b3.q.trim()) { alert("Sawal khaali hai — pehle sawal likhein."); return; }
+      var nq;
       if (sec.type === "mcq") {
         var ans = parseInt(b3.ans, 10); if (isNaN(ans)) ans = 0;
-        sec.questions.push({ q: b3.q.trim(), opts: [b3.o0, b3.o1, b3.o2, b3.o3].map(function (x) { return (x || "").trim(); }), ans: ans });
+        nq = { q: b3.q.trim(), opts: [b3.o0, b3.o1, b3.o2, b3.o3].map(function (x) { return (x || "").trim(); }), ans: ans };
       } else {
-        sec.questions.push({ q: b3.q.trim() });
+        nq = { q: b3.q.trim() };
       }
-      formBuf[sec.id] = { q: "", o0: "", o1: "", o2: "", o3: "", ans: "0" };
+      if (b3.chapter) nq.chapter = b3.chapter;
+      sec.questions.push(nq);
+      formBuf[sec.id] = { q: "", o0: "", o1: "", o2: "", o3: "", ans: "0", chapter: "" };
       renderSections(); refreshLight();
     }
     else if (act === "bulk-add") {
@@ -2402,6 +2912,122 @@ function bindAuth() {
   });
 }
 
+/* ================= EVENTS: PAIRING SCHEME ================= */
+var schemePendingFile = null; /* upload ki hui scheme photo (AI parse ke liye) */
+function bindScheme() {
+  renderSchemePresets();
+  renderMySchemes();
+  renderSchemeRows();
+  renderSchemeProgress();
+  var msg = function (id, t) { var el = document.getElementById(id); if (el) el.textContent = t; };
+
+  document.getElementById("btnSchemeApplyPreset").addEventListener("click", function () {
+    var idx = parseInt(document.getElementById("schemePreset").value, 10);
+    if (isNaN(idx) || !SCHEME_PRESETS[idx]) return;
+    if (applyScheme(SCHEME_PRESETS[idx])) msg("schemeAiStatus", "✔ Scheme lag gayi: " + SCHEME_PRESETS[idx].name);
+  });
+
+  document.getElementById("schemeFile").addEventListener("change", function () {
+    var f = this.files && this.files[0];
+    schemePendingFile = null;
+    if (!f) { msg("schemeFileStatus", ""); return; }
+    var isPdf = /pdf$/i.test(f.type) || /\.pdf$/i.test(f.name);
+    var isTxt = /^text\//.test(f.type) || /\.txt$/i.test(f.name);
+    if (isPdf) {
+      msg("schemeFileStatus", "📄 PDF parh rahe hain…");
+      pdfFileToText(f).then(function (text) {
+        if (!text.trim()) { msg("schemeFileStatus", "⚠ PDF se text nahi mila — ho sakta hai ye scanned photo PDF ho. Is ki photo bana kar image upload karein."); return; }
+        document.getElementById("schemeText").value = text.slice(0, 12000);
+        msg("schemeFileStatus", "✔ PDF ka text neeche wale box mein aa gaya hai — ab 'AI se Scheme Parhein' dabayein.");
+      }).catch(function (e) { msg("schemeFileStatus", "⚠ " + (e && e.message ? e.message : e)); });
+    } else if (isTxt) {
+      var r = new FileReader();
+      r.onload = function () {
+        document.getElementById("schemeText").value = String(r.result || "").slice(0, 12000);
+        msg("schemeFileStatus", "✔ Text file ka text neeche wale box mein aa gaya hai — ab 'AI se Scheme Parhein' dabayein.");
+      };
+      r.onerror = function () { msg("schemeFileStatus", "⚠ File parh nahi sakay."); };
+      r.readAsText(f);
+    } else if (/^image\//.test(f.type)) {
+      schemePendingFile = f;
+      msg("schemeFileStatus", "🖼 Scheme ki photo select ho gayi (" + f.name + ") — ab 'AI se Scheme Parhein' dabayein.");
+    } else {
+      msg("schemeFileStatus", "⚠ Ye file type nahi chalega — image, PDF ya .txt file dein.");
+    }
+  });
+
+  document.getElementById("btnSchemeAiParse").addEventListener("click", function () {
+    if (schemePendingFile) runSchemeAiParse({ file: schemePendingFile });
+    else runSchemeAiParse({ text: document.getElementById("schemeText").value });
+  });
+
+  /* manual rows editor */
+  var rowsBox = document.getElementById("schemeRows");
+  rowsBox.addEventListener("input", function (e) {
+    var i = e.target.getAttribute("data-srow"), f = e.target.getAttribute("data-sf");
+    if (i === null || !f) return;
+    i = parseInt(i, 10);
+    if (schemeEditRows[i]) schemeEditRows[i][f] = e.target.value;
+  });
+  rowsBox.addEventListener("change", function (e) {
+    var i = e.target.getAttribute("data-srow"), f = e.target.getAttribute("data-sf");
+    if (i === null || !f) return;
+    i = parseInt(i, 10);
+    if (schemeEditRows[i]) schemeEditRows[i][f] = e.target.value;
+  });
+  rowsBox.addEventListener("click", function (e) {
+    var del = e.target.closest("[data-sdel]");
+    if (!del) return;
+    schemeEditRows.splice(parseInt(del.getAttribute("data-sdel"), 10), 1);
+    renderSchemeRows();
+  });
+  document.getElementById("btnSchemeAddRow").addEventListener("click", function () {
+    schemeEditRows.push({ section: "", chapter: "", type: "short", given: "", attempt: "", marksEach: "" });
+    renderSchemeRows();
+  });
+  document.getElementById("btnSchemeBuildRows").addEventListener("click", function () {
+    var sc = schemeFromRows(schemeEditRows, {
+      name: document.getElementById("schEdName").value.trim(),
+      "class": document.getElementById("schEdClass").value.trim(),
+      subject: document.getElementById("schEdSubject").value.trim()
+    });
+    if (!sc) { msg("schemeEdMsg", "⚠ Rows se scheme nahi bani — har row mein Section, Chapter aur Given (number) zaroor likhein."); return; }
+    applyScheme(sc);
+    msg("schemeEdMsg", "✔ Scheme ban kar lag gayi: " + sc.name);
+  });
+
+  document.getElementById("btnSchemeClear").addEventListener("click", function () {
+    clearScheme();
+    msg("schemeAiStatus", "Scheme hata di gayi — paper aur sawal waisay hi hain.");
+  });
+
+  /* My Schemes */
+  document.getElementById("btnMySchemeSave").addEventListener("click", function () {
+    var name = document.getElementById("mySchemeName").value.trim();
+    if (!name) { msg("mySchemeMsg", "⚠ Pehle scheme ka naam likhein."); return; }
+    var sc = getActiveScheme();
+    if (!sc) { msg("mySchemeMsg", "⚠ Abhi koi scheme active nahi — pehle tayyar scheme lagayein, upload karein ya manual editor se banayein."); return; }
+    if (saveMyScheme(name, sc)) {
+      renderMySchemes();
+      document.getElementById("mySchemesList").value = name;
+      msg("mySchemeMsg", "✔ Scheme save ho gayi: " + name);
+    }
+  });
+  document.getElementById("btnMySchemeLoad").addEventListener("click", function () {
+    var name = document.getElementById("mySchemesList").value;
+    var all = getMySchemes();
+    if (!name || !all[name]) { msg("mySchemeMsg", "⚠ Pehle list se scheme chunein."); return; }
+    if (applyScheme(all[name])) msg("mySchemeMsg", "✔ Scheme lag gayi: " + name);
+  });
+  document.getElementById("btnMySchemeDelete").addEventListener("click", function () {
+    var name = document.getElementById("mySchemesList").value;
+    if (!name) { msg("mySchemeMsg", "⚠ Pehle list se scheme chunein."); return; }
+    deleteMyScheme(name);
+    renderMySchemes();
+    msg("mySchemeMsg", "🗑 Scheme delete ho gayi: " + name);
+  });
+}
+
 /* ================= TEST HOOKS ================= */
 window.KPG = {
   getState: function () { return state; },
@@ -2439,14 +3065,23 @@ window.KPG = {
   renderMyPanel: renderMyPanel, renderMyDrafts: renderMyDrafts, maskServerUrl: maskServerUrl,
   loadAdminUsers: loadAdminUsers, renderAdminUsers: renderAdminUsers,
   admAddUser: admAddUser, admSetPass: admSetPass, admDeleteUser: admDeleteUser,
-  saveServerUrlFrom: saveServerUrlFrom
+  saveServerUrlFrom: saveServerUrlFrom,
+  SCHEME_PRESETS: SCHEME_PRESETS, LS_SCHEMES: LS_SCHEMES,
+  normalizeScheme: normalizeScheme, parseAiScheme: parseAiScheme, buildSchemePrompt: buildSchemePrompt,
+  schemeFromRows: schemeFromRows, applyScheme: applyScheme, clearScheme: clearScheme,
+  getActiveScheme: getActiveScheme, schemeChapters: schemeChapters, schemeProgress: schemeProgress,
+  renderSchemeProgress: renderSchemeProgress,
+  getMySchemes: getMySchemes, saveMyScheme: saveMyScheme, deleteMyScheme: deleteMyScheme,
+  pdfFileToText: pdfFileToText, puterChatText: puterChatText, runSchemeAiParse: runSchemeAiParse,
+  getSchemeEditRows: function () { return schemeEditRows; },
+  setSchemeEditRows: function (r) { schemeEditRows = r || []; renderSchemeRows(); }
 };
 
 /* ================= INIT ================= */
 function init() {
   if (!loadPersisted()) { state = defaultState(); persist(); }
   renderAll();
-  bindSetup(); bindSections(); bindActions(); bindPhoto();
+  bindSetup(); bindSections(); bindActions(); bindPhoto(); bindScheme();
   bindAuth(); applyAuthUI(); authVerifySessionOnce();
   if (authSession && authSession.role === "admin") loadAdminUsers();
 }
