@@ -219,6 +219,12 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
         <option value="ur">Urdu (اردو)</option>
         <option value="bi">Bilingual</option>
       </select>
+      <div id="translateBox" style="display:none;border:1px dashed var(--line);border-radius:8px;padding:9px 10px;margin:10px 0">
+        <div class="hint" style="margin:0 0 7px">Medium sirf labels aur headings badalta hai — sawalon ki <b>statements apni asal (English) zuban mein</b> rehti hain. AI se tamam statements aur MCQ options ka <b>Urdu tarjuma</b> karwayein (FREE Puter account wala hi tareeqa — neeche Photo wale hisse wala sign in chalega):</div>
+        <button type="button" class="btn" id="btnTranslate">🌐 Tamam Statements ko Urdu mein Translate Karein (AI)</button>
+        <button type="button" class="btn ghost" id="btnTranslateUndo" style="display:none">↩ Asal text wapas karein</button>
+        <div class="hint" id="translateStatus"></div>
+      </div>
       <div class="chips">
         <span class="chip">Questions: <span id="sumQuestions">0</span></span>
         <span class="chip">Total Marks: <span id="sumMarks">0</span></span>
@@ -611,6 +617,26 @@ function hasUrdu(s) { return /[\u0600-\u06FF]/.test(String(s || "")); }
    Is se Urdu alfaz apni line ke andar sahi shape hote hain, lekin number,
    options aur blocks ki LTR tartib kabhi nahi badalti. */
 function langAttrs(s) { return ' dir="auto"' + (hasUrdu(s) ? ' class="urdu-text"' : ""); }
+/* Paper ke text ko line-wise spans mein todo: har line apne langAttrs ke
+   sath (Urdu line ko .urdu-text + dir=auto), lines <br> se judi hui.
+   Single-line text par output BILKUL purana wala ek span hai — koi farq
+   nahi. Bilingual tarjume mein statement ke neeche wali Urdu line
+   (jo "\n" se judi hoti hai) isi se Nastaliq font mein aati hai. */
+function richText(s) {
+  var lines = String(s == null ? "" : s).split("\n");
+  return lines.map(function (ln) { return "<span" + langAttrs(ln) + ">" + esc(ln) + "</span>"; }).join("<br>");
+}
+/* MCQ option: pehli line par "(A) " wala prefix. Single-line par output
+   bilkul purana wala hai; multi-line (bilingual tarjuma) par option ek
+   grid cell ke andar do lines mein aata hai. */
+function richOptText(o, letter) {
+  var lines = String(o == null ? "" : o).split("\n");
+  if (lines.length === 1) return "<span" + langAttrs(o) + ">(" + letter + ") " + esc(o) + "</span>";
+  var inner = lines.map(function (ln, i) {
+    return "<span" + langAttrs(ln) + ">" + (i === 0 ? "(" + letter + ") " : "") + esc(ln) + "</span>";
+  }).join("<br>");
+  return "<span>" + inner + "</span>";
+}
 
 function autoCode(subject, clazz) {
   var subj = String(subject || "").trim();
@@ -1142,6 +1168,156 @@ function runSchemeAiParse(src) {
   });
 }
 
+/* ================= AI TARJUMA (statements -> Urdu) =================
+   Medium badalne se sirf labels/headings badalte hain — statements asal
+   zuban mein rehti hain. Owner ki hidayat par ye feature tamam question
+   statements aur MCQ options ka AI (Puter — wohi sign in jo Photo wale
+   hisse ka hai) se Urdu tarjuma karta hai:
+   - Urdu medium: statement/option ki jagah Urdu tarjuma aa jata hai.
+   - Bilingual: har statement/option ke neeche "\n" se Urdu line judti hai
+     (paper mein richText use alag line + Nastaliq font mein dikhata hai).
+   Apply se pehle asal text snapshot hota hai (memory + localStorage
+   kpg_pre_translate_v1) — Undo se byte-for-byte wapas aa jata hai.
+   Koi bhi batch fail ho jaye to KUCH apply nahi hota (atomic). */
+var TR_LS = "kpg_pre_translate_v1";
+var _preTranslate = null; /* {medium, items:[{si,qi,kind,oi,text}]} */
+
+function collectTranslateItems() {
+  var items = [];
+  state.sections.forEach(function (sec, si) {
+    sec.questions.forEach(function (q, qi) {
+      var t = String(q.q == null ? "" : q.q);
+      if (t.trim()) items.push({ si: si, qi: qi, kind: "q", oi: -1, text: t });
+      if (sec.type === "mcq" && Array.isArray(q.opts)) {
+        q.opts.forEach(function (o, oi) {
+          var ot = String(o == null ? "" : o);
+          if (ot.trim()) items.push({ si: si, qi: qi, kind: "opt", oi: oi, text: ot });
+        });
+      }
+    });
+  });
+  return items;
+}
+function buildTranslatePrompt(texts) {
+  return "You are an expert translator for Pakistani board-exam papers (BISE style). Translate each English exam question statement / MCQ option below into Urdu (Urdu script).\n" +
+    "STRICT RULES:\n" +
+    "1. Return ONLY a JSON object of exactly this shape: {\"t\":[\"...\",\"...\"]} — one Urdu translation per input item, in the SAME order and the SAME count (" + texts.length + " items). No extra text, no markdown fences, no numbering, no explanations.\n" +
+    "2. Keep numbers, digits, mathematical expressions, formulas, chemical formulas, units and symbols EXACTLY as they are in the original — do not translate, reformat or drop them. Examples that must stay unchanged inside the translation: (a + b)^2, log_2 32, H2O, 25 cm, x = {1, 2, 3}.\n" +
+    "3. Scientific and technical English terms must be written as Urdu-script TRANSLITERATIONS of the English word — for example gas -> گیس, evaporation -> اویپوریشن, rational number -> ریشنل نمبر. Do NOT invent coined Urdu meanings for them and do NOT leave them in Latin/English letters. EXCEPTION: the exact phrases \"contact force\" and \"non-contact force\" stay in Latin letters as they are.\n" +
+    "4. Use simple, natural board-exam Urdu for the rest of the sentence. Translate ONLY — do not add answers, hints or extra questions.\n" +
+    "5. If an item is already in Urdu, return it unchanged.\n\n" +
+    "ITEMS_JSON:\n" + JSON.stringify(texts);
+}
+/* AI jawab ko tolerant tareeqe se parho: fences/prose mein lipta JSON bhi
+   chalega, lekin count mismatch ya ghalat shakal par null (koi apply nahi). */
+function parseTranslateReply(txt, expected) {
+  var s = String(txt || "").replace(/```json|```/g, "").trim();
+  var a = s.indexOf("{"), b = s.lastIndexOf("}");
+  var arr = null;
+  if (a >= 0 && b > a) {
+    try { var obj = JSON.parse(s.slice(a, b + 1)); if (obj && Array.isArray(obj.t)) arr = obj.t; } catch (e) {}
+  }
+  if (!arr) {
+    var a2 = s.indexOf("["), b2 = s.lastIndexOf("]");
+    if (a2 >= 0 && b2 > a2) { try { var bare = JSON.parse(s.slice(a2, b2 + 1)); if (Array.isArray(bare)) arr = bare; } catch (e) {} }
+  }
+  if (!arr || arr.length !== expected) return null;
+  for (var i = 0; i < arr.length; i++) if (typeof arr[i] !== "string" || !arr[i].trim()) return null;
+  return arr;
+}
+function hasTranslateSnapshot() {
+  if (_preTranslate && _preTranslate.items && _preTranslate.items.length) return true;
+  try { var raw = localStorage.getItem(TR_LS); if (!raw) return false; var s = JSON.parse(raw); return !!(s && s.items && s.items.length); }
+  catch (e) { return false; }
+}
+function renderTranslateBox() {
+  var box = document.getElementById("translateBox");
+  if (!box) return;
+  var m = state.setup.medium;
+  var show = (m === "ur" || m === "bi");
+  box.style.display = show ? "" : "none";
+  if (!show) return;
+  var btn = document.getElementById("btnTranslate");
+  if (btn) btn.textContent = (m === "bi")
+    ? "🌐 Har Statement ke neeche Urdu Tarjuma jodein (AI)"
+    : "🌐 Tamam Statements ko Urdu mein Translate Karein (AI)";
+  var undo = document.getElementById("btnTranslateUndo");
+  if (undo) undo.style.display = hasTranslateSnapshot() ? "" : "none";
+}
+/* Returns: Promise<translated items ki tadaad> (fail par 0, paper unchanged) */
+function runTranslate() {
+  var stEl = document.getElementById("translateStatus");
+  function say(m) { if (stEl) stEl.textContent = m; }
+  var medium = state.setup.medium;
+  if (medium !== "ur" && medium !== "bi") { say("⚠ Pehle Medium ko Urdu ya Bilingual karein."); return Promise.resolve(0); }
+  if (!puterReady()) { say("⚠ Puter library load nahi hui — internet check karke page refresh karein."); return Promise.resolve(0); }
+  var items = collectTranslateItems();
+  if (!items.length) { say("⚠ Abhi paper mein koi statement nahi — pehle sawal shamil karein."); return Promise.resolve(0); }
+  function go() {
+    var batches = [];
+    for (var i = 0; i < items.length; i += 40) batches.push(items.slice(i, i + 40));
+    var results = [];
+    var chain = Promise.resolve();
+    batches.forEach(function (batch, bi) {
+      chain = chain.then(function () {
+        say(batches.length > 1
+          ? "🌐 Tarjuma ho raha hai… Batch " + (bi + 1) + "/" + batches.length
+          : "🌐 AI statements ka Urdu tarjuma kar raha hai…");
+        return puterChatText(buildTranslatePrompt(batch.map(function (it) { return it.text; }))).then(function (txt) {
+          var arr = parseTranslateReply(txt, batch.length);
+          if (!arr) throw new Error("AI ke jawab ki shakal durust nahi mili — koi tabdeeli nahi ki gayi. Dobara koshish karein.");
+          results = results.concat(arr);
+        });
+      });
+    });
+    return chain.then(function () {
+      /* Sab batches kamyab — pehle snapshot, phir apply (atomic) */
+      _preTranslate = { medium: medium, items: items.map(function (it) { return { si: it.si, qi: it.qi, kind: it.kind, oi: it.oi, text: it.text }; }) };
+      try { localStorage.setItem(TR_LS, JSON.stringify(_preTranslate)); } catch (e) {}
+      items.forEach(function (it, idx) {
+        var q = state.sections[it.si].questions[it.qi];
+        var tr = String(results[idx]);
+        if (it.kind === "q") q.q = (medium === "bi") ? (it.text + "\n" + tr) : tr;
+        else q.opts[it.oi] = (medium === "bi") ? (it.text + "\n" + tr) : tr;
+      });
+      editCtx = null;
+      renderAll(); persist(); renderTranslateBox();
+      say("✔ " + items.length + " statements translate ho gayin" + (medium === "bi" ? " (har statement ke neeche Urdu line jud gayi)" : "") + " — paper preview check kar lein. Pasand na aye to ↩ Asal text wapas karein dabayein.");
+      return items.length;
+    }).catch(function (e) {
+      say("⚠ Tarjuma fail: " + (e && e.message ? e.message : e) + " Paper mein koi tabdeeli nahi hui.");
+      return 0;
+    });
+  }
+  if (puterSignedIn()) return go();
+  say("🔐 Pehle FREE Puter sign in chahiye — popup khul raha hai…");
+  return puterDoSignIn().then(function (ok) {
+    if (!ok) { say("⚠ Pehle FREE Puter account se sign in karein (neeche Photo wale hisse ka Sign In button) — baghair sign in ke AI tarjuma nahi chalega."); return 0; }
+    return go();
+  });
+}
+/* Snapshot se asal text byte-for-byte wapas. Returns true agar restore hua. */
+function undoTranslate() {
+  var snap = _preTranslate;
+  if (!snap || !snap.items) {
+    try { var raw = localStorage.getItem(TR_LS); if (raw) snap = JSON.parse(raw); } catch (e) { snap = null; }
+  }
+  if (!snap || !snap.items || !snap.items.length) return false;
+  snap.items.forEach(function (it) {
+    var sec = state.sections[it.si]; if (!sec) return;
+    var q = sec.questions[it.qi]; if (!q) return;
+    if (it.kind === "q") q.q = it.text;
+    else if (Array.isArray(q.opts) && it.oi >= 0 && it.oi < q.opts.length) q.opts[it.oi] = it.text;
+  });
+  _preTranslate = null;
+  try { localStorage.removeItem(TR_LS); } catch (e) {}
+  editCtx = null;
+  renderAll(); persist(); renderTranslateBox();
+  var stEl = document.getElementById("translateStatus");
+  if (stEl) stEl.textContent = "↩ Asal text wapas aa gaya hai.";
+  return true;
+}
+
 /* ---- Manual scheme editor (rows) ---- */
 var schemeEditRows = [];
 function renderSchemeRows() {
@@ -1234,11 +1410,11 @@ function paperHTML(st) {
       h += '<div class="p-note' + (hasUrdu(instrText) ? " urdu-text" : "") + '" dir="auto">' + esc(instrText) + "</div>";
     }
     sec.questions.forEach(function (q, qi) {
-      h += '<div class="p-q"><b>' + (qi + 1) + ".</b> <span" + langAttrs(q.q) + ">" + esc(q.q) + "</span></div>";
+      h += '<div class="p-q"><b>' + (qi + 1) + ".</b> " + richText(q.q) + "</div>";
       if (sec.type === "mcq") {
         h += '<div class="p-opts">';
         q.opts.forEach(function (o, oi) {
-          h += "<span" + langAttrs(o) + ">(" + LETTERS[oi] + ") " + esc(o) + "</span>";
+          h += richOptText(o, LETTERS[oi]);
         });
         h += "</div>";
       } else if (sec.type === "long") {
@@ -1277,7 +1453,7 @@ function keyHTML(st) {
     });
     h += "</tr></table>";
     h += "<div>" + k.items.map(function (it) {
-      return "<div>" + it.n + ". (" + it.letter + ") <span" + langAttrs(it.text) + ">" + esc(it.text || "— teacher mark karein") + "</span></div>";
+      return "<div>" + it.n + ". (" + it.letter + ") " + richText(it.text || "— teacher mark karein") + "</div>";
     }).join("") + "</div></div>";
   });
   h += "</div>";
@@ -1393,8 +1569,8 @@ function renderDrafts() {
     return '<option value="' + esc(n) + '"' + (n === cur ? " selected" : "") + ">" + esc(n) + "</option>";
   }).join("");
 }
-function renderAll() { renderSetup(); renderSections(); renderPreview(); renderDrafts(); renderSchemeProgress(); }
-function refreshLight() { renderPreview(); persist(); renderSchemeProgress(); }
+function renderAll() { renderSetup(); renderSections(); renderPreview(); renderDrafts(); renderSchemeProgress(); renderTranslateBox(); }
+function refreshLight() { renderPreview(); persist(); renderSchemeProgress(); renderTranslateBox(); }
 
 /* ================= EVENTS: SETUP ================= */
 function bindSetup() {
@@ -1420,6 +1596,9 @@ function bindSetup() {
     document.getElementById("inCode").value = state.setup.code;
     refreshLight();
   });
+  document.getElementById("btnTranslate").addEventListener("click", function () { runTranslate(); });
+  document.getElementById("btnTranslateUndo").addEventListener("click", function () { undoTranslate(); });
+  renderTranslateBox();
 }
 
 /* ================= EVENTS: SECTIONS (delegated) ================= */
@@ -3215,6 +3394,10 @@ window.KPG = {
   renderSchemeProgress: renderSchemeProgress,
   getMySchemes: getMySchemes, saveMyScheme: saveMyScheme, deleteMyScheme: deleteMyScheme,
   pdfFileToText: pdfFileToText, puterChatText: puterChatText, runSchemeAiParse: runSchemeAiParse,
+  TR_LS: TR_LS, collectTranslateItems: collectTranslateItems, buildTranslatePrompt: buildTranslatePrompt,
+  parseTranslateReply: parseTranslateReply, runTranslate: runTranslate, undoTranslate: undoTranslate,
+  renderTranslateBox: renderTranslateBox, hasTranslateSnapshot: hasTranslateSnapshot,
+  richText: richText, richOptText: richOptText,
   getSchemeEditRows: function () { return schemeEditRows; },
   setSchemeEditRows: function (r) { schemeEditRows = r || []; renderSchemeRows(); }
 };
