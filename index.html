@@ -7,7 +7,8 @@
 <meta name="description" content="KEPS Academy Paper Generator — free online test paper maker for teachers: build MCQ, short and long question papers with paper code, live A4 preview, answer key and PDF download. English, Urdu and Bilingual.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <script src="https://js.puter.com/v2/"></script>
 <style>
 :root{--ink:#1c2733;--mut:#5b6b7a;--line:#d7dee5;--brand:#0b5fa5;--brand2:#084a82;--bg:#eef2f5;--card:#ffffff;--ok:#177245;--warn:#b3261e;--chip:#e7f1f8}
@@ -191,6 +192,10 @@ footer.appfoot{max-width:1240px;margin:0 auto;padding:6px 14px 22px;color:var(--
       <button type="button" class="btn big" id="btnDownloadPdf">⬇ Download Paper PDF</button>
       <button type="button" class="btn big" id="btnDownloadKey" style="background:var(--ok);border-color:var(--ok)">🔑 Download Answer Key PDF</button>
       <div class="hint" id="pdfStatus" style="margin-top:6px"></div>
+      <div style="margin-top:8px">
+        <button type="button" class="btn ghost" id="btnPrintPaper">🖨 Print Paper (doosra tareeqa)</button>
+        <button type="button" class="btn ghost" id="btnPrintKey">🖨 Print Answer Key</button>
+      </div>
       <div style="margin-top:10px">
         <button type="button" class="btn ghost" id="btnSample">📝 Load Sample Paper</button>
         <button type="button" class="btn ghost" id="btnShuffle">🔀 Shuffle MCQ Options</button>
@@ -748,6 +753,8 @@ function bindActions() {
   });
   document.getElementById("btnDownloadPdf").addEventListener("click", function () { downloadPDF("paper"); });
   document.getElementById("btnDownloadKey").addEventListener("click", function () { downloadPDF("key"); });
+  document.getElementById("btnPrintPaper").addEventListener("click", function () { printHTML("paper"); });
+  document.getElementById("btnPrintKey").addEventListener("click", function () { printHTML("key"); });
 }
 
 function printHTML(kind) {
@@ -758,21 +765,27 @@ function printHTML(kind) {
   window.print();
   document.title = old;
 }
-/* ---- PDF: saaf clone wala tareeqa (Nov 2026 bugfix) ----
-   Pehle downloadPDF seedha LIVE preview node ko html2canvas ke hawale
-   karta tha. Wo node position:sticky wrapper ke andar, grid column
-   mein, lambi (aksar scroll hui) page par hota hai — html2canvas aise
-   node ka canvas khaali/blank de deta hai, aur .save() ka result kabhi
-   check nahi hota tha, is liye bilkul safed PDF "kamyaab" download ho
-   jata tha (user ki X0-01-paper.pdf aisi hi nikli).
-   Ab: har download par paper ka ek SAAF CLONE alag off-screen stage
-   mein natural A4 size (794px) par banta hai — sticky/transform/scroll
-   ka koi asar nahi — usi ko capture karte hain. Bana hua PDF blob size
-   se check hota hai; khaali/chhota blob ya koi bhi ghalti ho to khud
-   print wala tareeqa khul jata hai aur status line mein bata bhi dete
-   hain. Answer Key PDF bhi bilkul isi raste se banta hai. */
+/* ---- PDF: html-to-image wala tareeqa (Nov 2026, doosri bugfix) ----
+   Pichla engine (html2canvas, html2pdf bundle ke zariye) is page par DO
+   dafa fail hua: pehle bilkul khaali/safed PDF, phir saaf clone ko
+   off-screen (left:-99999px) stage par rakhne ke bawajood sirf ek tang
+   left slice capture hua — sawal kate hue. html2canvas CSS ko khud
+   dobara parse karke layout banata hai, is liye aisi geometry par
+   bharosa nahi raha. Engine hi badal diya gaya hai:
+   Ab paper ka clone ek VISIBLE full-screen overlay (position:fixed,
+   inset:0) mein natural 794px width par asal viewport layout mein
+   khara hota hai, aur html-to-image (SVG foreignObject) browser ke
+   apne native layout se us ki PNG tasveer banata hai — koi CSS
+   re-parse nahi, koi off-screen geometry nahi. PNG ko jsPDF mein
+   full A4 page image ke taur par dalte hain; paper ek A4 se lamba ho
+   to tasveer ko A4 ratio par saaf slices mein kaat kar har page par
+   alag dalte hain. Bana hua PDF blob size se check hota hai; khaali/
+   chhota blob ya koi bhi ghalti ho to khud print wala tareeqa khul
+   jata hai aur status line mein bata bhi dete hain. Answer Key PDF
+   bhi bilkul isi raste se banta hai. */
 var PDF_A4_W = 794;      /* A4 @ 96dpi: 210mm ≈ 794px (lambai content ke hisaab se) */
 var PDF_MIN_BYTES = 8192;
+var PDF_A4_RATIO = 297 / 210;   /* A4 height/width — page slicing ke liye */
 
 function pdfStatus(msg) {
   var el = document.getElementById("pdfStatus");
@@ -780,31 +793,39 @@ function pdfStatus(msg) {
 }
 function buildPdfClone(kind) {
   removePdfStage(null);
+  /* Clone ab VISIBLE full-screen overlay mein khara hota hai — asal
+     viewport layout hi wo geometry hai jo browser-native renderer
+     (html-to-image) sahi capture karta hai. Off-screen position ya
+     transform bilkul nahi. Capture ke baad overlay hata dete hain. */
   var stage = document.createElement("div");
   stage.id = "pdfStage";
-  stage.setAttribute("aria-hidden", "true");
-  /* html2canvas-safe off-screen: display:none NAHI (us se capture khaali
-     hota hai), transform NAHI — sirf absolute position screen se bahar. */
-  stage.style.cssText = "position:absolute;top:0;left:-99999px;width:" + PDF_A4_W + "px;background:#ffffff;color:#000000;visibility:visible;z-index:-1;pointer-events:none;";
-  stage.innerHTML = kind === "key" ? keyHTML(state) : paperHTML(state);
-  var paper = stage.querySelector(".paper");
+  stage.setAttribute("role", "status");
+  stage.style.cssText = "position:fixed;inset:0;background:#ffffff;z-index:99999;overflow:auto;padding:20px 0 28px;";
+  var note = document.createElement("div");
+  note.textContent = "⏳ PDF tayyar ho raha hai…";
+  note.style.cssText = "text-align:center;font:600 15px/1.4 system-ui,sans-serif;color:#333333;margin:0 0 12px;";
+  stage.appendChild(note);
+  var holder = document.createElement("div");
+  holder.innerHTML = kind === "key" ? keyHTML(state) : paperHTML(state);
+  var paper = holder.querySelector(".paper");
   if (paper) {
     paper.style.width = PDF_A4_W + "px";
-    paper.style.margin = "0";
+    paper.style.margin = "0 auto";
     paper.style.border = "none";
     paper.style.boxShadow = "none";
     paper.style.background = "#ffffff";
     paper.style.color = "#000000";
     paper.style.transform = "none";
   }
-  var all = stage.querySelectorAll("*");
+  var all = holder.querySelectorAll("*");
   for (var i = 0; i < all.length; i++) {
     all[i].style.transform = "none";
     all[i].style.animation = "none";
     all[i].style.transition = "none";
   }
+  stage.appendChild(holder);
   document.body.appendChild(stage);
-  return { stage: stage, el: paper || stage };
+  return { stage: stage, el: paper || holder };
 }
 function removePdfStage(built) {
   var old = document.getElementById("pdfStage");
@@ -827,9 +848,59 @@ function pdfPrintFallback(kind, why) {
   pdfStatus("⚠ " + why + " — print wala tareeqa khul raha hai: khulne wale print window mein Destination 'Save as PDF' chunein to sahi PDF ban jayega.");
   printHTML(kind);
 }
+function waitFrames(n) {
+  return new Promise(function (resolve) {
+    if (typeof window.requestAnimationFrame !== "function") { setTimeout(resolve, 30); return; }
+    function step() { n -= 1; if (n <= 0) resolve(); else window.requestAnimationFrame(step); }
+    window.requestAnimationFrame(step);
+  });
+}
+function loadPngImage(dataUrl) {
+  return new Promise(function (resolve, reject) {
+    var img = new Image();
+    img.onload = function () { resolve(img); };
+    img.onerror = function () { reject(new Error("PNG image load nahi hui")); };
+    img.src = dataUrl;
+  });
+}
+/* Tasveer ko A4 pages mein kaatne ka hisaab (pure function — testable):
+   har page ki unchai = width * 297/210 image pixels. Aakhri page par
+   bachi hui unchai sh mein aati hai, lekin canvas ph (full page height)
+   ka banta hai aur baqi hissa safed rehta hai. */
+function pdfPageSlices(imgW, imgH) {
+  var pageH = Math.max(1, Math.round(imgW * PDF_A4_RATIO));
+  var out = [];
+  for (var y = 0; y < imgH; y += pageH) {
+    out.push({ sy: y, sh: Math.min(pageH, imgH - y), ph: pageH });
+  }
+  if (!out.length) out.push({ sy: 0, sh: imgH, ph: pageH });
+  return out;
+}
+function pdfDocFromImage(img) {
+  var JsPDF = window.jspdf && window.jspdf.jsPDF;
+  if (!JsPDF) throw new Error("jsPDF library nahi mili");
+  var W = img.naturalWidth || img.width;
+  var H = img.naturalHeight || img.height;
+  if (!W || !H) throw new Error("PNG ka size nahi mila");
+  var slices = pdfPageSlices(W, H);
+  var doc = new JsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+  slices.forEach(function (s, i) {
+    if (i > 0) doc.addPage();
+    var c = document.createElement("canvas");
+    c.width = W;
+    c.height = s.ph;
+    var ctx = c.getContext("2d");
+    if (!ctx) throw new Error("canvas context nahi mila");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, W, s.ph);
+    ctx.drawImage(img, 0, s.sy, W, s.sh, 0, 0, W, s.sh);
+    doc.addImage(c.toDataURL("image/jpeg", 0.95), "JPEG", 0, 0, 210, 297);
+  });
+  return doc;
+}
 function downloadPDF(kind) {
   var fname = (state.setup.code || "paper") + (kind === "key" ? "-answer-key" : "-paper") + ".pdf";
-  if (!window.html2pdf) { pdfPrintFallback(kind, "PDF library load nahi hui (internet check karein)"); return Promise.resolve(false); }
+  if (!window.htmlToImage || !window.jspdf || !window.jspdf.jsPDF) { pdfPrintFallback(kind, "PDF library load nahi hui (internet check karein)"); return Promise.resolve(false); }
   pdfStatus("⏳ PDF ban raha hai…");
   var built = null;
   return Promise.resolve()
@@ -838,18 +909,22 @@ function downloadPDF(kind) {
       if (document.fonts && document.fonts.ready) return document.fonts.ready;
       return null;
     })
+    .then(function () { return waitFrames(2); })
     .then(function () {
       var el = built.el;
+      var w = el.offsetWidth || PDF_A4_W;
       var h = el.scrollHeight || el.offsetHeight || 1123;
-      return window.html2pdf().set({
-        margin: 10, filename: fname,
-        image: { type: "jpeg", quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff", width: PDF_A4_W, height: h, windowWidth: PDF_A4_W, scrollX: 0, scrollY: 0 },
-        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-        pagebreak: { mode: ["css", "legacy"] }
-      }).from(el).outputPdf("blob");
+      return window.htmlToImage.toPng(el, {
+        pixelRatio: 2, backgroundColor: "#ffffff", width: w, height: h
+      });
     })
-    .then(function (blob) {
+    .then(function (dataUrl) {
+      if (!dataUrl || typeof dataUrl !== "string" || dataUrl.length < 1000) throw new Error("capture khaali aya");
+      return loadPngImage(dataUrl);
+    })
+    .then(function (img) {
+      var doc = pdfDocFromImage(img);
+      var blob = doc.output("blob");
       removePdfStage(built);
       if (!blob || typeof blob.size !== "number" || blob.size < PDF_MIN_BYTES) {
         pdfPrintFallback(kind, "PDF khaali bana (file size bohat chhota)");
@@ -1549,7 +1624,8 @@ window.KPG = {
   renderAll: renderAll, renderSections: renderSections, renderPreview: renderPreview,
   buildPdfClone: buildPdfClone, removePdfStage: removePdfStage,
   downloadPDF: downloadPDF, printHTML: printHTML, pdfStatus: pdfStatus,
-  PDF_A4_W: PDF_A4_W, PDF_MIN_BYTES: PDF_MIN_BYTES
+  pdfPageSlices: pdfPageSlices, pdfDocFromImage: pdfDocFromImage, loadPngImage: loadPngImage,
+  PDF_A4_W: PDF_A4_W, PDF_MIN_BYTES: PDF_MIN_BYTES, PDF_A4_RATIO: PDF_A4_RATIO
 };
 
 /* ================= INIT ================= */
