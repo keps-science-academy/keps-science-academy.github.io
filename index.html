@@ -6,7 +6,8 @@
 <title>KEPS Academy — Paper Generator</title>
 <meta name="description" content="KEPS Academy Paper Generator — free online test paper maker for teachers: build MCQ, short and long question papers with paper code, live A4 preview, answer key and PDF download. English, Urdu and Bilingual.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;600;700&family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <script src="https://js.puter.com/v2/"></script>
@@ -57,22 +58,23 @@ input:focus,select:focus,textarea:focus{outline:2px solid #9ec7e8;border-color:v
 .sticky{position:sticky;top:86px}
 @media(max-width:900px){.sticky{position:static}}
 /* ===== A4 PAPER PREVIEW ===== */
-.paper{background:#fff;color:#000;border:1px solid #bbb;box-shadow:0 2px 10px rgba(0,0,0,.12);padding:16mm 13mm;font-family:"Times New Roman",Times,serif;font-size:13.5px;line-height:1.5;min-height:200px}
-.paper.ur{font-family:"Noto Nastaliq Urdu","Times New Roman",serif;line-height:2.1}
+.paper{background:#fff;color:#000;border:1px solid #bbb;box-shadow:0 2px 10px rgba(0,0,0,.12);padding:16mm 13mm;font-family:"Noto Sans","Times New Roman",Times,Arial,"Noto Nastaliq Urdu",sans-serif;font-size:13.5px;line-height:1.5;min-height:200px}
+/* Urdu-script text ONLY: Nastaliq font + tall line-height. Layout/flow of the
+   page hamesha LTR rehta hai — ye class sirf font badalti hai, direction nahi. */
+.urdu-text{font-family:"Noto Nastaliq Urdu","Noto Sans",serif;line-height:2}
 .p-head{border-top:4px double #000;border-bottom:4px double #000;padding:7px 4px 9px;text-align:center}
 .p-school{font-size:21px;font-weight:700;letter-spacing:.3px}
-.paper.ur .p-school{font-size:19px}
+.p-school.urdu-text{font-size:19px}
 .p-band{margin-top:6px;border:1.5px solid #000;padding:3px 6px;font-weight:700;font-size:15px;background:#f2f2f2}
 .p-info{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
 .p-info td{border:1px solid #000;padding:3px 7px;text-align:left}
-.paper[dir=rtl] .p-info td{text-align:right}
 .p-sec{margin-top:14px}
 .p-sec-head{display:flex;justify-content:space-between;gap:8px;border-bottom:1.5px solid #000;padding-bottom:2px;font-weight:700;font-size:14.5px}
+.p-sec-sub{font-weight:600;font-size:13px;margin-top:1px}
 .p-note{font-style:italic;font-size:12.5px;margin:4px 0 2px}
-.paper.ur .p-note{font-style:normal}
+.p-note.urdu-text{font-style:normal}
 .p-q{margin:7px 0 2px}
 .p-opts{display:grid;grid-template-columns:1fr 1fr;gap:1px 18px;margin:1px 0 5px 20px;font-size:13px}
-.paper[dir=rtl] .p-opts{margin:1px 20px 5px 0}
 .p-lines{border-bottom:1px dotted #999;height:20px;margin:2px 0}
 .keytable{border-collapse:collapse;margin:8px 0}
 .keytable td{border:1px solid #000;padding:4px 10px;text-align:center;font-weight:600}
@@ -246,6 +248,47 @@ var DEFAULT_NOTES = {
   long: ""
 };
 var SECTION_NAMES = { mcq: "MCQs (Objective)", short: "Short Questions", long: "Long Questions" };
+var SECTION_NAMES_UR = { mcq: "معروضی سوالات", short: "مختصر سوالات", long: "تفصیلی سوالات" };
+var DEFAULT_NOTES_UR = {
+  mcq: "درست جواب کا انتخاب کریں۔ ہر سوال کے نمبر برابر ہیں۔",
+  short: "",
+  long: ""
+};
+/* Fixed paper labels per medium. Medium SIRF lafz badalta hai — labels ki
+   jagah aur page ka LTR flow har medium mein ek jaisa rehta hai. */
+function paperLabels(medium) {
+  if (medium === "ur") return {
+    urdu: true, subject: "مضمون", clazz: "جماعت", code: "پیپر کوڈ", date: "تاریخ",
+    time: "وقت", total: "کل نمبر", student: "طالب علم کا نام", roll: "رول نمبر",
+    keyWord: "جوابی کلید", codeWord: "کوڈ"
+  };
+  return {
+    urdu: false, subject: "Subject", clazz: "Class", code: "Paper Code", date: "Date",
+    time: "Time", total: "Total Marks", student: "Student Name", roll: "Roll No",
+    keyWord: "ANSWER KEY", codeWord: "Code"
+  };
+}
+/* Ek label ko span mein lapaitna: Urdu label ko Nastaliq class + dir=auto
+   (sirf us ke apne alfaz ki shaping ke liye — block LTR flow mein hi rehta hai). */
+function labSpan(text, urdu) {
+  return urdu ? '<span class="urdu-text" dir="auto">' + text + ":</span>" : text + ":";
+}
+/* Section heading ka title hissa (marks wala hissa caller lagata hai).
+   ur: "سوال نمبر N: <urdu title>" — span LTR head ke left par hi rehta hai.
+   bi: English heading + neeche Urdu subheading. en: sirf English. */
+function secHeadTitle(sec, idx, medium) {
+  var num = idx + 1;
+  var isDefault = sec.title === SECTION_NAMES[sec.type];
+  if (medium === "ur") {
+    var t = isDefault ? (SECTION_NAMES_UR[sec.type] || sec.title) : sec.title;
+    return '<span class="urdu-text" dir="auto">سوال نمبر ' + num + ": " + esc(t) + "</span>";
+  }
+  var h = "<span>Q." + num + " " + esc(sec.title) + "</span>";
+  if (medium === "bi" && SECTION_NAMES_UR[sec.type]) {
+    h += '<div class="p-sec-sub urdu-text" dir="auto">سوال نمبر ' + num + ": " + SECTION_NAMES_UR[sec.type] + "</div>";
+  }
+  return h;
+}
 
 function makeSection(type) {
   return {
@@ -284,7 +327,11 @@ function esc(s) {
   });
 }
 function hasUrdu(s) { return /[\u0600-\u06FF]/.test(String(s || "")); }
-function dirAttr(s) { return hasUrdu(s) ? ' dir="rtl"' : ' dir="auto"'; }
+/* Per-element language attributes: hamesha dir="auto" (kabhi rtl nahi) —
+   Urdu text wale element ko Nastaliq ke liye .urdu-text class milti hai.
+   Is se Urdu alfaz apni line ke andar sahi shape hote hain, lekin number,
+   options aur blocks ki LTR tartib kabhi nahi badalti. */
+function langAttrs(s) { return ' dir="auto"' + (hasUrdu(s) ? ' class="urdu-text"' : ""); }
 
 function autoCode(subject, clazz) {
   var subj = String(subject || "").trim();
@@ -437,36 +484,51 @@ function sampleState() {
 function paperHTML(st) {
   var t = computeTotals(st);
   var su = st.setup;
-  var dir = su.medium === "ur" ? "rtl" : "ltr";
-  var cls = "paper" + (su.medium === "ur" ? " ur" : "");
+  var L = paperLabels(su.medium);
   var shown = st.sections.filter(function (s) { return s.questions.length > 0; });
-  var h = '<div class="' + cls + '" dir="' + dir + '">';
-  h += '<div class="p-head"><div class="p-school" dir="auto">' + esc(su.school || "School Name") + "</div>";
-  h += '<div class="p-band" dir="auto">Subject: ' + esc(su.subject || "—") + (su.clazz ? " &nbsp;|&nbsp; Class: " + esc(su.clazz) : "") + "</div>";
+  /* Paper ka container HAR medium mein dir="ltr" — flow left-to-right hi
+     rehta hai; medium sirf labels ke lafz aur Urdu text ka font badalta hai. */
+  var h = '<div class="paper" dir="ltr">';
+  h += '<div class="p-head"><div class="p-school' + (hasUrdu(su.school) ? " urdu-text" : "") + '" dir="auto">' + esc(su.school || "School Name") + "</div>";
+  h += '<div class="p-band">' + labSpan(L.subject, L.urdu) + " <span" + langAttrs(su.subject) + ">" + esc(su.subject || "—") + "</span>" +
+    (su.clazz ? " &nbsp;|&nbsp; " + labSpan(L.clazz, L.urdu) + " <span" + langAttrs(su.clazz) + ">" + esc(su.clazz) + "</span>" : "") + "</div>";
   h += '<table class="p-info"><tr>' +
-    "<td><b>Paper Code:</b> " + esc(su.code || "—") + "</td>" +
-    "<td><b>Date:</b> " + esc(su.date || "—") + "</td>" +
-    "<td><b>Time:</b> " + esc(su.time || "—") + "</td>" +
-    "<td><b>Total Marks:</b> " + t.marks + "</td></tr>" +
-    '<tr><td colspan="2"><b>Student Name:</b> ______________________________</td>' +
-    '<td colspan="2"><b>Roll No:</b> ____________________</td></tr></table></div>';
+    "<td><b>" + labSpan(L.code, L.urdu) + "</b> " + esc(su.code || "—") + "</td>" +
+    "<td><b>" + labSpan(L.date, L.urdu) + "</b> " + esc(su.date || "—") + "</td>" +
+    "<td><b>" + labSpan(L.time, L.urdu) + "</b> <span" + langAttrs(su.time) + ">" + esc(su.time || "—") + "</span></td>" +
+    "<td><b>" + labSpan(L.total, L.urdu) + "</b> " + t.marks + "</td></tr>" +
+    '<tr><td colspan="2"><b>' + labSpan(L.student, L.urdu) + "</b> ______________________________</td>" +
+    '<td colspan="2"><b>' + labSpan(L.roll, L.urdu) + "</b> ____________________</td></tr></table></div>";
   if (!shown.length) {
     h += '<div class="empty-note">Abhi koi sawal nahi — pehle sawal shamil karein, preview yahan banta jayega.</div>';
   }
   shown.forEach(function (sec, i) {
     var c = sectionCountedMarks(sec);
-    h += '<div class="p-sec"><div class="p-sec-head"><span>Q.' + (i + 1) + " " + esc(sec.title) + "</span><span>(" + c.marks + ")</span></div>";
+    h += '<div class="p-sec"><div class="p-sec-head"><div>' + secHeadTitle(sec, i, su.medium) + "</div><span>(" + c.marks + ")</span></div>";
     var instr = [];
-    if (sec.attempt && parseInt(sec.attempt, 10) > 0 && parseInt(sec.attempt, 10) < sec.questions.length)
-      instr.push("Attempt any " + sec.attempt + " of " + sec.questions.length + " questions.");
-    if (sec.note) instr.push(sec.note);
-    if (instr.length) h += '<div class="p-note" dir="auto">' + esc(instr.join(" ")) + "</div>";
+    if (sec.attempt && parseInt(sec.attempt, 10) > 0 && parseInt(sec.attempt, 10) < sec.questions.length) {
+      if (su.medium === "ur")
+        instr.push("کل " + sec.questions.length + " سوالوں میں سے کوئی سے " + sec.attempt + " سوال حل کریں۔");
+      else
+        instr.push("Attempt any " + sec.attempt + " of " + sec.questions.length + " questions.");
+    }
+    if (sec.note) {
+      var note = sec.note;
+      if (su.medium === "ur" && note === (DEFAULT_NOTES[sec.type] || "")) note = DEFAULT_NOTES_UR[sec.type] || note;
+      instr.push(note);
+      if (su.medium === "bi" && sec.type === "mcq" && sec.note === DEFAULT_NOTES.mcq)
+        instr.push("درست جواب کا انتخاب کریں۔");
+    }
+    if (instr.length) {
+      var instrText = instr.join(" ");
+      h += '<div class="p-note' + (hasUrdu(instrText) ? " urdu-text" : "") + '" dir="auto">' + esc(instrText) + "</div>";
+    }
     sec.questions.forEach(function (q, qi) {
-      h += '<div class="p-q"><b>' + (qi + 1) + ".</b> <span" + dirAttr(q.q) + ">" + esc(q.q) + "</span></div>";
+      h += '<div class="p-q"><b>' + (qi + 1) + ".</b> <span" + langAttrs(q.q) + ">" + esc(q.q) + "</span></div>";
       if (sec.type === "mcq") {
         h += '<div class="p-opts">';
         q.opts.forEach(function (o, oi) {
-          h += "<span" + dirAttr(o) + ">(" + LETTERS[oi] + ") " + esc(o) + "</span>";
+          h += "<span" + langAttrs(o) + ">(" + LETTERS[oi] + ") " + esc(o) + "</span>";
         });
         h += "</div>";
       } else if (sec.type === "long") {
@@ -481,16 +543,21 @@ function paperHTML(st) {
 function keyHTML(st) {
   var keys = buildKey(st);
   var su = st.setup;
-  var dir = su.medium === "ur" ? "rtl" : "ltr";
-  var cls = "paper" + (su.medium === "ur" ? " ur" : "");
-  var h = '<div class="' + cls + '" dir="' + dir + '">';
-  h += '<div class="p-head"><div class="p-school" dir="auto">' + esc(su.school || "School Name") + "</div>";
-  h += '<div class="p-band">ANSWER KEY — ' + esc(su.subject || "—") + (su.code ? " &nbsp;|&nbsp; Code: " + esc(su.code) : "") + "</div></div>";
+  var L = paperLabels(su.medium);
+  /* Answer key bhi har medium mein LTR flow mein — sirf lafz/font badalte hain. */
+  var h = '<div class="paper" dir="ltr">';
+  h += '<div class="p-head"><div class="p-school' + (hasUrdu(su.school) ? " urdu-text" : "") + '" dir="auto">' + esc(su.school || "School Name") + "</div>";
+  h += '<div class="p-band">' + (L.urdu ? '<span class="urdu-text" dir="auto">' + L.keyWord + "</span>" : L.keyWord) +
+    " — <span" + langAttrs(su.subject) + ">" + esc(su.subject || "—") + "</span>" +
+    (su.code ? " &nbsp;|&nbsp; " + labSpan(L.codeWord, L.urdu) + " " + esc(su.code) : "") + "</div></div>";
   if (!keys.length) {
     h += '<div class="empty-note">Answer key ke liye pehle MCQ sawal shamil karein aur un ka sahi jawab mark karein.</div>';
   }
+  var shownPos = {};
+  st.sections.forEach(function (s, si) { if (s.questions.length > 0) shownPos[si] = Object.keys(shownPos).length; });
   keys.forEach(function (k) {
-    h += '<div class="p-sec"><div class="p-sec-head"><span>' + esc(k.title) + "</span></div>";
+    var sec = st.sections[k.section] || { title: k.title, type: "mcq" };
+    h += '<div class="p-sec"><div class="p-sec-head"><div>' + secHeadTitle(sec, shownPos[k.section] || 0, su.medium) + "</div></div>";
     h += '<table class="keytable"><tr>';
     k.items.forEach(function (it, i) {
       h += "<td>" + it.n + ". " + it.letter + "</td>";
@@ -498,7 +565,7 @@ function keyHTML(st) {
     });
     h += "</tr></table>";
     h += "<div>" + k.items.map(function (it) {
-      return "<div>" + it.n + ". (" + it.letter + ") <span" + dirAttr(it.text) + ">" + esc(it.text || "— teacher mark karein") + "</span></div>";
+      return "<div>" + it.n + ". (" + it.letter + ") <span" + langAttrs(it.text) + ">" + esc(it.text || "— teacher mark karein") + "</span></div>";
     }).join("") + "</div></div>";
   });
   h += "</div>";
@@ -1697,6 +1764,8 @@ window.KPG = {
   shuffleMcqOptions: shuffleMcqOptions,
   parseBulkMcq: parseBulkMcq, parseBulkPlain: parseBulkPlain,
   buildKey: buildKey, paperHTML: paperHTML, keyHTML: keyHTML,
+  paperLabels: paperLabels, langAttrs: langAttrs, hasUrdu: hasUrdu,
+  SECTION_NAMES_UR: SECTION_NAMES_UR, DEFAULT_NOTES_UR: DEFAULT_NOTES_UR,
   sampleState: sampleState, defaultState: defaultState,
   saveDraft: saveDraft, loadDraft: loadDraft, deleteDraft: deleteDraft, getDrafts: getDrafts,
   parseAiQuestions: parseAiQuestions, buildGenPrompt: buildGenPrompt,
