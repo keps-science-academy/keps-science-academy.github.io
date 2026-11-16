@@ -190,6 +190,7 @@ footer.appfoot{max-width:1240px;margin:0 auto;padding:6px 14px 22px;color:var(--
       <h2>4️⃣ Finish</h2>
       <button type="button" class="btn big" id="btnDownloadPdf">⬇ Download Paper PDF</button>
       <button type="button" class="btn big" id="btnDownloadKey" style="background:var(--ok);border-color:var(--ok)">🔑 Download Answer Key PDF</button>
+      <div class="hint" id="pdfStatus" style="margin-top:6px"></div>
       <div style="margin-top:10px">
         <button type="button" class="btn ghost" id="btnSample">📝 Load Sample Paper</button>
         <button type="button" class="btn ghost" id="btnShuffle">🔀 Shuffle MCQ Options</button>
@@ -757,22 +758,112 @@ function printHTML(kind) {
   window.print();
   document.title = old;
 }
+/* ---- PDF: saaf clone wala tareeqa (Nov 2026 bugfix) ----
+   Pehle downloadPDF seedha LIVE preview node ko html2canvas ke hawale
+   karta tha. Wo node position:sticky wrapper ke andar, grid column
+   mein, lambi (aksar scroll hui) page par hota hai — html2canvas aise
+   node ka canvas khaali/blank de deta hai, aur .save() ka result kabhi
+   check nahi hota tha, is liye bilkul safed PDF "kamyaab" download ho
+   jata tha (user ki X0-01-paper.pdf aisi hi nikli).
+   Ab: har download par paper ka ek SAAF CLONE alag off-screen stage
+   mein natural A4 size (794px) par banta hai — sticky/transform/scroll
+   ka koi asar nahi — usi ko capture karte hain. Bana hua PDF blob size
+   se check hota hai; khaali/chhota blob ya koi bhi ghalti ho to khud
+   print wala tareeqa khul jata hai aur status line mein bata bhi dete
+   hain. Answer Key PDF bhi bilkul isi raste se banta hai. */
+var PDF_A4_W = 794;      /* A4 @ 96dpi: 210mm ≈ 794px (lambai content ke hisaab se) */
+var PDF_MIN_BYTES = 8192;
+
+function pdfStatus(msg) {
+  var el = document.getElementById("pdfStatus");
+  if (el) el.textContent = msg;
+}
+function buildPdfClone(kind) {
+  removePdfStage(null);
+  var stage = document.createElement("div");
+  stage.id = "pdfStage";
+  stage.setAttribute("aria-hidden", "true");
+  /* html2canvas-safe off-screen: display:none NAHI (us se capture khaali
+     hota hai), transform NAHI — sirf absolute position screen se bahar. */
+  stage.style.cssText = "position:absolute;top:0;left:-99999px;width:" + PDF_A4_W + "px;background:#ffffff;color:#000000;visibility:visible;z-index:-1;pointer-events:none;";
+  stage.innerHTML = kind === "key" ? keyHTML(state) : paperHTML(state);
+  var paper = stage.querySelector(".paper");
+  if (paper) {
+    paper.style.width = PDF_A4_W + "px";
+    paper.style.margin = "0";
+    paper.style.border = "none";
+    paper.style.boxShadow = "none";
+    paper.style.background = "#ffffff";
+    paper.style.color = "#000000";
+    paper.style.transform = "none";
+  }
+  var all = stage.querySelectorAll("*");
+  for (var i = 0; i < all.length; i++) {
+    all[i].style.transform = "none";
+    all[i].style.animation = "none";
+    all[i].style.transition = "none";
+  }
+  document.body.appendChild(stage);
+  return { stage: stage, el: paper || stage };
+}
+function removePdfStage(built) {
+  var old = document.getElementById("pdfStage");
+  if (old && old.parentNode) old.parentNode.removeChild(old);
+  if (built && built.stage && built.stage !== old && built.stage.parentNode) built.stage.parentNode.removeChild(built.stage);
+}
+function saveBlobFile(blob, fname) {
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url;
+  a.download = fname;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function () {
+    try { URL.revokeObjectURL(url); } catch (e) {}
+    if (a.parentNode) a.parentNode.removeChild(a);
+  }, 4000);
+}
+function pdfPrintFallback(kind, why) {
+  pdfStatus("⚠ " + why + " — print wala tareeqa khul raha hai: khulne wale print window mein Destination 'Save as PDF' chunein to sahi PDF ban jayega.");
+  printHTML(kind);
+}
 function downloadPDF(kind) {
-  var src = kind === "key" ? document.querySelector("#keyPreview .paper") : document.querySelector("#paperPreview .paper");
   var fname = (state.setup.code || "paper") + (kind === "key" ? "-answer-key" : "-paper") + ".pdf";
-  if (window.html2pdf && src) {
-    try {
-      window.html2pdf().set({
+  if (!window.html2pdf) { pdfPrintFallback(kind, "PDF library load nahi hui (internet check karein)"); return Promise.resolve(false); }
+  pdfStatus("⏳ PDF ban raha hai…");
+  var built = null;
+  return Promise.resolve()
+    .then(function () {
+      built = buildPdfClone(kind);
+      if (document.fonts && document.fonts.ready) return document.fonts.ready;
+      return null;
+    })
+    .then(function () {
+      var el = built.el;
+      var h = el.scrollHeight || el.offsetHeight || 1123;
+      return window.html2pdf().set({
         margin: 10, filename: fname,
         image: { type: "jpeg", quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff", width: PDF_A4_W, height: h, windowWidth: PDF_A4_W, scrollX: 0, scrollY: 0 },
         jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
         pagebreak: { mode: ["css", "legacy"] }
-      }).from(src).save();
-      return;
-    } catch (e) { /* fall through to print route */ }
-  }
-  printHTML(kind);
+      }).from(el).outputPdf("blob");
+    })
+    .then(function (blob) {
+      removePdfStage(built);
+      if (!blob || typeof blob.size !== "number" || blob.size < PDF_MIN_BYTES) {
+        pdfPrintFallback(kind, "PDF khaali bana (file size bohat chhota)");
+        return false;
+      }
+      saveBlobFile(blob, fname);
+      pdfStatus("✔ PDF download ho gaya: " + fname + " — file khol kar zaroor check kar lein.");
+      return true;
+    })
+    .catch(function () {
+      removePdfStage(built);
+      pdfPrintFallback(kind, "PDF banane mein ghalti hui");
+      return false;
+    });
 }
 
 /* ================= PHOTO -> QUESTIONS ================= */
@@ -1455,7 +1546,10 @@ window.KPG = {
   runAiGen: runAiGen, runGemini: runGemini,
   runPuterGen: runPuterGen, puterChatOnce: puterChatOnce, puterRespText: puterRespText,
   puterSignedIn: puterSignedIn, refreshPuterAuthUI: refreshPuterAuthUI, PUTER_MODEL: PUTER_MODEL,
-  renderAll: renderAll, renderSections: renderSections, renderPreview: renderPreview
+  renderAll: renderAll, renderSections: renderSections, renderPreview: renderPreview,
+  buildPdfClone: buildPdfClone, removePdfStage: removePdfStage,
+  downloadPDF: downloadPDF, printHTML: printHTML, pdfStatus: pdfStatus,
+  PDF_A4_W: PDF_A4_W, PDF_MIN_BYTES: PDF_MIN_BYTES
 };
 
 /* ================= INIT ================= */
