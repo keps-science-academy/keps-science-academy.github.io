@@ -106,8 +106,10 @@ input:focus,select:focus,textarea:focus{outline:2px solid #9ec7e8;border-color:v
 @media(max-width:900px){.sticky{position:static}}
 /* ===== A4 PAPER PREVIEW ===== */
 .paper{background:#fff;color:#000;border:1px solid #bbb;box-shadow:0 2px 10px rgba(0,0,0,.12);padding:16mm 13mm;font-family:"Noto Sans","Times New Roman",Times,Arial,"Noto Nastaliq Urdu",sans-serif;font-size:13.5px;line-height:1.5;min-height:200px}
-/* Urdu-script text ONLY: Nastaliq font + tall line-height. Layout/flow of the
-   page hamesha LTR rehta hai — ye class sirf font badalti hai, direction nahi. */
+/* Urdu-script text ONLY: Nastaliq font + tall line-height. Ye class sirf
+   font badalti hai; direction ka faisla medium karta hai — Urdu medium
+   mein section .p-rtl se RTL hota hai, English/Bilingual ki English
+   lines LTR rehti hain (neeche .p-rtl wala note dekhein). */
 .urdu-text{font-family:"Jameel Noori Nastaleeq","Noto Nastaliq Urdu","Noto Sans",serif;line-height:2;font-size:calc(1em * var(--ur-scale))}
 /* Jameel Noori ke glyphs usi pt par Latin/Noto se chhote nazar aate hain —
    owner ke chhape papers mein Urdu hamesha bara hota hai. Is liye paper ke
@@ -125,6 +127,21 @@ input:focus,select:focus,textarea:focus{outline:2px solid #9ec7e8;border-color:v
 .p-sec{margin-top:14px}
 .p-sec-head{display:flex;justify-content:space-between;gap:8px;border-bottom:1.5px solid #000;padding-bottom:2px;font-weight:700;font-size:14.5px}
 .p-sec-sub{font-weight:600;font-size:13px;margin-top:1px}
+/* Urdu medium (Nov 2026 — owner ki nayi hidayat, Capture-24): jab pure
+   statements Urdu mein translate ho jayein to header ke NEECHE ka sara
+   hissa asal Urdu paper ki tarah RIGHT side se shuru hota hai. Is liye
+   Urdu medium mein har section .p-rtl (direction:rtl) banta hai — heading
+   right se, marks left end par, sawal number right par, options A→D
+   right-to-left. Paper container aur header hamesha LTR/English rehte
+   hain (container par koi flip nahi). Latin/math ke tukre .mx spans mein
+   bidi-isolate rehte hain taake RTL flow mein un ki andar ki tartib
+   (masalan {a, b} ya 3x + 1 = 0) na tute aur jumla un ke gird na phate. */
+.p-rtl{direction:rtl;text-align:right}
+.p-rtl .p-opts{margin-left:0;margin-right:20px}
+.mx{unicode-bidi:isolate}
+.urdu-text .mx{font-family:"Noto Sans","Times New Roman",Times,Arial,sans-serif;font-size:calc(1em / var(--ur-scale))}
+.bi-ur{display:block;text-align:right}
+.p-sec-sub[dir="rtl"]{text-align:right}
 .p-note{font-style:italic;font-size:12.5px;margin:4px 0 2px}
 .p-note.urdu-text{font-style:normal}
 .p-q{margin:7px 0 2px}
@@ -617,18 +634,21 @@ function labSpan(text, urdu) {
   return urdu ? '<span class="urdu-text" dir="auto">' + text + ":</span>" : text + ":";
 }
 /* Section heading ka title hissa (marks wala hissa caller lagata hai).
-   ur: "سوال نمبر N: <urdu title>" — span LTR head ke left par hi rehta hai.
-   bi: English heading + neeche Urdu subheading. en: sirf English. */
+   ur: "سوال نمبر N: <urdu title>" — Urdu medium mein section .p-rtl hai,
+   is liye heading RIGHT se shuru hoti hai aur marks left end par jate
+   hain; span par dir="rtl" wazeh tor par laga hai.
+   bi: English heading (LTR) + neeche Urdu subheading apni RTL line mein.
+   en: sirf English. */
 function secHeadTitle(sec, idx, medium) {
   var num = idx + 1;
   var isDefault = sec.title === SECTION_NAMES[sec.type];
   if (medium === "ur") {
     var t = isDefault ? (SECTION_NAMES_UR[sec.type] || sec.title) : sec.title;
-    return '<span class="urdu-text" dir="auto">سوال نمبر ' + num + ": " + esc(t) + "</span>";
+    return '<span class="urdu-text" dir="rtl">سوال نمبر ' + num + ": " + esc(t) + "</span>";
   }
   var h = "<span>Q." + num + " " + esc(sec.title) + "</span>";
   if (medium === "bi" && SECTION_NAMES_UR[sec.type]) {
-    h += '<div class="p-sec-sub urdu-text" dir="auto">سوال نمبر ' + num + ": " + SECTION_NAMES_UR[sec.type] + "</div>";
+    h += '<div class="p-sec-sub urdu-text" dir="rtl">سوال نمبر ' + num + ": " + SECTION_NAMES_UR[sec.type] + "</div>";
   }
   return h;
 }
@@ -671,30 +691,102 @@ function esc(s) {
   });
 }
 function hasUrdu(s) { return /[\u0600-\u06FF]/.test(String(s || "")); }
-/* Per-element language attributes: hamesha dir="auto" (kabhi rtl nahi) —
-   Urdu text wale element ko Nastaliq ke liye .urdu-text class milti hai.
-   Is se Urdu alfaz apni line ke andar sahi shape hote hain, lekin number,
-   options aur blocks ki LTR tartib kabhi nahi badalti. */
+/* Per-element language attributes (English/LTR hisse ke liye): dir="auto"
+   aur Urdu text wale element ko Nastaliq ke liye .urdu-text class.
+   Direction ka asal faisla ab medium karta hai (neeche richText dekhein):
+   Urdu medium mein neeche ka sara hissa RTL hai, English hissa LTR. */
 function langAttrs(s) { return ' dir="auto"' + (hasUrdu(s) ? ' class="urdu-text"' : ""); }
-/* Paper ke text ko line-wise spans mein todo: har line apne langAttrs ke
-   sath (Urdu line ko .urdu-text + dir=auto), lines <br> se judi hui.
-   Single-line text par output BILKUL purana wala ek span hai — koi farq
-   nahi. Bilingual tarjume mein statement ke neeche wali Urdu line
-   (jo "\n" se judi hoti hai) isi se Nastaliq font mein aati hai. */
-function richText(s) {
-  var lines = String(s == null ? "" : s).split("\n");
-  return lines.map(function (ln) { return "<span" + langAttrs(ln) + ">" + esc(ln) + "</span>"; }).join("<br>");
+/* Ek char Latin/math run ka hissa hai? (ASCII harf/number, math alamat,
+   aam punctuation aur space — Urdu/Arabic block ke harf is mein NAHI.) */
+function isMxChar(ch) {
+  return /[A-Za-z0-9{}()\[\]|=+\-−^<>≤≥∈∉∧∨∩∪⊂⊃⊆⊇∅√πθλμ°%*\/\\.,:;!?'"&~_#@×÷±∞→∠²³¹⁰⁴⁵⁶⁷⁸⁹₀₁₂₃₄ ]/.test(ch);
 }
-/* MCQ option: pehli line par "(A) " wala prefix. Single-line par output
-   bilkul purana wala hai; multi-line (bilingual tarjuma) par option ek
-   grid cell ke andar do lines mein aata hai. */
-function richOptText(o, letter) {
+/* RTL line ke andar ke Latin/math tukron ko bidi-ISOLATE karke HTML banao:
+   har woh run jo asal Latin/math hai (masalan "{a, b}", "{x | x = n^2}",
+   "3x + 1 = 0", "n ≤ 336") ek <span class="mx" dir="ltr"> mein band ho
+   jata hai — andar ki tartib bilkul waisi rehti hai aur RTL jumla us ke
+   gird sahi jagah par baithta hai (jumla run ke gird phatta nahi).
+   Kinare ki spaces run se bahar rehti hain; sirf number/harf/math alamat
+   wala run hi isolate hota hai, khaali punctuation nahi. */
+function isolateRunsHtml(raw) {
+  var s = String(raw == null ? "" : raw), out = "", i = 0, n = s.length;
+  while (i < n) {
+    if (isMxChar(s[i])) {
+      var j = i; while (j < n && isMxChar(s[j])) j++;
+      var run = s.slice(i, j);
+      var lead = run.match(/^ */)[0], trail = run.match(/ *$/)[0];
+      var core = run.slice(lead.length, run.length - trail.length);
+      if (core && /[A-Za-z0-9{}()\[\]|=+^<>%]/.test(core)) {
+        out += esc(lead) + '<span class="mx" dir="ltr">' + esc(core) + "</span>" + esc(trail);
+      } else out += esc(run);
+      i = j;
+    } else {
+      var k = i; while (k < n && !isMxChar(s[k])) k++;
+      out += esc(s.slice(i, k));
+      i = k;
+    }
+  }
+  return out;
+}
+/* Ek line RTL treat hogi ya nahi: Urdu medium mein har line; Bilingual
+   mein sirf woh line jis mein Urdu hai (English line LTR rehti hai). */
+function lineIsRtl(ln, medium) {
+  return medium === "ur" || (medium === "bi" && hasUrdu(ln));
+}
+/* Ek line ka span. RTL line: dir="rtl" (+ Urdu ho to .urdu-text) aur
+   andar ke math/Latin tukre isolateRunsHtml se isolate. Bilingual ki
+   Urdu line ko .bi-ur (block, right-aligned) bhi milta hai taake wo
+   English line ke neeche apni RTL line ban kar aye. LTR line par
+   output purana wala hi hai (langAttrs + esc). */
+function richLineHtml(ln, medium) {
+  if (!lineIsRtl(ln, medium)) return "<span" + langAttrs(ln) + ">" + esc(ln) + "</span>";
+  var cls = hasUrdu(ln) ? ' class="urdu-text' + (medium === "bi" ? " bi-ur" : "") + '"' : (medium === "bi" ? ' class="bi-ur"' : "");
+  return '<span dir="rtl"' + cls + ">" + isolateRunsHtml(ln) + "</span>";
+}
+/* Paper ke text ko line-wise spans mein todo (medium ke hisaab se har
+   line LTR ya RTL). Block-level line (.bi-ur) ke sath <br> nahi lagta —
+   wo khud nayi line banati hai; baqi lines <br> se judti hain.
+   Medium na diya jaye ya English ho to output BILKUL purana wala hai. */
+function richText(s, medium) {
+  var lines = String(s == null ? "" : s).split("\n");
+  var parts = lines.map(function (ln) {
+    return { html: richLineHtml(ln, medium), block: medium === "bi" && lineIsRtl(ln, medium) };
+  });
+  var out = "";
+  parts.forEach(function (p, i) {
+    if (i > 0 && !p.block && !parts[i - 1].block) out += "<br>";
+    out += p.html;
+  });
+  return out;
+}
+/* MCQ option: pehli line par "(A)" wala label. RTL (Urdu medium) mein
+   label ek isolate LTR tukra ban kar line ke RIGHT start par aata hai
+   aur baqi option RTL flow mein us ke baad chalta hai — grid cell khud
+   .p-rtl ki wajah se RTL hai, is liye A right par, phir B, C, D.
+   LTR par output purana wala hi hai. */
+function richOptText(o, letter, medium) {
   var lines = String(o == null ? "" : o).split("\n");
+  if (lines.length === 1 && lineIsRtl(lines[0], medium)) {
+    var cls = hasUrdu(lines[0])
+      ? ' class="urdu-text' + (medium === "bi" ? " bi-ur" : "") + '"'
+      : (medium === "bi" ? ' class="bi-ur"' : "");
+    return '<span dir="rtl"' + cls + '><span class="mx" dir="ltr">(' + letter + ")</span> " + isolateRunsHtml(lines[0]) + "</span>";
+  }
   if (lines.length === 1) return "<span" + langAttrs(o) + ">(" + letter + ") " + esc(o) + "</span>";
   var inner = lines.map(function (ln, i) {
+    if (lineIsRtl(ln, medium)) {
+      var rc = hasUrdu(ln) ? ' class="urdu-text' + (medium === "bi" ? " bi-ur" : "") + '"' : (medium === "bi" ? ' class="bi-ur"' : "");
+      return '<span dir="rtl"' + rc + ">" + (i === 0 ? '<span class="mx" dir="ltr">(' + letter + ")</span> " : "") + isolateRunsHtml(ln) + "</span>";
+    }
     return "<span" + langAttrs(ln) + ">" + (i === 0 ? "(" + letter + ") " : "") + esc(ln) + "</span>";
-  }).join("<br>");
-  return "<span>" + inner + "</span>";
+  });
+  /* Block (.bi-ur) line se pehle <br> nahi — wo khud nayi line hai. */
+  var out = "";
+  inner.forEach(function (p, i) {
+    if (i > 0 && !(medium === "bi" && lineIsRtl(lines[i], medium)) && !(medium === "bi" && lineIsRtl(lines[i - 1], medium))) out += "<br>";
+    out += p;
+  });
+  return "<span>" + out + "</span>";
 }
 
 function autoCode(subject, clazz) {
@@ -1430,9 +1522,12 @@ function paperHTML(st) {
   var su = st.setup;
   var L = paperLabels(su.medium);
   var shown = st.sections.filter(function (s) { return s.questions.length > 0; });
-  /* Paper ka container HAR medium mein dir="ltr" — flow left-to-right hi
-     rehta hai. Header hamesha English (paperLabels); medium sirf header
-     ke neeche (section headings, instructions, attempt lines) badalta hai. */
+  /* Paper ka container HAR medium mein dir="ltr" rehta hai aur header
+     hamesha English (paperLabels). Urdu medium mein header ke NEECHE ke
+     sections .p-rtl (dir="rtl") bante hain — asal Urdu paper ki tarah
+     sab kuch right side se shuru hota hai (owner ki nayi hidayat jab se
+     pure statements translate hote hain). English medium sab LTR;
+     Bilingual mein English lines LTR aur Urdu lines apni RTL line mein. */
   var h = '<div class="paper" dir="ltr">';
   h += '<div class="p-head"><div class="p-school' + (hasUrdu(su.school) ? " urdu-text" : "") + '" dir="auto">' + esc(su.school || "School Name") + "</div>";
   h += '<div class="p-band">' + labSpan(L.subject, L.urdu) + " <span" + langAttrs(su.subject) + ">" + esc(su.subject || "—") + "</span>" +
@@ -1449,7 +1544,8 @@ function paperHTML(st) {
   }
   shown.forEach(function (sec, i) {
     var c = sectionCountedMarks(sec);
-    h += '<div class="p-sec"><div class="p-sec-head"><div>' + secHeadTitle(sec, i, su.medium) + "</div><span>(" + c.marks + ")</span></div>";
+    var rtlSec = su.medium === "ur";
+    h += '<div class="p-sec' + (rtlSec ? " p-rtl" : "") + '"' + (rtlSec ? ' dir="rtl"' : "") + '><div class="p-sec-head"><div>' + secHeadTitle(sec, i, su.medium) + "</div><span>(" + c.marks + ")</span></div>";
     var instr = [];
     if (sec.attempt && parseInt(sec.attempt, 10) > 0 && parseInt(sec.attempt, 10) < sec.questions.length) {
       if (su.medium === "ur")
@@ -1466,14 +1562,14 @@ function paperHTML(st) {
     }
     if (instr.length) {
       var instrText = instr.join(" ");
-      h += '<div class="p-note' + (hasUrdu(instrText) ? " urdu-text" : "") + '" dir="auto">' + esc(instrText) + "</div>";
+      h += '<div class="p-note' + (hasUrdu(instrText) ? " urdu-text" : "") + '" dir="' + (rtlSec ? "rtl" : "auto") + '">' + esc(instrText) + "</div>";
     }
     sec.questions.forEach(function (q, qi) {
-      h += '<div class="p-q"><b>' + (qi + 1) + ".</b> " + richText(q.q) + "</div>";
+      h += '<div class="p-q"><b>' + (qi + 1) + ".</b> " + richText(q.q, su.medium) + "</div>";
       if (sec.type === "mcq") {
         h += '<div class="p-opts">';
         q.opts.forEach(function (o, oi) {
-          h += richOptText(o, LETTERS[oi]);
+          h += richOptText(o, LETTERS[oi], su.medium);
         });
         h += "</div>";
       } else if (sec.type === "long") {
@@ -1489,9 +1585,10 @@ function keyHTML(st) {
   var keys = buildKey(st);
   var su = st.setup;
   var L = paperLabels(su.medium);
-  /* Answer key bhi har medium mein LTR flow mein. Title band (header)
-     hamesha English "ANSWER KEY"; medium sirf neeche ke section
-     headings par lagti hai. */
+  /* Answer key ka title band (header) hamesha English "ANSWER KEY" aur
+     LTR rehta hai; letter wali table bhi LTR. Urdu medium mein section
+     headings aur jawab wali text list RTL ho jati hai (paper ki tarah),
+     taake Urdu jawab sahi tartib mein parha jaye. */
   var h = '<div class="paper" dir="ltr">';
   h += '<div class="p-head"><div class="p-school' + (hasUrdu(su.school) ? " urdu-text" : "") + '" dir="auto">' + esc(su.school || "School Name") + "</div>";
   h += '<div class="p-band">' + (L.urdu ? '<span class="urdu-text" dir="auto">' + L.keyWord + "</span>" : L.keyWord) +
@@ -1504,15 +1601,16 @@ function keyHTML(st) {
   st.sections.forEach(function (s, si) { if (s.questions.length > 0) shownPos[si] = Object.keys(shownPos).length; });
   keys.forEach(function (k) {
     var sec = st.sections[k.section] || { title: k.title, type: "mcq" };
-    h += '<div class="p-sec"><div class="p-sec-head"><div>' + secHeadTitle(sec, shownPos[k.section] || 0, su.medium) + "</div></div>";
+    var rtlKey = su.medium === "ur";
+    h += '<div class="p-sec"><div class="p-sec-head"' + (rtlKey ? ' dir="rtl"' : "") + '><div>' + secHeadTitle(sec, shownPos[k.section] || 0, su.medium) + "</div></div>";
     h += '<table class="keytable"><tr>';
     k.items.forEach(function (it, i) {
       h += "<td>" + it.n + ". " + it.letter + "</td>";
       if ((i + 1) % 5 === 0 && i < k.items.length - 1) h += "</tr><tr>";
     });
     h += "</tr></table>";
-    h += "<div>" + k.items.map(function (it) {
-      return "<div>" + it.n + ". (" + it.letter + ") " + richText(it.text || "— teacher mark karein") + "</div>";
+    h += "<div" + (rtlKey ? ' class="p-rtl" dir="rtl"' : "") + ">" + k.items.map(function (it) {
+      return "<div>" + it.n + ". (" + it.letter + ") " + richText(it.text || "— teacher mark karein", su.medium) + "</div>";
     }).join("") + "</div></div>";
   });
   h += "</div>";
@@ -3486,7 +3584,7 @@ window.KPG = {
   TR_LS: TR_LS, collectTranslateItems: collectTranslateItems, buildTranslatePrompt: buildTranslatePrompt,
   parseTranslateReply: parseTranslateReply, runTranslate: runTranslate, undoTranslate: undoTranslate,
   renderTranslateBox: renderTranslateBox, hasTranslateSnapshot: hasTranslateSnapshot,
-  richText: richText, richOptText: richOptText,
+  richText: richText, richOptText: richOptText, isolateRunsHtml: isolateRunsHtml,
   getSchemeEditRows: function () { return schemeEditRows; },
   setSchemeEditRows: function (r) { schemeEditRows = r || []; renderSchemeRows(); }
 };
