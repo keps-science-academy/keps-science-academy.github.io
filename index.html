@@ -385,22 +385,36 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
         </div>
         <div class="hint">Puter account <b>bilkul free</b> hai — sirf email se banta hai, <b>koi bank card nahi chahiye</b>. Har free account ko har month kuch <b>free AI allowance</b> milta hai; sawal usi allowance se bante hain, is website ko kuch pay nahi karna parta. Ek dafa sign in kar lein to browser yaad rakhta hai — har dafa sign in nahi karna parta.</div>
       </div>
-      <label class="fl" for="photoFiles">Page Photos (jpg / png — ek ya zyada, har photo = ek safha)</label>
-      <input type="file" id="photoFiles" accept="image/*" multiple>
-      <div id="photoPreviews" style="margin-top:8px"></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px">
+        <button type="button" class="btn" id="btnModePhoto">📷 Photo se</button>
+        <button type="button" class="btn ghost" id="btnModeText">📝 Text Paste</button>
+      </div>
+      <div id="photoModeBox">
+        <label class="fl" for="photoFiles">Page Photos (jpg / png — ek ya zyada, har photo = ek safha)</label>
+        <input type="file" id="photoFiles" accept="image/*" multiple>
+        <div id="photoPreviews" style="margin-top:8px"></div>
+      </div>
+      <div id="textModeBox" style="display:none">
+        <label class="fl" for="pasteText">Book ka Text / Sawal Paste Karein</label>
+        <textarea id="pasteText" rows="8" placeholder="Yahan book ka text ya sawal paste karein — AI MCQ, Short aur Long alag alag karke paper mein jod dega."></textarea>
+        <div class="hint">Paste ek dafa mein <b>~8000 characters</b> tak; bara chapter ho to hison mein paste karein. Agar text mein pehle se sawal/mashq hai to AI wahi sawal <b>lafz-ba-lafz</b> nikalega; agar sirf chapter ka text hai to AI usi se sawal banayega. Sawal usi zuban mein aayenge jis mein text hai.</div>
+        <div class="hint" id="pasteCount" style="margin-top:2px">0 characters</div>
+      </div>
       <div class="row3" style="margin-top:8px">
-        <div><label class="fl" for="aiMcqCount">MCQs kitne?</label>
-          <select id="aiMcqCount"><option value="5" selected>5 MCQs</option><option value="10">10 MCQs</option></select></div>
-        <div><label class="fl" for="aiShortCount">Short kitne?</label>
-          <select id="aiShortCount"><option value="3">3 Short</option><option value="5" selected>5 Short</option></select></div>
-        <div><label class="fl" for="aiLongCount">Long kitne?</label>
-          <select id="aiLongCount"><option value="1" selected>1 Long</option><option value="2">2 Long</option></select></div>
+        <div><label class="fl" for="aiMcqCount">Kitne MCQ?</label>
+          <input type="number" id="aiMcqCount" min="0" max="30" step="1" value="5"></div>
+        <div><label class="fl" for="aiShortCount">Kitne Short?</label>
+          <input type="number" id="aiShortCount" min="0" max="20" step="1" value="5"></div>
+        <div><label class="fl" for="aiLongCount">Kitne Long?</label>
+          <input type="number" id="aiLongCount" min="0" max="10" step="1" value="1"></div>
       </div>
       <button type="button" class="btn big" id="btnAiGen" style="margin-top:10px">🤖 AI se Sawal Banayein — Free, Bina Key</button>
       <div class="hint">Ye <b>mazboot AI</b> hai (GPT/Claude class) jo photo parh kar sawal <b>bana</b> kar deta hai — <b>koi API key nahi chahiye</b>, bas upar wala <b>ek-dafa FREE Puter sign in</b> chahiye. Jawab aam taur par <b>seconds se ek minute</b> mein aa jata hai. Behtar result ke liye: <b>ek safha = ek photo, qareeb se, saaf roshni mein</b>.</div>
       <div class="hint" id="aiGenStatus"></div>
-      <button type="button" class="btn ghost" id="btnAiGenSlow" style="margin-top:6px">🐢 Bina Sign-In Wala Slow Tareeqa (free CPU server)</button>
-      <div class="hint">Slow tareeqa ek free CPU server (Qwen2.5-VL) use karta hai — sign in nahi chahiye, lekin asal test mein ye <b>10–12 minute mein bhi time out</b> ho gaya tha. Upar wala Puter wala tareeqa hi behtar hai; ye sirf backup hai.</div>
+      <div id="photoSlowBox">
+        <button type="button" class="btn ghost" id="btnAiGenSlow" style="margin-top:6px">🐢 Bina Sign-In Wala Slow Tareeqa (free CPU server)</button>
+        <div class="hint">Slow tareeqa ek free CPU server (Qwen2.5-VL) use karta hai — sign in nahi chahiye, lekin asal test mein ye <b>10–12 minute mein bhi time out</b> ho gaya tha. Upar wala Puter wala tareeqa hi behtar hai; ye sirf backup hai.</div>
+      </div>
       <h3>📝 Review — Sawal Check Karein</h3>
       <div class="hint" style="border:1px solid var(--warn);border-radius:7px;padding:7px 9px">⚠ <b>Note:</b> Sawal aur un ke <b>sahi jawab AI ne banaye hain</b> — paper mein shamil karne se pehle har sawal aur us ka sahi jawab khud check kar lein. Jo ghalat lage, yahin theek kar dein ya unselect kar dein.</div>
       <div class="hint" id="candQuality"></div>
@@ -677,6 +691,7 @@ var state = defaultState();
 var _lastAutoCode = ""; // last auto-suggested paper code (manual edits are never overridden)
 var formBuf = {};   // transient per-section add-form values {secId:{q,o0..o3,ans}}
 var bulkBuf = {};   // transient per-section bulk paste text
+var blankCountBuf = {}; // transient per-section "kitne khaali sawal" counts
 var editCtx = null; // {secId, idx}
 
 function getSection(id) {
@@ -1622,6 +1637,22 @@ function bufFor(id) {
   if (!formBuf[id]) formBuf[id] = { q: "", o0: "", o1: "", o2: "", o3: "", ans: "0", chapter: "" };
   return formBuf[id];
 }
+/* Ek khaali sawal — bilkul waisi shape/defaults jaisi single-add
+   (q-add) banata hai: MCQ mein 4 khaali options aur ans 0 (form ki
+   default), Short/Long mein sirf khaali q. Baad mein ✎ se bhartay hain. */
+function blankQuestion(type) {
+  if (type === "mcq") return { q: "", opts: ["", "", "", ""], ans: 0 };
+  return { q: "" };
+}
+/* Section mein ek sath N khaali sawal jodein (N: 1–20, ghalat/khaali
+   ho to 5). Juday hue sawalon ki tadaad return hoti hai. */
+function addBlankQuestions(sec, n) {
+  n = parseInt(n, 10);
+  if (isNaN(n)) n = 5;
+  n = Math.max(1, Math.min(20, n));
+  for (var i = 0; i < n; i++) sec.questions.push(blankQuestion(sec.type));
+  return n;
+}
 function renderSections() {
   var wrap = document.getElementById("sectionsWrap");
   var html = "";
@@ -1686,6 +1717,14 @@ function renderSections() {
         ? '<button type="button" class="btn small" data-act="q-save-edit">💾 Save Edit</button> <button type="button" class="btn small ghost" data-act="q-cancel-edit">Cancel</button>'
         : '<button type="button" class="btn small" data-act="q-add">＋ Add Question</button>') +
       "</div>";
+    if (!editing) {
+      var bcVal = blankCountBuf[sec.id];
+      if (bcVal === undefined || bcVal === "") bcVal = 5;
+      html += '<div style="margin-top:6px"><label class="fl" style="display:inline-block;margin-right:6px">Kitne sawal jodein?</label>' +
+        '<input type="number" min="1" max="20" step="1" value="' + esc(bcVal) + '" data-bulk-count style="width:76px;display:inline-block;margin-right:6px">' +
+        '<button type="button" class="btn small ghost" data-act="q-add-blank">＋ Itne sawal jodein</button>' +
+        '<div class="hint">Utne khaali sawal ek sath jud jayenge — phir har sawal ke ✎ par click karke usay bhar dein.</div></div>';
+    }
     /* bulk paste */
     html += "<h3>📋 Bulk Paste</h3>";
     if (sec.type === "mcq") {
@@ -1777,6 +1816,7 @@ function bindSections() {
     var fm = e.target.getAttribute("data-form");
     if (fm) { bufFor(sec.id)[fm] = e.target.value; return; }
     if (e.target.hasAttribute("data-bulk")) { bulkBuf[sec.id] = e.target.value; }
+    if (e.target.hasAttribute("data-bulk-count")) { blankCountBuf[sec.id] = e.target.value; return; }
   });
   wrap.addEventListener("change", function (e) {
     var card = e.target.closest("[data-sec]"); if (!card) return;
@@ -1829,6 +1869,10 @@ function bindSections() {
       if (b3.chapter) nq.chapter = b3.chapter;
       sec.questions.push(nq);
       formBuf[sec.id] = { q: "", o0: "", o1: "", o2: "", o3: "", ans: "0", chapter: "" };
+      renderSections(); refreshLight();
+    }
+    else if (act === "q-add-blank") {
+      addBlankQuestions(sec, parseInt(blankCountBuf[sec.id], 10));
       renderSections(); refreshLight();
     }
     else if (act === "bulk-add") {
@@ -2338,6 +2382,24 @@ function showPreviews(files) {
    prompt ko "You are a professional medical AI... Context: {prompt}"
    mein lapetata hai). Phir sakht hidayat: sirf is safhe ki content se
    sawal banao, ginati exact, JSON compact (server ki 768-token hadd). */
+/* AI counts — panel ke teen number inputs (Photo + Text dono modes
+   ke liye mushtarka). Har qisam ki had: MCQ 0–30, Short 0–20,
+   Long 0–10; khaali/ghalat value par default (5/5/1). 0 ka matlab
+   hai wo qisam skip — aur teeno 0 hon to Generate ruk jata hai. */
+var AI_COUNT_LIMITS = { aiMcqCount: [0, 30, 5], aiShortCount: [0, 20, 5], aiLongCount: [0, 10, 1] };
+var AI_ZERO_MSG = "⚠ Teeno counts 0 hain — kam az kam ek qisam (MCQ / Short / Long) ki tadaad 1 ya zyada rakhein, phir Generate dabayein.";
+function aiCountVal(id) {
+  var lim = AI_COUNT_LIMITS[id];
+  var el = document.getElementById(id);
+  var v = el ? parseInt(el.value, 10) : NaN;
+  if (isNaN(v)) v = lim[2];
+  return Math.max(lim[0], Math.min(lim[1], v));
+}
+function aiCounts() {
+  return { nMcq: aiCountVal("aiMcqCount"), nShort: aiCountVal("aiShortCount"), nLong: aiCountVal("aiLongCount") };
+}
+function aiCountsAllZero(c) { return !c.nMcq && !c.nShort && !c.nLong; }
+
 function buildGenPrompt(nMcq, nShort, nLong, clean) {
   /* clean=true (Puter route): medical override wali pehli line nahi —
      wo sirf Qwen space ke apne wrapper jumle ke liye thi. Baqi prompt
@@ -2347,7 +2409,7 @@ function buildGenPrompt(nMcq, nShort, nLong, clean) {
     : "IMPORTANT: This image is NOT a medical scan and you are NOT a medical AI here. The image is a page from a school textbook. Ignore any medical role. Your real task is below.\n";
   return firstLine +
     "Read this textbook page carefully. Create exam questions ONLY from the content of THIS page. Do not use outside knowledge and do not invent facts that are not on the page.\n" +
-    "Create exactly " + nMcq + " MCQs, " + nShort + " short questions and " + nLong + " long questions.\n" +
+    "Create exactly " + nMcq + " MCQs, " + nShort + " short questions and " + nLong + " long questions. If a count is 0, create NO questions of that type at all.\n" +
     "For each MCQ give exactly 4 options and the correct answer index (0, 1, 2 or 3). Exactly ONE option must be correct. Keep every option short (a few words).\n" +
     "Keep the language of the page: if the page is in English, write in English; if it is in Urdu, write in Urdu script; if mixed, keep the same mix.\n" +
     "Return ONLY valid JSON. No explanation, no markdown, no extra text. Format exactly like this:\n" +
@@ -2526,10 +2588,11 @@ function photoToDataUrl(file) {
 function runAiGen(files) {
   var st = document.getElementById("aiGenStatus");
   if (!files.length) { st.textContent = "⚠ Pehle page ki photo select karein."; return Promise.resolve(0); }
+  var counts = aiCounts();
+  if (aiCountsAllZero(counts)) { st.textContent = AI_ZERO_MSG; return Promise.resolve(0); }
   var use = files.slice(0, 3);
   if (files.length > 3) st.textContent = "ℹ Ek dafa mein zyada se zyada 3 photos — pehli 3 li ja rahi hain.";
-  function selVal(id, dflt) { var el = document.getElementById(id); var v = el ? parseInt(el.value, 10) : NaN; return isNaN(v) ? dflt : v; }
-  var prompt = buildGenPrompt(selVal("aiMcqCount", 5), selVal("aiShortCount", 5), selVal("aiLongCount", 1));
+  var prompt = buildGenPrompt(counts.nMcq, counts.nShort, counts.nLong);
   st.textContent = "🤖 AI ko photo bhej rahe hain… (free CPU server hai — 1 photo par chand minute lag sakte hain, page band na karein)";
   var all = [], failed = 0;
   var chain = Promise.resolve();
@@ -2658,11 +2721,12 @@ function runPuterGen(files) {
   var st = document.getElementById("aiGenStatus");
   if (!files || !files.length) { st.textContent = "⚠ Pehle page ki photo select karein."; return Promise.resolve(0); }
   if (!puterReady()) { st.textContent = "⚠ Puter library load nahi hui — internet check karke page refresh karein, ya neeche wala slow tareeqa azmayein."; return Promise.resolve(0); }
+  var counts = aiCounts();
+  if (aiCountsAllZero(counts)) { st.textContent = AI_ZERO_MSG; return Promise.resolve(0); }
   var use = files.slice(0, 3);
   if (files.length > 3) st.textContent = "ℹ Ek dafa mein zyada se zyada 3 photos — pehli 3 li ja rahi hain.";
   function go() {
-    function selVal(id, dflt) { var el = document.getElementById(id); var v = el ? parseInt(el.value, 10) : NaN; return isNaN(v) ? dflt : v; }
-    var prompt = buildGenPrompt(selVal("aiMcqCount", 5), selVal("aiShortCount", 5), selVal("aiLongCount", 1), true);
+    var prompt = buildGenPrompt(counts.nMcq, counts.nShort, counts.nLong, true);
     st.textContent = "🤖 AI ko photo bhej rahe hain…";
     var all = [], failed = 0;
     var chain = Promise.resolve();
@@ -2691,6 +2755,83 @@ function runPuterGen(files) {
       var nl = all.filter(function (c) { return c.type === "long"; }).length;
       st.textContent = "✔ AI ne " + all.length + " sawal banaye (" + nm + " MCQ, " + ns + " Short, " + nl + " Long) — neeche Review mein sawal aur sahi jawab check karke paper mein shamil karein.";
       return all.length;
+    });
+  }
+  if (puterSignedIn()) return go();
+  st.textContent = "🔐 Pehle FREE Puter sign in chahiye — popup khul raha hai…";
+  return puterDoSignIn().then(function (ok) {
+    if (!ok) { st.textContent = "⚠ Pehle FREE Puter account se sign in karein (upar wala Sign In button) — baghair sign in ke AI nahi chalega. Account bilkul free hai, sirf email se banta hai."; return 0; }
+    return go();
+  });
+}
+
+/* ---- TEXT PASTE mode: photo ki jagah book ka text paste karein ----
+   Panel ke upar do tabs hain: "📷 Photo se" (purana flow, bilkul
+   waisa hi) aur "📝 Text Paste" (naya). Counts (MCQ/Short/Long),
+   Generate button, Review list, Paper-mein-jodein aur Answer Key —
+   sab DONO modes ke liye ek hi hain; sirf input badalta hai. */
+var aiInputMode = "photo";
+function setAiInputMode(m) {
+  aiInputMode = (m === "text") ? "text" : "photo";
+  var isText = aiInputMode === "text";
+  var pb = document.getElementById("photoModeBox");
+  var tb = document.getElementById("textModeBox");
+  var sb = document.getElementById("photoSlowBox");
+  if (pb) pb.style.display = isText ? "none" : "";
+  if (tb) tb.style.display = isText ? "" : "none";
+  if (sb) sb.style.display = isText ? "none" : "";
+  var bp = document.getElementById("btnModePhoto");
+  var bt = document.getElementById("btnModeText");
+  if (bp) bp.className = isText ? "btn ghost" : "btn";
+  if (bt) bt.className = isText ? "btn" : "btn ghost";
+  return aiInputMode;
+}
+function updatePasteCount() {
+  var ta = document.getElementById("pasteText");
+  var el = document.getElementById("pasteCount");
+  if (ta && el) el.textContent = String(ta.value || "").length + " characters";
+}
+/* Text mode ka prompt — jawab ki shape photo wale buildGenPrompt
+   jaisi hi (parseAiQuestions dono ko parhta hai). Farq sirf itna:
+   text pehle se sawal/mashq ho to EXTRACT lafz-ba-lafz; warna
+   chapter text se sawal banao. Zuban text ki apni rehti hai. */
+function buildTextGenPrompt(nMcq, nShort, nLong) {
+  return "You are given TEXT pasted from a school textbook or its exercise (it appears at the end, between the markers). Your task is below.\n" +
+    "FIRST decide what kind of text it is:\n" +
+    "- If the text ALREADY contains questions (an exercise, a question list, MCQs with options, an answer key, etc.): EXTRACT those questions word-for-word — do NOT invent, reword, translate or summarise them. Keep each MCQ's options exactly as given. Mark the correct answer ONLY when the text makes it determinable (for example an answer key in the text, a tick mark, or an unambiguous fact in the text); if the correct answer cannot be determined from the text, use -1 as that MCQ's answer.\n" +
+    "- If the text is plain chapter or notes content (no questions in it): create exam questions ONLY from this content. Do not use outside knowledge and do not invent facts that are not in the text. In this case create exactly " + nMcq + " MCQs, " + nShort + " short questions and " + nLong + " long questions.\n" +
+    "When extracting, return as many real questions of each type as the text actually contains, up to " + nMcq + " MCQs, " + nShort + " short questions and " + nLong + " long questions. If a count is 0, return NO questions of that type at all.\n" +
+    "For each MCQ give exactly 4 options and the correct answer index (0, 1, 2 or 3), or -1 when it cannot be determined from the text. Keep every option short (a few words).\n" +
+    "Keep the language of the text: if the text is in Urdu, write the questions in Urdu script; if it is in English, write in English; if mixed, keep the same mix. Copy math, formulas, units and numbers EXACTLY as written.\n" +
+    "Return ONLY valid JSON. No explanation, no markdown, no extra text. Format exactly like this:\n" +
+    '{"mcqs":[{"q":"question text","options":["opt1","opt2","opt3","opt4"],"answer":0}],"shorts":["short question 1"],"longs":["long question 1"]}';
+}
+function runPuterTextGen(textOverride) {
+  var st = document.getElementById("aiGenStatus");
+  var text = "";
+  if (typeof textOverride === "string") text = textOverride.trim();
+  else { var ta = document.getElementById("pasteText"); text = ta ? String(ta.value || "").trim() : ""; }
+  if (!text) { st.textContent = "⚠ Pehle upar wale box mein book ka text paste karein."; return Promise.resolve(0); }
+  if (!puterReady()) { st.textContent = "⚠ Puter library load nahi hui — internet check karke page refresh karein."; return Promise.resolve(0); }
+  var counts = aiCounts();
+  if (aiCountsAllZero(counts)) { st.textContent = AI_ZERO_MSG; return Promise.resolve(0); }
+  function go() {
+    var clipped = text.slice(0, 8000);
+    var prompt = buildTextGenPrompt(counts.nMcq, counts.nShort, counts.nLong) +
+      "\n\n===== PASTED TEXT =====\n" + clipped + "\n===== END OF PASTED TEXT =====";
+    st.textContent = "🤖 AI text parh kar sawal bana raha hai…" + (text.length > 8000 ? " (text bara tha — pehle 8000 characters bheje gaye hain)" : "");
+    return puterChatText(prompt).then(function (txt) {
+      var cands = parseAiQuestions(txt);
+      if (!cands.length) { st.textContent = "⚠ AI ke jawab se koi sawal nahi bana — text check karke dobara koshish karein. Agar text mein sawal hain to thora saaf hissa paste karke azmayein."; return 0; }
+      setCandidates(cands);
+      var nm = cands.filter(function (c) { return c.type === "mcq"; }).length;
+      var ns = cands.filter(function (c) { return c.type === "short"; }).length;
+      var nl = cands.filter(function (c) { return c.type === "long"; }).length;
+      st.textContent = "✔ AI ne " + cands.length + " sawal banaye (" + nm + " MCQ, " + ns + " Short, " + nl + " Long) — neeche Review mein sawal aur sahi jawab check karke paper mein shamil karein.";
+      return cands.length;
+    }).catch(function (e) {
+      st.textContent = "⚠ AI fail: " + (e && e.message ? e.message : e) + " — dobara koshish karein. Agar ye ghalti baar baar aaye to ho sakta hai is month ki free allowance khatam ho — kuch dair baad dobara koshish karein.";
+      return 0;
     });
   }
   if (puterSignedIn()) return go();
@@ -2773,7 +2914,15 @@ function runGemini(files) {
 function bindPhoto() {
   var inp = document.getElementById("photoFiles");
   inp.addEventListener("change", function () { showPreviews(selectedPhotoFiles()); });
-  document.getElementById("btnAiGen").addEventListener("click", function () { runPuterGen(selectedPhotoFiles()); });
+  document.getElementById("btnModePhoto").addEventListener("click", function () { setAiInputMode("photo"); });
+  document.getElementById("btnModeText").addEventListener("click", function () { setAiInputMode("text"); });
+  var ptEl = document.getElementById("pasteText");
+  if (ptEl) ptEl.addEventListener("input", updatePasteCount);
+  updatePasteCount();
+  document.getElementById("btnAiGen").addEventListener("click", function () {
+    if (aiInputMode === "text") runPuterTextGen();
+    else runPuterGen(selectedPhotoFiles());
+  });
   document.getElementById("btnAiGenSlow").addEventListener("click", function () { runAiGen(selectedPhotoFiles()); });
   document.getElementById("btnPuterSignIn").addEventListener("click", function () { puterDoSignIn(); });
   document.getElementById("btnPuterSignOut").addEventListener("click", function () { puterDoSignOut(); });
@@ -3550,6 +3699,12 @@ window.KPG = {
   addSelectedCandidates: addSelectedCandidates,
   runAiGen: runAiGen, runGemini: runGemini,
   runPuterGen: runPuterGen, puterChatOnce: puterChatOnce, puterRespText: puterRespText,
+  buildTextGenPrompt: buildTextGenPrompt, runPuterTextGen: runPuterTextGen,
+  setAiInputMode: setAiInputMode, getAiInputMode: function () { return aiInputMode; },
+  updatePasteCount: updatePasteCount,
+  aiCounts: aiCounts, aiCountsAllZero: aiCountsAllZero, AI_ZERO_MSG: AI_ZERO_MSG,
+  AI_COUNT_LIMITS: AI_COUNT_LIMITS,
+  blankQuestion: blankQuestion, addBlankQuestions: addBlankQuestions,
   puterSignedIn: puterSignedIn, refreshPuterAuthUI: refreshPuterAuthUI, PUTER_MODEL: PUTER_MODEL,
   renderAll: renderAll, renderSections: renderSections, renderPreview: renderPreview,
   buildPdfClone: buildPdfClone, removePdfStage: removePdfStage,
