@@ -280,6 +280,7 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
 /* ===== PRINT ===== */
 #printRoot{display:none}
 @page{size:A4;margin:11mm}
+@page twoup{size:A4 landscape;margin:6mm}
 @media print{
   body>*:not(#printRoot){display:none !important}
   #printRoot{display:block !important}
@@ -288,6 +289,19 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
   .p-sec{page-break-inside:avoid}
   .page-tag{display:none !important}
   #printRoot .paper-page2{break-before:page;page-break-before:always}
+  /* ✂ 2-up print: har source page ek LANDSCAPE sheet par do copies
+     mein — copies CSS transform se scale hoti hain (natural 210mm
+     chaudi paper → 0.66 scale = 138.6mm, har half 142.5mm mein
+     center), darmiyan mein dashed cut line, neeche reminder strip.
+     Sheet ka nap: margin 6mm ke sath content box 285 x 198mm. */
+  #printRoot .twoup-sheet{page:twoup;position:relative;width:285mm;height:197mm;overflow:hidden;break-after:page;page-break-after:always}
+  #printRoot .twoup-sheet:last-child{break-after:auto;page-break-after:auto}
+  #printRoot .twoup-copy{position:absolute;top:0;width:210mm;transform:scale(.66);transform-origin:top left}
+  #printRoot .twoup-copy-l{left:2mm}
+  #printRoot .twoup-copy-r{left:144.5mm}
+  #printRoot .twoup-copy .paper-page2{break-before:auto;page-break-before:auto}
+  #printRoot .twoup-cut{position:absolute;top:2mm;bottom:9mm;left:50%;border-left:1.2px dashed #999}
+  #printRoot .twoup-reminder{position:absolute;left:0;right:0;bottom:1mm;text-align:center;font:11px "Segoe UI",sans-serif;color:#777}
 }
 </style>
 </head>
@@ -297,7 +311,7 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
   <p>Free test paper maker for teachers — MCQs, Short &amp; Long Questions • English / اردو / Bilingual • Live A4 preview • PDF download • 100% Free</p>
 </header>
 
-<div id="setupBanner" style="display:none">⚠ <b>Login system ki setup baqi hai</b> — site abhi sab ke liye khuli hai. Server lagane ke liye neeche wala <b>Server Setup</b> card dekhein (SETUP-URDU guide ke steps).</div>
+<div id="setupBanner" style="display:none">⚠ <b>The login system setup is pending</b> — the site is currently open to everyone. To set up the server, see the <b>Server Setup</b> card below (steps in the SETUP-URDU guide).</div>
 
 <div id="userBar" style="display:none">
   <span>👤 <b id="ubUser"></b><span class="rolebadge" id="ubRole"></span></span>
@@ -313,11 +327,11 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
   <div>
     <div class="card" id="serverSetupCard" style="display:none">
       <h2>🔧 Server Setup (Login System)</h2>
-      <p class="hint" style="margin-top:0">Login system ke liye Google Apps Script wala server chahiye (bilkul free). Pehle <b>backend/Code.gs</b> deploy karein (SETUP-URDU.txt ke steps), phir us ka <b>/exec URL</b> yahan paste kar dein. URL save hote hi login lazmi ho jayega.</p>
+      <p class="hint" style="margin-top:0">The login system needs a Google Apps Script server (completely free). First deploy <b>backend/Code.gs</b> (steps in SETUP-URDU.txt), then paste its <b>/exec URL</b> here. As soon as the URL is saved, login becomes mandatory.</p>
       <label class="fl" for="srvUrlInput">Server URL (/exec)</label>
       <input type="text" id="srvUrlInput" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off">
       <div style="margin-top:7px">
-        <button type="button" class="btn" id="btnSrvSave">💾 URL Save Karein</button>
+        <button type="button" class="btn" id="btnSrvSave">💾 Save URL</button>
       </div>
       <div class="hint" id="srvSetupMsg"></div>
     </div>
@@ -330,7 +344,7 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
         <div><label class="fl" for="inClass">Class</label><input type="text" id="inClass" placeholder="e.g. 9th"></div>
         <div><label class="fl" for="inSubjectSel">Subject</label>
           <select id="inSubjectSel">
-            <option value="">— Subject chunein —</option>
+            <option value="">— Select Subject —</option>
             <option value="Mathematics">Mathematics</option>
             <option value="Physics">Physics</option>
             <option value="Chemistry">Chemistry</option>
@@ -341,7 +355,7 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
             <option value="Islamiat">Islamiat</option>
             <option value="Tarjuma-tul-Quran">Tarjuma-tul-Quran</option>
             <option value="Pakistan Studies">Pakistan Studies</option>
-            <option value="__other">Other (khud likhein)</option>
+            <option value="__other">Other (write your own)</option>
           </select>
           <input type="text" id="inSubject" placeholder="e.g. Mathematics" style="display:none;margin-top:6px">
         </div>
@@ -351,7 +365,7 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
         <div><label class="fl" for="inDate">Date</label><input type="date" id="inDate"></div>
         <div><label class="fl" for="inTime">Time Allowed</label><input type="text" id="inTime" placeholder="e.g. 2 Hours"></div>
       </div>
-      <div class="hint">* Har paper par code zaroor hota hai — Subject + Class se khud ban jata hai, chahein to badal lein. <button type="button" class="btn small ghost" id="btnAutoCode">↻ Auto Code</button></div>
+      <div class="hint">* Every paper must have a code — it is created automatically from Subject + Class; change it if you like. <button type="button" class="btn small ghost" id="btnAutoCode">↻ Auto Code</button></div>
       <label class="fl" for="inMedium">Medium</label>
       <select id="inMedium">
         <option value="en">English</option>
@@ -359,25 +373,32 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
         <option value="bi">Bilingual</option>
       </select>
       <div id="translateBox" style="display:none;border:1px dashed var(--line);border-radius:8px;padding:9px 10px;margin:10px 0">
-        <div class="hint" style="margin:0 0 7px">Medium sirf labels aur headings badalta hai — sawalon ki <b>statements apni asal (English) zuban mein</b> rehti hain. AI se tamam statements aur MCQ options ka <b>Urdu tarjuma</b> karwayein (FREE Puter account wala hi tareeqa — neeche Photo wale hisse wala sign in chalega):</div>
-        <button type="button" class="btn" id="btnTranslate">🌐 Tamam Statements ko Urdu mein Translate Karein (AI)</button>
-        <button type="button" class="btn ghost" id="btnTranslateUndo" style="display:none">↩ Asal text wapas karein</button>
+        <div class="hint" style="margin:0 0 7px">The Medium only changes labels and headings — the question <b>statements stay in their original (English) language</b>. Use AI to <b>translate all statements and MCQ options into Urdu</b> (the same FREE Puter account method — the sign-in from the Photo section below will work):</div>
+        <button type="button" class="btn" id="btnTranslate">🌐 Translate All Statements into Urdu (AI)</button>
+        <button type="button" class="btn ghost" id="btnTranslateUndo" style="display:none">↩ Restore Original Text</button>
         <div class="hint" id="translateStatus"></div>
       </div>
       <label class="fl" for="inLayout">📄 Page Layout</label>
       <select id="inLayout">
-        <option value="auto">Auto (marks ke hisab se)</option>
-        <option value="front">Sirf Front Side (1 page)</option>
+        <option value="auto">Auto (based on marks)</option>
+        <option value="front">Front Side Only (1 page)</option>
         <option value="back">Front + Back (2 pages)</option>
       </select>
       <div class="hint" id="layoutStatus"></div>
+      <div id="twoUpTopBox" style="margin-top:7px">
+        <label style="display:flex;gap:8px;align-items:center;cursor:pointer;font-size:13.5px">
+          <input type="checkbox" id="inTwoUpTop">
+          <span>✂ 2 Tests on One Page (2 copies, with cut line)</span>
+        </label>
+        <div class="hint" id="twoUpTopNote" style="display:none;color:var(--warn)">2-up does not apply to Side by Side (it is already one full sheet).</div>
+      </div>
       <div id="biStyleBox" style="display:none">
         <label class="fl" for="inBiStyle">↔ Bilingual Presentation</label>
         <select id="inBiStyle">
-          <option value="line">Line by line (upar English, neeche Urdu)</option>
+          <option value="line">Line by line (English above, Urdu below)</option>
           <option value="side">Side by Side (Right English | Left Urdu)</option>
         </select>
-        <div class="hint">Side by Side sirf ek sheet (Front) par lagega — agar Page Layout Front + Back ho jaye to paper line-by-line hi ayega.</div>
+        <div class="hint">Side by Side applies only on a single sheet (Front) — if the Page Layout becomes Front + Back, the paper will appear line by line.</div>
       </div>
       <div class="chips">
         <span class="chip">Questions: <span id="sumQuestions">0</span></span>
@@ -385,64 +406,66 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
       </div>
       <div id="subjTplBar" style="display:none;border:1px dashed var(--line);border-radius:8px;padding:9px 10px;margin-top:10px">
         <div class="hint" id="subjTplText" style="margin:0 0 7px"></div>
-        <button type="button" class="btn" id="btnApplyTemplate">📐 Ye Layout Lagayein</button>
-        <div class="hint" style="margin-top:6px">Layout lagane se us subject ka board dhacha (khaali sawal, attempt aur number) ban jayega — phir aap sawal bhar dein ya Photo/Text se banayein. Paper mein pehle se sawal hon to pehle poocha jayega.</div>
+        <div id="subjTplChecks" style="margin:0 0 4px"></div>
+        <div style="margin:0 0 7px"><button type="button" class="btn small ghost" id="btnTplAll">Select all</button> <button type="button" class="btn small ghost" id="btnTplNone">Clear all</button></div>
+        <button type="button" class="btn" id="btnApplyTemplate">📐 Apply Selected Sections</button>
+        <div class="hint" style="margin-top:6px">Applying the layout creates that subject's board structure (blank questions, attempt and marks) — then fill in the questions yourself or generate them from Photo/Text. If the paper already has questions, you will be asked first.</div>
       </div>
     </div>
 
     <div class="card" id="schemeCard">
       <h2>📐 Pairing Scheme</h2>
-      <p class="hint" style="margin-top:0">Board ki <b>pairing scheme</b> lagayein — paper ka dhacha (kis chapter/unit se kitne MCQ, Short, Long) scheme ke mutabiq khud ban jayega. Phir har sawal ke sath us ka <b>chapter tag</b> lagayein; neeche wali <b>Scheme Progress</b> batati rahegi ke kaun sa hissa kitna mukammal hai. Chapter tag sirf editor ke liye hai — <b>paper par print nahi hota</b>.</p>
+      <p class="hint" style="margin-top:0">Apply the board's <b>pairing scheme</b> — the paper structure (how many MCQs, Short and Long questions from each chapter/unit) will be created automatically according to the scheme. Then add a <b>chapter tag</b> to each question; the <b>Scheme Progress</b> below will keep showing how complete each part is. The chapter tag is only for the editor — it is <b>not printed on the paper</b>.</p>
 
-      <label class="fl" for="schemePreset">Tayyar Scheme (built-in)</label>
+      <label class="fl" for="schemePreset">Ready Scheme (built-in)</label>
       <div class="row2">
         <select id="schemePreset"></select>
-        <button type="button" class="btn" id="btnSchemeApplyPreset">✔ Ye Scheme Lagayein</button>
+        <button type="button" class="btn" id="btnSchemeApplyPreset">✔ Apply This Scheme</button>
       </div>
 
-      <h3>📤 Scheme Upload Karein (photo / PDF / text)</h3>
-      <label class="fl" for="schemeFile">Scheme ki file — image (PNG/JPG), PDF ya .txt</label>
+      <h3>📤 Upload a Scheme (photo / PDF / text)</h3>
+      <label class="fl" for="schemeFile">Scheme file — image (PNG/JPG), PDF or .txt</label>
       <input type="file" id="schemeFile" accept="image/*,.pdf,.txt,text/plain,application/pdf">
       <div class="hint" id="schemeFileStatus"></div>
-      <label class="fl" for="schemeText">Ya scheme ka text yahan paste karein</label>
-      <textarea id="schemeText" rows="4" placeholder="Pairing scheme ka text yahan paste karein — phir AI wala button dabayein, AI use parh kar scheme bana dega."></textarea>
+      <label class="fl" for="schemeText">Or paste the scheme text here</label>
+      <textarea id="schemeText" rows="4" placeholder="Paste the pairing scheme text here — then press the AI button; the AI will read it and create the scheme."></textarea>
       <div style="margin-top:6px">
-        <button type="button" class="btn" id="btnSchemeAiParse">🤖 AI se Scheme Parhein</button>
+        <button type="button" class="btn" id="btnSchemeAiParse">🤖 Read Scheme with AI</button>
         <span class="hint" id="schemeAiStatus"></span>
       </div>
-      <div class="hint">AI wala tareeqa photo/PDF/text parh kar scheme banata hai — is ke liye <b>FREE Puter sign in</b> chahiye (upar Photo wale hisse wala hi account). Scheme lagane se pehle neeche progress mein check kar lein; ghalti ho to Manual Editor se theek kar lein.</div>
+      <div class="hint">The AI method reads a photo/PDF/text and creates the scheme — it needs the <b>FREE Puter sign in</b> (the same account as the Photo section below). Before applying a scheme, check it in the progress below; if something is wrong, fix it with the Manual Editor.</div>
 
       <details style="margin-top:10px">
-        <summary style="cursor:pointer;font-size:13.5px;font-weight:600;color:var(--brand2)">✍️ Manual Scheme Editor (bina AI — khud scheme banayein)</summary>
+        <summary style="cursor:pointer;font-size:13.5px;font-weight:600;color:var(--brand2)">✍️ Manual Scheme Editor (no AI — create the scheme yourself)</summary>
         <div style="margin-top:8px">
           <div class="row3">
-            <div><label class="fl" for="schEdName">Scheme ka Naam</label><input type="text" id="schEdName" placeholder="e.g. 9th Math Board Scheme"></div>
+            <div><label class="fl" for="schEdName">Scheme Name</label><input type="text" id="schEdName" placeholder="e.g. 9th Math Board Scheme"></div>
             <div><label class="fl" for="schEdClass">Class</label><input type="text" id="schEdClass" placeholder="e.g. 9th"></div>
             <div><label class="fl" for="schEdSubject">Subject</label><input type="text" id="schEdSubject" placeholder="e.g. Mathematics"></div>
           </div>
-          <label class="fl">Rows — har row = ek section ka ek chapter hissa (Section | Chapter/Unit | Type | Given | Attempt | Marks each)</label>
+          <label class="fl">Rows — each row = one chapter part of a section (Section | Chapter/Unit | Type | Given | Attempt | Marks each)</label>
           <div id="schemeRows"></div>
           <div style="margin-top:6px">
-            <button type="button" class="btn small ghost" id="btnSchemeAddRow">＋ Row Shamil Karein</button>
-            <button type="button" class="btn small" id="btnSchemeBuildRows">✔ In Rows se Scheme Banayein aur Lagayein</button>
+            <button type="button" class="btn small ghost" id="btnSchemeAddRow">＋ Add Row</button>
+            <button type="button" class="btn small" id="btnSchemeBuildRows">✔ Create and Apply Scheme from These Rows</button>
           </div>
-          <div class="hint">Ek hi Section naam ki rows ek section mein jud jati hain — un ke chapter hisse (slots) alag alag bante hain. Attempt khaali chhor dein to sab sawal ginay jayenge.</div>
+          <div class="hint">Rows with the same Section name join into one section — their chapter parts (slots) stay separate. Leave Attempt empty and all questions will be counted.</div>
           <div class="hint" id="schemeEdMsg"></div>
         </div>
       </details>
 
       <div id="schemeProgress"></div>
       <div style="margin-top:8px">
-        <button type="button" class="btn small danger" id="btnSchemeClear" style="display:none">Scheme Hatayein (paper waisa hi rahega)</button>
+        <button type="button" class="btn small danger" id="btnSchemeClear" style="display:none">Remove Scheme (the paper stays as it is)</button>
       </div>
 
-      <h3>💾 My Schemes (is browser mein save)</h3>
+      <h3>💾 My Schemes (saved in this browser)</h3>
       <div class="row2">
-        <input type="text" id="mySchemeName" placeholder="Scheme ka naam, e.g. Meri 9th Math Scheme">
-        <button type="button" class="btn" id="btnMySchemeSave">💾 Current Scheme Save Karein</button>
+        <input type="text" id="mySchemeName" placeholder="Scheme name, e.g. My 9th Math Scheme">
+        <button type="button" class="btn" id="btnMySchemeSave">💾 Save Current Scheme</button>
       </div>
       <div class="row3" style="margin-top:8px">
-        <select id="mySchemesList"><option value="">— meri schemes —</option></select>
+        <select id="mySchemesList"><option value="">— my schemes —</option></select>
         <button type="button" class="btn ghost" id="btnMySchemeLoad">Load</button>
         <button type="button" class="btn danger" id="btnMySchemeDelete">Delete</button>
       </div>
@@ -460,92 +483,92 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
     </div>
 
     <div class="card" id="photoCard">
-      <h2>3️⃣ 📷 Photo se Sawal Banayein</h2>
-      <p class="hint" style="margin-top:0">Kitab ke safhe ki photo lagayein — <b>mazboot AI (GPT/Claude class)</b> safha parh kar usi ki content se <b>MCQs (4 options + sahi jawab ke sath), Short aur Long sawal bana</b> kar degi. Sawal pehle <b>Review</b> mein aayenge — check karke paper mein shamil karein. Is AI ke liye <b>sirf pehli dafa FREE Puter sign in</b> chahiye (neeche wala box) — us ke baad sawal aam taur par seconds mein ban jate hain.</p>
+      <h2>3️⃣ 📷 Generate Questions from a Photo</h2>
+      <p class="hint" style="margin-top:0">Attach a photo of a book page — a <b>strong AI (GPT/Claude class)</b> will read the page and <b>generate MCQs (with 4 options + the correct answer), Short and Long questions</b> from its content. The questions first appear in <b>Review</b> — check them, then add them to the paper. This AI needs a <b>FREE Puter sign in only the first time</b> (box below) — after that, questions are usually generated within seconds.</p>
       <div id="puterAuthBox" style="border:1px dashed var(--line);border-radius:8px;padding:9px 10px;margin:10px 0">
-        <div class="hint" id="puterAuthStatus" style="margin:0">Puter account check ho raha hai…</div>
+        <div class="hint" id="puterAuthStatus" style="margin:0">Checking the Puter account…</div>
         <div style="margin-top:6px">
-          <button type="button" class="btn" id="btnPuterSignIn">🔐 FREE Puter Account se Sign In Karein (sirf ek dafa)</button>
+          <button type="button" class="btn" id="btnPuterSignIn">🔐 Sign In with a FREE Puter Account (only once)</button>
           <button type="button" class="btn ghost" id="btnPuterSignOut" style="display:none">Sign Out</button>
         </div>
-        <div class="hint">Puter account <b>bilkul free</b> hai — sirf email se banta hai, <b>koi bank card nahi chahiye</b>. Har free account ko har month kuch <b>free AI allowance</b> milta hai; sawal usi allowance se bante hain, is website ko kuch pay nahi karna parta. Ek dafa sign in kar lein to browser yaad rakhta hai — har dafa sign in nahi karna parta.</div>
+        <div class="hint">A Puter account is <b>completely free</b> — it is created with just an email, <b>no bank card is needed</b>. Every free account gets some <b>free AI allowance</b> each month; questions are generated from that allowance, and this website never has to pay anything. Sign in once and the browser remembers you — you will not have to sign in every time.</div>
       </div>
       <div style="margin:10px 0">
         <label class="fl" for="aiEngineSel">⚙ AI Engine</label>
         <select id="aiEngineSel">
           <option value="puter">Puter (FREE)</option>
-          <option value="gemini">Apni Gemini Key</option>
+          <option value="gemini">Your Own Gemini Key</option>
           <option value="openai">ChatGPT (OpenAI API Key)</option>
         </select>
         <div class="hint" id="engineState" style="margin-top:4px"></div>
         <div id="engineKeyBox" style="display:none;border:1px dashed var(--line);border-radius:8px;padding:9px 10px;margin-top:8px">
-          <div class="hint" style="margin:0 0 7px">Google AI Studio se FREE key milti hai — key sirf aap ke browser mein rehti hai.</div>
+          <div class="hint" style="margin:0 0 7px">A FREE key is available from Google AI Studio — the key stays only in your browser.</div>
           <div class="row2">
-            <input type="password" id="engineGeminiKey" placeholder="Apni Gemini API key yahan lagayein" autocomplete="off">
-            <button type="button" class="btn" id="btnEngineKeySave">💾 Key Save Karein</button>
+            <input type="password" id="engineGeminiKey" placeholder="Paste your Gemini API key here" autocomplete="off">
+            <button type="button" class="btn" id="btnEngineKeySave">💾 Save Key</button>
           </div>
           <div class="hint" id="engineKeyState"></div>
         </div>
         <div id="engineOpenaiBox" style="display:none;border:1px dashed var(--line);border-radius:8px;padding:9px 10px;margin-top:8px">
-          <div class="hint" style="margin:0 0 7px">OpenAI ki API key platform.openai.com se milti hai — ye PAID hoti hai (balance dalna parta hai), ChatGPT Plus is se alag hai. Key sirf aap ke browser mein rehti hai.</div>
+          <div class="hint" style="margin:0 0 7px">The OpenAI API key is available from platform.openai.com — it is PAID (you have to add balance), and ChatGPT Plus is separate from it. The key stays only in your browser.</div>
           <div class="row2">
-            <input type="password" id="engineOpenaiKey" placeholder="Apni OpenAI API key yahan lagayein" autocomplete="off">
-            <button type="button" class="btn" id="btnEngineOpenaiSave">💾 Key Save Karein</button>
+            <input type="password" id="engineOpenaiKey" placeholder="Paste your OpenAI API key here" autocomplete="off">
+            <button type="button" class="btn" id="btnEngineOpenaiSave">💾 Save Key</button>
           </div>
           <div class="hint" id="engineOpenaiKeyState"></div>
         </div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px">
-        <button type="button" class="btn" id="btnModePhoto">📷 Photo se</button>
+        <button type="button" class="btn" id="btnModePhoto">📷 From Photo</button>
         <button type="button" class="btn ghost" id="btnModeText">📝 Text Paste</button>
-        <button type="button" class="btn ghost" id="btnModePaper">📄 Paper ki Photo</button>
+        <button type="button" class="btn ghost" id="btnModePaper">📄 Paper Photo</button>
       </div>
       <div id="photoModeBox">
-        <label class="fl" for="photoFiles">Page Photos (jpg / png — ek ya zyada, har photo = ek safha)</label>
+        <label class="fl" for="photoFiles">Page Photos (jpg / png — one or more, each photo = one page)</label>
         <input type="file" id="photoFiles" accept="image/*" multiple>
         <div id="photoPreviews" style="margin-top:8px"></div>
       </div>
       <div id="textModeBox" style="display:none">
-        <label class="fl" for="pasteText">Book ka Text / Sawal Paste Karein</label>
-        <textarea id="pasteText" rows="8" placeholder="Yahan book ka text ya sawal paste karein — AI MCQ, Short aur Long alag alag karke paper mein jod dega."></textarea>
-        <div class="hint">Paste ek dafa mein <b>~8000 characters</b> tak; bara chapter ho to hison mein paste karein. Agar text mein pehle se sawal/mashq hai to AI wahi sawal <b>lafz-ba-lafz</b> nikalega; agar sirf chapter ka text hai to AI usi se sawal banayega. Sawal usi zuban mein aayenge jis mein text hai.</div>
+        <label class="fl" for="pasteText">Paste Book Text / Questions</label>
+        <textarea id="pasteText" rows="8" placeholder="Paste the book text or questions here — the AI will separate MCQs, Short and Long questions and add them to the paper."></textarea>
+        <div class="hint">Paste up to <b>~8000 characters</b> at a time; for a large chapter, paste in parts. If the text already contains questions/exercises, the AI will extract those same questions <b>word for word</b>; if it is only chapter text, the AI will generate questions from it. The questions will be in the same language as the text.</div>
         <div class="hint" id="pasteCount" style="margin-top:2px">0 characters</div>
       </div>
       <div id="paperModeBox" style="display:none">
-        <label class="fl" for="paperFiles">Paper ki Photos (1–4, pages ki tartib mein)</label>
+        <label class="fl" for="paperFiles">Paper Photos (1–4, in page order)</label>
         <input type="file" id="paperFiles" accept="image/*" multiple>
         <div id="paperPreviews" style="margin-top:8px"></div>
-        <div class="hint">Poora paper — header, sections, sawal, options — <b>lafz-ba-lafz</b> parh kar bilkul <b>WAHI paper</b> dobara banta hai aur maujooda paper ki <b>jagah le leta hai</b>. Diagram wale sawalon ke liye saaf sada diagram (SVG) bhi banta hai — ye asal drawing ki hubahu copy nahi, ek saaf takhmini shakal hoti hai; jo diagram na ban sake wahan paper par nishan wali jagah ajati hai taake asal diagram haath se laga saken. Is mode mein upar wale counts (Kitne MCQ waghera) lagu nahi hote — paper ki apni tartib hi copy hoti hai.</div>
+        <div class="hint">The whole paper — header, sections, questions, options — is read <b>word for word</b> and exactly the <b>SAME paper</b> is recreated, <b>replacing</b> the current paper. For questions with diagrams, a clean simple diagram (SVG) is also created — it is not an exact copy of the original drawing, just a clean approximate shape; where a diagram cannot be created, a marked placeholder appears on the paper so you can add the original diagram by hand. The counts above (How many MCQs etc.) do not apply in this mode — the paper's own structure is copied.</div>
       </div>
       <div class="row3" id="aiCountsBox" style="margin-top:8px">
-        <div><label class="fl" for="aiMcqCount">Kitne MCQ?</label>
+        <div><label class="fl" for="aiMcqCount">How many MCQs?</label>
           <input type="number" id="aiMcqCount" min="0" max="30" step="1" value="5"></div>
-        <div><label class="fl" for="aiShortCount">Kitne Short?</label>
+        <div><label class="fl" for="aiShortCount">How many Short?</label>
           <input type="number" id="aiShortCount" min="0" max="20" step="1" value="5"></div>
-        <div><label class="fl" for="aiLongCount">Kitne Long?</label>
+        <div><label class="fl" for="aiLongCount">How many Long?</label>
           <input type="number" id="aiLongCount" min="0" max="10" step="1" value="1"></div>
       </div>
-      <button type="button" class="btn big" id="btnAiGen" style="margin-top:10px">🤖 AI se Sawal Banayein — Free, Bina Key</button>
-      <div class="hint">Ye <b>mazboot AI</b> hai (GPT/Claude class) jo photo parh kar sawal <b>bana</b> kar deta hai — <b>koi API key nahi chahiye</b>, bas upar wala <b>ek-dafa FREE Puter sign in</b> chahiye. Jawab aam taur par <b>seconds se ek minute</b> mein aa jata hai. Behtar result ke liye: <b>ek safha = ek photo, qareeb se, saaf roshni mein</b>.</div>
+      <button type="button" class="btn big" id="btnAiGen" style="margin-top:10px">🤖 Generate Questions with AI — Free, No Key</button>
+      <div class="hint">This is a <b>strong AI</b> (GPT/Claude class) that reads the photo and <b>generates</b> questions — <b>no API key is needed</b>, just the <b>one-time FREE Puter sign in</b> above. The reply usually arrives within <b>seconds to a minute</b>. For the best result: <b>one page = one photo, close up, in clear light</b>.</div>
       <div class="hint" id="aiGenStatus"></div>
-      <h3>📝 Review — Sawal Check Karein</h3>
-      <div class="hint" style="border:1px solid var(--warn);border-radius:7px;padding:7px 9px">⚠ <b>Note:</b> Sawal aur un ke <b>sahi jawab AI ne banaye hain</b> — paper mein shamil karne se pehle har sawal aur us ka sahi jawab khud check kar lein. Jo ghalat lage, yahin theek kar dein ya unselect kar dein.</div>
+      <h3>📝 Review — Check the Questions</h3>
+      <div class="hint" style="border:1px solid var(--warn);border-radius:7px;padding:7px 9px">⚠ <b>Note:</b> The questions and their <b>correct answers were created by AI</b> — before adding them to the paper, check every question and its correct answer yourself. Fix anything that looks wrong right here, or unselect it.</div>
       <div class="hint" id="candQuality"></div>
-      <div id="candList"><div class="hint">Abhi koi sawal nahi. Photo laga kar upar wala AI button dabayein to sawal yahan aayenge.</div></div>
+      <div id="candList"><div class="hint">No questions yet. Attach a photo and press the AI button above — the questions will appear here.</div></div>
       <div style="margin-top:8px">
-        <button type="button" class="btn" id="btnAddSelected">✔ Select kiye hue Paper mein Shamil Karein</button>
-        <button type="button" class="btn ghost" id="btnCandAll">Sab Select</button>
-        <button type="button" class="btn ghost" id="btnCandNone">Sab Unselect</button>
+        <button type="button" class="btn" id="btnAddSelected">✔ Add Selected to the Paper</button>
+        <button type="button" class="btn ghost" id="btnCandAll">Select All</button>
+        <button type="button" class="btn ghost" id="btnCandNone">Unselect All</button>
       </div>
       <div class="hint" id="candMsg"></div>
     </div>
 
     <div class="card" id="booksCard">
-      <h2>📚 Books — Book Upload Karein</h2>
-      <p class="hint" style="margin-top:0">Apni book ki <b>PDF</b> yahan upload karein — book save ho jayegi. Phir book khol kar <b>pages ya topic (chapter) select</b> karein aur usi hisse se sawal banayein — sawal upar 📷 wale hisse ki <b>Review</b> list mein aayenge.</p>
-      <label class="fl" for="bookFile">Book ki PDF</label>
+      <h2>📚 Books — Upload a Book</h2>
+      <p class="hint" style="margin-top:0">Upload your book's <b>PDF</b> here — the book will be saved. Then open the book, <b>select pages or a topic (chapter)</b> and generate questions from that part — the questions will appear in the <b>Review</b> list of the 📷 section above.</p>
+      <label class="fl" for="bookFile">Book PDF</label>
       <input type="file" id="bookFile" accept="application/pdf,.pdf">
-      <label class="fl" for="bookName">Book ka Naam</label>
+      <label class="fl" for="bookName">Book Name</label>
       <input type="text" id="bookName" placeholder="e.g. Mathematics 9th (PCTB)">
       <div class="row2">
         <div><label class="fl" for="bookClassSel">Class</label>
@@ -566,52 +589,52 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
             <option value="Islamiat">Islamiat</option>
             <option value="Tarjuma-tul-Quran">Tarjuma-tul-Quran</option>
             <option value="Pakistan Studies">Pakistan Studies</option>
-            <option value="Other">Other (khud likhein)</option>
+            <option value="Other">Other (write your own)</option>
           </select></div>
       </div>
-      <input type="text" id="bookSubjectOther" placeholder="Subject likhein" style="display:none;margin-top:6px">
+      <input type="text" id="bookSubjectOther" placeholder="Write the subject" style="display:none;margin-top:6px">
       <div style="margin-top:10px">
-        <button type="button" class="btn big" id="btnBookSave">⬆ Book Save Karein</button>
+        <button type="button" class="btn big" id="btnBookSave">⬆ Save Book</button>
       </div>
       <div class="hint" id="bookSaveStatus"></div>
-      <div class="hint">Books sirf isi device/browser mein save rehti hain — neeche wala <b>☁ GitHub</b> setup kar dein to books har device par mil jayengi.</div>
+      <div class="hint">Books are saved only in this device/browser — set up <b>☁ GitHub</b> below and the books will be available on every device.</div>
       <div id="ghBox" style="border:1px dashed var(--line);border-radius:8px;padding:9px 10px;margin:12px 0">
-        <div class="fl" style="margin-top:0">☁ GitHub par Save (har device ke liye)</div>
+        <div class="fl" style="margin-top:0">☁ Save on GitHub (for every device)</div>
         <label class="fl" for="ghRepo">GitHub Repo</label>
         <input type="text" id="ghRepo" value="keps-science-academy/keps-books" autocomplete="off">
         <label class="fl" for="ghToken">GitHub Token</label>
-        <input type="password" id="ghToken" placeholder="Fine-grained token yahan lagayein" autocomplete="off">
-        <div class="hint">Ek dafa setup: GitHub par 'keps-books' naam ka PUBLIC repo banayein, phir Settings → Developer settings → Fine-grained tokens se sirf usi repo ke liye Contents (Read and write) token bana kar yahan lagayein. Token sirf aap ke browser mein rehta hai.</div>
+        <input type="password" id="ghToken" placeholder="Paste the fine-grained token here" autocomplete="off">
+        <div class="hint">One-time setup: create a PUBLIC repo named 'keps-books' on GitHub, then go to Settings → Developer settings → Fine-grained tokens, create a Contents (Read and write) token for that repo only, and paste it here. The token stays only in your browser.</div>
         <div style="margin-top:6px">
-          <button type="button" class="btn" id="btnGhSave">💾 GitHub Settings Save Karein</button>
+          <button type="button" class="btn" id="btnGhSave">💾 Save GitHub Settings</button>
           <button type="button" class="btn ghost" id="btnGhTest">🔗 Test</button>
         </div>
         <div class="hint" id="ghStatus"></div>
       </div>
-      <h3>📚 Meri Books</h3>
-      <div id="bookList"><div class="hint">Abhi koi book save nahi hai.</div></div>
+      <h3>📚 My Books</h3>
+      <div id="bookList"><div class="hint">No book is saved yet.</div></div>
       <div class="hint" id="bookListStatus"></div>
       <div id="bookOpenBox" style="display:none;border:1px solid var(--line);border-radius:8px;padding:10px;margin-top:12px">
         <div class="fl" id="bookOpenTitle" style="margin-top:0"></div>
         <div id="bookChapters" style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0"></div>
         <div class="row2">
-          <div><label class="fl" for="bookPageFrom">Page se</label>
+          <div><label class="fl" for="bookPageFrom">From Page</label>
             <input type="number" id="bookPageFrom" min="1" step="1" value="1"></div>
-          <div><label class="fl" for="bookPageTo">Page tak</label>
+          <div><label class="fl" for="bookPageTo">To Page</label>
             <input type="number" id="bookPageTo" min="1" step="1" value="1"></div>
         </div>
-        <label class="fl" for="bookPreview">Select kiye hue hisse ka text (preview)</label>
+        <label class="fl" for="bookPreview">Text of the selected part (preview)</label>
         <textarea id="bookPreview" rows="5" readonly></textarea>
         <div class="hint" id="bookSelInfo"></div>
         <div class="row3" style="margin-top:8px">
-          <div><label class="fl" for="bookMcqCount">Kitne MCQ?</label>
+          <div><label class="fl" for="bookMcqCount">How many MCQs?</label>
             <input type="number" id="bookMcqCount" min="0" max="30" step="1" value="5"></div>
-          <div><label class="fl" for="bookShortCount">Kitne Short?</label>
+          <div><label class="fl" for="bookShortCount">How many Short?</label>
             <input type="number" id="bookShortCount" min="0" max="20" step="1" value="5"></div>
-          <div><label class="fl" for="bookLongCount">Kitne Long?</label>
+          <div><label class="fl" for="bookLongCount">How many Long?</label>
             <input type="number" id="bookLongCount" min="0" max="10" step="1" value="1"></div>
         </div>
-        <button type="button" class="btn big" id="btnBookGen" style="margin-top:10px">✨ Is hisse se sawal banayein</button>
+        <button type="button" class="btn big" id="btnBookGen" style="margin-top:10px">✨ Generate Questions from This Part</button>
         <div class="hint" id="bookStatus"></div>
       </div>
     </div>
@@ -620,9 +643,17 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
       <h2>4️⃣ Finish</h2>
       <button type="button" class="btn big" id="btnDownloadPdf">⬇ Download Paper PDF</button>
       <button type="button" class="btn big" id="btnDownloadKey" style="background:var(--ok);border-color:var(--ok)">🔑 Download Answer Key PDF</button>
+      <div style="margin-top:10px">
+        <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;font-size:14px">
+          <input type="checkbox" id="inTwoUp" style="margin-top:2px">
+          <span>✂ <b>2 Tests on One Page</b> (2 copies, with cut line) — the Paper PDF and Print will come as two copies on one landscape sheet</span>
+        </label>
+        <div class="hint" id="twoUpHint">The Answer Key will stay single.</div>
+        <div class="hint" id="twoUpNote" style="display:none;color:var(--warn)">2-up does not apply to Side by Side (it is already one full sheet).</div>
+      </div>
       <div class="hint" id="pdfStatus" style="margin-top:6px"></div>
       <div style="margin-top:8px">
-        <button type="button" class="btn ghost" id="btnPrintPaper">🖨 Print Paper (doosra tareeqa)</button>
+        <button type="button" class="btn ghost" id="btnPrintPaper">🖨 Print Paper (alternative method)</button>
         <button type="button" class="btn ghost" id="btnPrintKey">🖨 Print Answer Key</button>
       </div>
       <div style="margin-top:10px">
@@ -630,9 +661,9 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
         <button type="button" class="btn ghost" id="btnShuffle">🔀 Shuffle MCQ Options</button>
         <button type="button" class="btn danger" id="btnNew">🗑 New Paper (Clear)</button>
       </div>
-      <h3>💾 Saved Drafts (is browser mein)</h3>
+      <h3>💾 Saved Drafts (in this browser)</h3>
       <div class="row2">
-        <input type="text" id="draftName" placeholder="Draft ka naam, e.g. M9 Unit 1 Test">
+        <input type="text" id="draftName" placeholder="Draft name, e.g. M9 Unit 1 Test">
         <button type="button" class="btn" id="btnSaveDraft">Save Draft</button>
       </div>
       <div class="row3" style="margin-top:8px">
@@ -660,11 +691,11 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
 <!-- ============ MY PANEL (user view — har logged-in user, admin ko bhi) ============ -->
 <div id="viewMyPanel" class="viewpage" style="display:none">
   <div class="card">
-    <h2>👤 My Panel — Mera Account</h2>
+    <h2>👤 My Panel — My Account</h2>
     <table class="usertable">
       <tr><th style="width:170px">Username</th><td><b id="mpUser">—</b></td></tr>
       <tr><th>Role</th><td><span class="rolebadge" id="mpRole">—</span></td></tr>
-      <tr><th>Account bana</th><td id="mpCreated">—</td></tr>
+      <tr><th>Account Created</th><td id="mpCreated">—</td></tr>
     </table>
     <div style="margin-top:6px">
       <button type="button" class="btn ghost" id="btnMpLogout">🚪 Logout</button>
@@ -672,21 +703,21 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
   </div>
 
   <div class="card">
-    <h2>💾 Mere Save Papers (Drafts)</h2>
-    <div class="hint" style="margin-top:0">Is browser mein save kiye gaye papers — <b>Open</b> dabayein to paper Paper Generator mein khul jayega.</div>
+    <h2>💾 My Saved Papers (Drafts)</h2>
+    <div class="hint" style="margin-top:0">Papers saved in this browser — press <b>Open</b> and the paper will open in the Paper Generator.</div>
     <div id="mpDraftsList" style="margin-top:8px"></div>
     <div class="hint" id="mpDraftMsg"></div>
   </div>
 
   <div class="card" id="passCard" style="display:none">
-    <h2>🔑 Apna Password Badlein</h2>
-    <label class="fl" for="cpOld">Purana Password</label>
+    <h2>🔑 Change Your Password</h2>
+    <label class="fl" for="cpOld">Old Password</label>
     <input type="password" id="cpOld" autocomplete="current-password">
-    <label class="fl" for="cpNew">Naya Password (kam az kam 6 harf)</label>
+    <label class="fl" for="cpNew">New Password (at least 6 characters)</label>
     <input type="password" id="cpNew" autocomplete="new-password">
     <div style="margin-top:8px">
-      <button type="button" class="btn" id="btnCpSave">Password Badlein</button>
-      <button type="button" class="btn ghost" id="btnCpCancel">Wapas Generator Par</button>
+      <button type="button" class="btn" id="btnCpSave">Change Password</button>
+      <button type="button" class="btn ghost" id="btnCpCancel">Back to Generator</button>
     </div>
     <div class="hint" id="cpMsg"></div>
   </div>
@@ -696,36 +727,36 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
 <div id="viewAdmin" class="viewpage" style="display:none">
   <div class="card" id="adminCard">
     <h2>🛠 Admin Panel — Users</h2>
-    <div class="hint" style="margin-top:0">Sirf admin dekh sakta hai. Teachers ke accounts yahan se banayein — wo apne username/password se login karke generator use kar sakenge.</div>
+    <div class="hint" style="margin-top:0">Only the admin can see this. Create teacher accounts here — they will be able to log in with their username/password and use the generator.</div>
     <div class="statrow">
-      <span class="chip">👥 Kul Users: <b id="admStatUsers">0</b></span>
+      <span class="chip">👥 Total Users: <b id="admStatUsers">0</b></span>
       <span class="chip">🛡 Admins: <b id="admStatAdmins">0</b></span>
     </div>
-    <h3>➕ Naya User Banayein</h3>
+    <h3>➕ Create a New User</h3>
     <div class="row3">
       <div><label class="fl" for="admNewUser">Username</label><input type="text" id="admNewUser" placeholder="e.g. teacher1" autocomplete="off"></div>
-      <div><label class="fl" for="admNewPass">Password</label><input type="password" id="admNewPass" placeholder="kam az kam 6 harf" autocomplete="new-password"></div>
+      <div><label class="fl" for="admNewPass">Password</label><input type="password" id="admNewPass" placeholder="at least 6 characters" autocomplete="new-password"></div>
       <div><label class="fl" for="admNewRole">Role</label><select id="admNewRole"><option value="user">user (teacher)</option><option value="admin">admin</option></select></div>
     </div>
-    <div style="margin-top:8px"><button type="button" class="btn" id="btnAdmAdd">➕ User Banayein</button></div>
+    <div style="margin-top:8px"><button type="button" class="btn" id="btnAdmAdd">➕ Create User</button></div>
     <div class="hint" id="admMsg"></div>
-    <h3>👥 Users ki List</h3>
+    <h3>👥 Users List</h3>
     <table class="usertable">
-      <thead><tr><th>Username</th><th>Role</th><th>Banaya</th><th>Naya Password</th><th>Actions</th></tr></thead>
+      <thead><tr><th>Username</th><th>Role</th><th>Created</th><th>New Password</th><th>Actions</th></tr></thead>
       <tbody id="adminUsersBody"><tr><td colspan="5">Loading…</td></tr></tbody>
     </table>
-    <button type="button" class="btn small ghost" id="btnAdmRefresh">↻ List Refresh</button>
+    <button type="button" class="btn small ghost" id="btnAdmRefresh">↻ Refresh List</button>
   </div>
 
   <div class="card">
     <h2>🔧 Server Setup Info</h2>
-    <div class="hint" style="margin-top:0">Login server ka mojooda URL (chhupa kar dikhaya gaya hai):</div>
+    <div class="hint" style="margin-top:0">The current login server URL (shown masked):</div>
     <div style="margin:6px 0"><code id="admSrvUrl" style="word-break:break-all">—</code></div>
-    <div class="hint">Server URL badalna ho to <b>logout karke login screen</b> ke kone wale <b>⚙ gear button</b> se badlein — is panel se URL change nahi hota.</div>
+    <div class="hint">To change the server URL, <b>log out and use the ⚙ gear button</b> in the corner of the <b>login screen</b> — the URL cannot be changed from this panel.</div>
   </div>
 </div>
 
-<footer class="appfoot">© KEPS Academy — Paper Generator, free for teachers. Papers aur drafts sirf aap ke browser mein save hote hain, kahin upload nahi hote.<br>Photo ya text se sawal: AI Engine (Puter FREE, ya apni Gemini / ChatGPT key) photo parh kar MCQs, Short aur Long sawal bana kar deta hai.</footer>
+<footer class="appfoot">© KEPS Academy — Paper Generator, free for teachers. Papers and drafts are saved only in your browser; they are never uploaded anywhere.<br>Questions from a photo or text: the AI Engine (Puter FREE, or your own Gemini / ChatGPT key) reads the photo and generates MCQs, Short and Long questions.</footer>
 
 <div id="loginGate" style="display:none">
   <div class="lg-shell">
@@ -735,10 +766,10 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
         <div class="lg-logo-sub">Paper Generator</div>
       </div>
       <h2 class="lg-head">Exam paper creation for modern educators.</h2>
-      <p class="lg-desc">Board-pattern papers, pairing schemes, aur print-ready exam layouts — ek fast, preview-first workflow ke sath.</p>
+      <p class="lg-desc">Board-pattern papers, pairing schemes, and print-ready exam layouts — with a fast, preview-first workflow.</p>
       <ul class="lg-points">
         <li><span class="tick">✔</span> Print-ready paper layouts</li>
-        <li><span class="tick">✔</span> Urdu (Jameel Noori) aur English support</li>
+        <li><span class="tick">✔</span> Urdu (Jameel Noori) and English support</li>
         <li><span class="tick">✔</span> Secure teacher &amp; institute access</li>
       </ul>
     </aside>
@@ -753,29 +784,29 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
       <label class="fl" for="liUser">Username</label>
       <input type="text" id="liUser" placeholder="e.g. Keps" autocomplete="username">
       <label class="fl" for="liPass">Password</label>
-      <input type="password" id="liPass" placeholder="Apna password" autocomplete="current-password">
+      <input type="password" id="liPass" placeholder="Your password" autocomplete="current-password">
       <button type="button" class="btn big" id="btnLogin">Sign In</button>
     </div>
   </div>
   <div class="lg-wa-strip" id="lgWaStrip">
     <span class="wa-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="#25D366" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg></span>
-    <span>Account purchase karne ke liye WhatsApp par rabta karein:</span>
+    <span>To purchase an account, contact us on WhatsApp:</span>
     <a class="lg-wa-num" href="https://wa.me/923016318596" target="_blank" rel="noopener">0301-6318596</a>
   </div>
   <div class="lg-owner-line" id="lgOwnerLine" style="display:none">Owner? <a href="#" id="liOwnerSetup">Server Setup →</a></div>
   <button type="button" class="lg-gear" id="btnLgGear" title="Server Setup" aria-label="Server Setup">⚙</button>
   <div class="lg-setup-modal" id="liSetupBox" style="display:none">
     <div class="lg-setup-dialog">
-      <div class="lg-setup-head"><b>🔧 Server Setup</b><button type="button" id="btnLgSetupClose" title="Band karein">✖</button></div>
+      <div class="lg-setup-head"><b>🔧 Server Setup</b><button type="button" id="btnLgSetupClose" title="Close">✖</button></div>
       <label class="fl" for="liSrvUrl">Server URL (/exec)</label>
       <input type="text" id="liSrvUrl" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off">
       <div style="margin-top:7px">
-        <button type="button" class="btn small" id="btnLiSrvSave">💾 URL Save Karein</button>
-        <button type="button" class="btn small danger" id="btnLiSrvClear">URL Hatayein</button>
+        <button type="button" class="btn small" id="btnLiSrvSave">💾 Save URL</button>
+        <button type="button" class="btn small danger" id="btnLiSrvClear">Remove URL</button>
       </div>
       <div class="hint" id="liSrvMsg"></div>
       <div id="liSetupBypassRow" style="display:none">
-        <a href="#" class="lg-bypass" id="liBypass">Setup mode: bina login ke generator kholein →</a>
+        <a href="#" class="lg-bypass" id="liBypass">Setup mode: open the generator without login →</a>
       </div>
     </div>
   </div>
@@ -858,7 +889,8 @@ function defaultState() {
       school: "KEPS Science Academy, Ahmad Pur Sial, Jhang",
       clazz: "", subject: "", code: "", date: "", time: "2 Hours", medium: "en",
       layout: "auto", /* page layout: "auto" | "front" | "back" — purane drafts mein na ho to "auto" */
-      biStyle: "line" /* bilingual presentation: "line" (purana) | "side" (Side by Side) — purane drafts mein na ho to "line" */
+      biStyle: "line", /* bilingual presentation: "line" (purana) | "side" (Side by Side) — purane drafts mein na ho to "line" */
+      twoUp: false /* ✂ Ek page par 2 test: paper PDF/print ek landscape sheet par 2 copies mein — purane drafts mein na ho to false */
     },
     sections: [makeSection("mcq"), makeSection("short"), makeSection("long")],
     scheme: null /* active pairing scheme (ya null) — drafts/persist ke sath rehta hai */
@@ -1109,7 +1141,7 @@ function loadPersisted() {
     var raw = localStorage.getItem(LS_CUR);
     if (!raw) return false;
     var s = JSON.parse(raw);
-    if (s && s.setup && Array.isArray(s.sections)) { state = s; if (state.scheme === undefined) state.scheme = null; if (state.setup.layout === undefined) state.setup.layout = "auto"; if (state.setup.biStyle === undefined) state.setup.biStyle = "line"; return true; }
+    if (s && s.setup && Array.isArray(s.sections)) { state = s; if (state.scheme === undefined) state.scheme = null; if (state.setup.layout === undefined) state.setup.layout = "auto"; if (state.setup.biStyle === undefined) state.setup.biStyle = "line"; if (state.setup.twoUp === undefined) state.setup.twoUp = false; return true; }
   } catch (e) {}
   return false;
 }
@@ -1141,6 +1173,7 @@ function loadDraft(name) {
   if (state.scheme === undefined) state.scheme = null; /* purane drafts mein scheme nahi hota — backward compatible */
   if (state.setup && state.setup.layout === undefined) state.setup.layout = "auto"; /* purane drafts mein layout nahi hota — Auto mana jata hai */
   if (state.setup && state.setup.biStyle === undefined) state.setup.biStyle = "line"; /* purane drafts mein biStyle nahi hota — line-by-line mana jata hai */
+  if (state.setup && state.setup.twoUp === undefined) state.setup.twoUp = false; /* purane drafts mein twoUp nahi hota — OFF mana jata hai */
   editCtx = null; formBuf = {}; bulkBuf = {};
   persist();
   return true;
@@ -1467,26 +1500,73 @@ function templateSections(tpl) {
   }
   return secs;
 }
+/* ---- Tick-box section picker (Phase 3) ----
+   Template bar ke neeche har template section ki ek tick row: title
+   (template data jaisa stored hai) + given/attempt/marks summary.
+   Marks ka hisaab templateSections + sectionCountedMarks se hi
+   nikalta hai — apply wali hi counting, taake picker ke numbers aur
+   asal paper ke numbers hamesha ek hon. Sab rows default TICKED;
+   template (class+subject) badalte hi selection reset ho jati hai. */
+var tplChecksKey = "";
+var tplChecks = [];
+function templateKey(tpl) { return tpl ? (tpl["class"] + "-" + tpl.subject) : ""; }
+function templateBuiltInfo(tpl) {
+  var built = templateSections(tpl);
+  var rows = (tpl.sections || []).map(function (es, i) {
+    var sec = built[i + 1];
+    return {
+      title: String(es.title || "Section"), given: es.given, attempt: es.attempt,
+      marks: sec ? sectionCountedMarks(sec).marks : 0
+    };
+  });
+  return { objectiveMarks: built.length ? sectionCountedMarks(built[0]).marks : 0, rows: rows };
+}
+function ensureTplChecks(tpl) {
+  var key = templateKey(tpl);
+  var n = (tpl.sections || []).length;
+  if (tplChecksKey !== key || tplChecks.length !== n) {
+    tplChecksKey = key;
+    tplChecks = [];
+    for (var i = 0; i < n; i++) tplChecks.push(true);
+  }
+  return tplChecks;
+}
+function getTplChecks() { return tplChecks.slice(); }
+function setTplCheck(i, on) {
+  if (i >= 0 && i < tplChecks.length) tplChecks[i] = !!on;
+  renderTemplateBar();
+}
+function tplSummaryText(r) {
+  var parts = [];
+  if (r.given != null && r.given !== "") parts.push(r.given + " given");
+  if (r.attempt != null && r.attempt !== "" && String(r.attempt) !== String(r.given)) parts.push("attempt " + r.attempt);
+  return (parts.length ? parts.join(", ") + " — " : "") + r.marks + " marks";
+}
 /* Template lagao (applyScheme wala pattern): pehle se sawal hon to
    confirm lazmi — cancel par KUCH nahi badalta. Time template se,
    paper code subject ke prefix se (autoCode), Page Layout Auto hi
-   rehta hai (kul number se Front/Front+Back khud resolve hota hai). */
+   rehta hai (kul number se Front/Front+Back khud resolve hota hai).
+   Sirf TICKED sections bante hain (MCQ/objective hamesha shamil);
+   koi section tick na ho to apply nahi hota (button bhi disabled). */
 function applySubjectTemplate() {
   var tpl = subjectTemplateFor(state.setup.clazz, state.setup.subject);
   if (!tpl) return false;
+  var checks = ensureTplChecks(tpl);
+  if (!checks.some(function (c) { return c; })) return false;
   var hasQ = state.sections.some(function (s) { return s.questions.length > 0; });
-  if (hasQ && !window.confirm("Is paper mein pehle se sawal hain. Template lagane se maujooda sawal hat kar " + tpl.subject + " (" + tpl["class"] + "th) ka khaali board layout ban jayega. Kya aap waqai template lagana chahte hain?")) return false;
+  if (hasQ && !window.confirm("This paper already has questions. Applying the template will remove the current questions and create the blank board layout for " + tpl.subject + " (" + tpl["class"] + "th). Do you really want to apply the template?")) return false;
   state.setup.time = tpl.time;
   state.setup.code = autoCode(state.setup.subject, state.setup.clazz);
   _lastAutoCode = state.setup.code;
-  state.sections = templateSections(tpl);
+  state.sections = templateSections(tpl).filter(function (sec, i) { return i === 0 || checks[i - 1]; });
   state.scheme = null;
   editCtx = null; formBuf = {}; bulkBuf = {};
   renderAll(); persist();
   return true;
 }
 /* Template bar: sirf tab dikhta hai jab maujooda Class (9th/10th) +
-   Subject ka template mojood ho. */
+   Subject ka template mojood ho. Checklist + apply button ka label
+   (ticked sections ke kul marks ke sath) bhi yahin render hota hai. */
 function renderTemplateBar() {
   var bar = document.getElementById("subjTplBar");
   if (!bar) return;
@@ -1494,7 +1574,25 @@ function renderTemplateBar() {
   if (!tpl) { bar.style.display = "none"; return; }
   bar.style.display = "";
   var tx = document.getElementById("subjTplText");
-  if (tx) tx.textContent = "📐 " + tpl.subject + " (" + tpl["class"] + "th) ka Board Layout — kul " + tpl.totalMarks + " number, " + tpl.time;
+  if (tx) tx.textContent = "📐 " + tpl.subject + " (" + tpl["class"] + "th) Board Layout — total " + tpl.totalMarks + " marks, " + tpl.time + " — tick the sections you want:";
+  var info = templateBuiltInfo(tpl);
+  var checks = ensureTplChecks(tpl);
+  var box = document.getElementById("subjTplChecks");
+  if (box) {
+    box.innerHTML = info.rows.map(function (r, i) {
+      return '<label style="display:flex;gap:7px;align-items:flex-start;padding:3px 0;cursor:pointer">' +
+        '<input type="checkbox" data-tplchk="' + i + '"' + (checks[i] ? " checked" : "") + ' style="margin-top:3px">' +
+        '<span style="flex:1">' + esc(r.title) + '</span>' +
+        '<span class="hint" style="margin:0;white-space:nowrap">' + esc(tplSummaryText(r)) + '</span></label>';
+    }).join("");
+  }
+  var btn = document.getElementById("btnApplyTemplate");
+  if (btn) {
+    var sum = info.objectiveMarks;
+    info.rows.forEach(function (r, i) { if (checks[i]) sum += r.marks; });
+    btn.textContent = "📐 Apply Selected Sections (" + sum + " marks)";
+    btn.disabled = !checks.some(function (c) { return c; });
+  }
 }
 /* Subject field ki UI haalat: mashhoor subject ho to select par wahi,
    koi aur text ho to "Other" + free-text input khula, khaali ho to
@@ -1560,16 +1658,16 @@ function renderSchemeProgress() {
   if (clearBtn) clearBtn.style.display = "";
   var h = '<div class="sch-prog"><b>📐 Active Scheme:</b> ' + esc(p.name) + " &nbsp;·&nbsp; <b>Marks:</b> " + p.countedMarks + " / " + p.totalMarks;
   p.sections.forEach(function (s) {
-    h += '<div class="sp-sec"><b>' + esc(s.title) + "</b> — " + s.filled + "/" + s.given + " sawal";
+    h += '<div class="sp-sec"><b>' + esc(s.title) + "</b> — " + s.filled + "/" + s.given + " questions";
     s.slots.forEach(function (sl) {
       h += ' <span class="sp-slot' + (sl.over ? " over" : (sl.done ? " full" : "")) + '">' + esc(sl.chapter) + ": " + sl.filled + "/" + sl.need + (sl.done && !sl.over ? " ✓" : "") + "</span>";
     });
-    if (s.untagged > 0) h += ' <span class="sp-slot">⚠ ' + s.untagged + " sawal baghair chapter tag</span>";
+    if (s.untagged > 0) h += ' <span class="sp-slot">⚠ ' + s.untagged + " questions without a chapter tag</span>";
     h += "</div>";
   });
-  if (p.over) h += '<div class="sp-warn">⚠ Kuch hisse scheme se zyada bhar gaye hain. Ye sirf warning hai — paper phir bhi ban jayega; chahein to extra sawal hata dein.</div>';
-  else if (!p.complete) h += '<div class="sp-warn">ℹ Paper abhi scheme ke mutabiq adhoora hai — upar wali progress dekh kar baqi sawal shamil karein.</div>';
-  else h += '<div class="sp-ok">✔ Paper scheme ke mutabiq mukammal hai.</div>';
+  if (p.over) h += '<div class="sp-warn">⚠ Some parts have been filled beyond the scheme. This is only a warning — the paper will still be created; remove the extra questions if you like.</div>';
+  else if (!p.complete) h += '<div class="sp-warn">ℹ The paper is still incomplete according to the scheme — check the progress above and add the remaining questions.</div>';
+  else h += '<div class="sp-ok">✔ The paper is complete according to the scheme.</div>';
   h += "</div>";
   box.innerHTML = h;
 }
@@ -1611,7 +1709,7 @@ function renderSchemePresets() {
 /* ---- Scheme upload: PDF se text (pdf.js), AI parse (Puter) ---- */
 function pdfFileToText(file) {
   if (!window.pdfjsLib || typeof window.pdfjsLib.getDocument !== "function") {
-    return Promise.reject(new Error("PDF library (pdf.js) load nahi hui — internet check karke page refresh karein"));
+    return Promise.reject(new Error("The PDF library (pdf.js) did not load — check your internet and refresh the page"));
   }
   try {
     if (window.pdfjsLib.GlobalWorkerOptions && !window.pdfjsLib.GlobalWorkerOptions.workerSrc) {
@@ -1645,7 +1743,7 @@ function puterChatText(prompt) {
     return Promise.resolve().then(function () { return window.puter.ai.chat(prompt, undefined, false, opts); })
       .then(function (resp) {
         var t = puterRespText(resp);
-        if (!t) throw new Error("AI ne khaali jawab diya");
+        if (!t) throw new Error("The AI returned an empty reply");
         return t;
       });
   }
@@ -1683,7 +1781,7 @@ function setAiEngine(v) {
 }
 /* Puter ki free limit khatam hone par EK saaf paigham — raw error
    kabhi nahi dikhta, aur limit par retry-loop bhi nahi chalta. */
-var PUTER_LIMIT_MSG = "⚠ Puter ki FREE limit khatam ho gayi hai. Thora intezar karein (limit khud refresh hoti hai) — ya neeche 'Apni Gemini Key' wala tareeqa use karein, us par ye limit nahi hoti.";
+var PUTER_LIMIT_MSG = "⚠ The FREE Puter limit has been used up. Please wait a while (the limit refreshes itself) — or use the 'Your Own Gemini Key' method below; this limit does not apply to it.";
 /* Error limit/quota wala hai ya nahi: message/type mein limit, quota,
    usage, insufficient — ya HTTP 402/429 (status field ya message mein). */
 function isAiLimitError(e) {
@@ -1731,33 +1829,33 @@ function refreshEngineUI() {
   if (obox) obox.style.display = (o && !hasO) ? "" : "none";
   var st = document.getElementById("engineState");
   if (st) st.textContent = g
-    ? (has ? "✔ Gemini key save hai — sawal ab Gemini se banege (Puter wali free limit is par nahi hoti)." : "⚠ Gemini Engine chuna hai lekin abhi koi key save nahi — neeche apni FREE Gemini key lagayein.")
+    ? (has ? "✔ A Gemini key is saved — questions will now be generated by Gemini (the Puter free limit does not apply to it)." : "⚠ The Gemini Engine is selected but no key is saved yet — add your FREE Gemini key below.")
     : o
-      ? (hasO ? "✔ OpenAI key save hai — sawal ab ChatGPT (gpt-4o-mini) se banege (Puter wali free limit is par nahi hoti)." : "⚠ ChatGPT Engine chuna hai lekin abhi koi key save nahi — neeche apni OpenAI API key lagayein (ye key PAID hoti hai).")
-      : "Puter (FREE) — sawal free allowance se bante hain; pehle halka model (gpt-4o-mini) chalta hai taake limit der se aye.";
+      ? (hasO ? "✔ An OpenAI key is saved — questions will now be generated by ChatGPT (gpt-4o-mini) (the Puter free limit does not apply to it)." : "⚠ The ChatGPT Engine is selected but no key is saved yet — add your OpenAI API key below (this key is PAID).")
+      : "Puter (FREE) — questions are generated from the free allowance; the lighter model (gpt-4o-mini) runs first so the limit comes later.";
 }
 function saveEngineOpenaiKey() {
   var inp = document.getElementById("engineOpenaiKey");
   var key = inp ? String(inp.value || "").trim() : "";
   var stEl = document.getElementById("engineOpenaiKeyState");
-  if (!key) { if (stEl) stEl.textContent = "⚠ Pehle key likhein, phir Save dabayein."; return false; }
+  if (!key) { if (stEl) stEl.textContent = "⚠ Write the key first, then press Save."; return false; }
   try { localStorage.setItem(OPENAI_LS, key); } catch (e) {}
   if (inp) inp.value = "";
   refreshEngineUI();
   var st = document.getElementById("aiGenStatus");
-  if (st) st.textContent = "✔ OpenAI key save ho gayi — ab Generate dabayein, sawal ChatGPT se banege.";
+  if (st) st.textContent = "✔ The OpenAI key is saved — now press Generate; questions will be generated by ChatGPT.";
   return true;
 }
 function saveEngineGeminiKey() {
   var inp = document.getElementById("engineGeminiKey");
   var key = inp ? String(inp.value || "").trim() : "";
   var stEl = document.getElementById("engineKeyState");
-  if (!key) { if (stEl) stEl.textContent = "⚠ Pehle key likhein, phir Save dabayein."; return false; }
+  if (!key) { if (stEl) stEl.textContent = "⚠ Write the key first, then press Save."; return false; }
   try { localStorage.setItem(GEMINI_LS, key); } catch (e) {}
   if (inp) inp.value = "";
   refreshEngineUI();
   var st = document.getElementById("aiGenStatus");
-  if (st) st.textContent = "✔ Gemini key save ho gayi — ab Generate dabayein, sawal Gemini se banege.";
+  if (st) st.textContent = "✔ The Gemini key is saved — now press Generate; questions will be generated by Gemini.";
   return true;
 }
 /* Generation ke liye EK rasta: Engine Gemini/OpenAI ho aur us ki key
@@ -1794,26 +1892,26 @@ function runSchemeAiParse(src) {
   var st = document.getElementById("schemeAiStatus");
   function say(m) { if (st) st.textContent = m; }
   var eng = aiEngine();
-  if (eng === "gemini" && !geminiSavedKey()) { say("⚠ AI Engine 'Apni Gemini Key' chuna hai lekin koi key save nahi — neeche Photo wale hisse mein Engine ke neeche apni Gemini key lagayein, ya Engine 'Puter (FREE)' kar dein."); return Promise.resolve(null); }
-  if (eng === "openai" && !openaiSavedKey()) { say("⚠ AI Engine 'ChatGPT (OpenAI API Key)' chuna hai lekin koi key save nahi — neeche Photo wale hisse mein Engine ke neeche apni OpenAI key lagayein, ya Engine 'Puter (FREE)' kar dein."); return Promise.resolve(null); }
-  if (eng === "puter" && !puterReady()) { say("⚠ Puter library load nahi hui — internet check karke page refresh karein."); return Promise.resolve(null); }
+  if (eng === "gemini" && !geminiSavedKey()) { say("⚠ The AI Engine 'Your Own Gemini Key' is selected but no key is saved — add your Gemini key under the Engine in the Photo section below, or set the Engine to 'Puter (FREE)'."); return Promise.resolve(null); }
+  if (eng === "openai" && !openaiSavedKey()) { say("⚠ The AI Engine 'ChatGPT (OpenAI API Key)' is selected but no key is saved — add your OpenAI key under the Engine in the Photo section below, or set the Engine to 'Puter (FREE)'."); return Promise.resolve(null); }
+  if (eng === "puter" && !puterReady()) { say("⚠ The Puter library did not load — check your internet and refresh the page."); return Promise.resolve(null); }
   function go() {
     var prompt = buildSchemePrompt();
     var call;
     if (src && src.file) {
-      say("🤖 AI scheme ki photo parh raha hai…");
+      say("🤖 The AI is reading the scheme photo…");
       call = aiChatPhoto(prompt, src.file);
     } else {
       var text = String((src && src.text) || "").trim();
-      if (!text) { say("⚠ Pehle scheme ka text paste karein ya file select karein."); return Promise.resolve(null); }
-      say("🤖 AI scheme parh raha hai…");
+      if (!text) { say("⚠ First paste the scheme text or select a file."); return Promise.resolve(null); }
+      say("🤖 The AI is reading the scheme…");
       call = aiChatText(prompt + "\n\nPAIRING SCHEME TEXT:\n" + text.slice(0, 12000));
     }
     return call.then(function (txt) {
       var sc = parseAiScheme(txt);
-      if (!sc) { say("⚠ AI ke jawab se scheme nahi bani — text saaf likha ho to dobara koshish karein, ya Manual Editor use karein."); return null; }
+      if (!sc) { say("⚠ No scheme could be created from the AI reply — if the text is written clearly, try again, or use the Manual Editor."); return null; }
       applyScheme(sc);
-      say("✔ Scheme lag gayi: " + sc.name + " — neeche progress check kar lein.");
+      say("✔ Scheme applied: " + sc.name + " — check the progress below.");
       return sc;
     }).catch(function (e) {
       var um = aiUserMsg(e);
@@ -1825,9 +1923,9 @@ function runSchemeAiParse(src) {
   }
   if (eng !== "puter") return go();
   if (puterSignedIn()) return go();
-  say("🔐 Pehle FREE Puter sign in chahiye — popup khul raha hai…");
+  say("🔐 A FREE Puter sign in is needed first — opening the popup…");
   return puterDoSignIn().then(function (ok) {
-    if (!ok) { say("⚠ Pehle FREE Puter account se sign in karein (Photo wale hisse ka Sign In button) — baghair sign in ke AI nahi chalega."); return null; }
+    if (!ok) { say("⚠ Sign in with a FREE Puter account first (the Sign In button in the Photo section) — the AI will not run without sign-in."); return null; }
     return go();
   });
 }
@@ -1913,8 +2011,8 @@ function renderTranslateBox() {
   if (!show) return;
   var btn = document.getElementById("btnTranslate");
   if (btn) btn.textContent = (m === "bi")
-    ? "🌐 Har Statement ke neeche Urdu Tarjuma jodein (AI)"
-    : "🌐 Tamam Statements ko Urdu mein Translate Karein (AI)";
+    ? "🌐 Add an Urdu Translation Below Each Statement (AI)"
+    : "🌐 Translate All Statements into Urdu (AI)";
   var undo = document.getElementById("btnTranslateUndo");
   if (undo) undo.style.display = hasTranslateSnapshot() ? "" : "none";
 }
@@ -1923,13 +2021,13 @@ function runTranslate() {
   var stEl = document.getElementById("translateStatus");
   function say(m) { if (stEl) stEl.textContent = m; }
   var medium = state.setup.medium;
-  if (medium !== "ur" && medium !== "bi") { say("⚠ Pehle Medium ko Urdu ya Bilingual karein."); return Promise.resolve(0); }
+  if (medium !== "ur" && medium !== "bi") { say("⚠ First set the Medium to Urdu or Bilingual."); return Promise.resolve(0); }
   var eng = aiEngine();
-  if (eng === "gemini" && !geminiSavedKey()) { say("⚠ AI Engine 'Apni Gemini Key' chuna hai lekin koi key save nahi — neeche Photo wale hisse mein Engine ke neeche apni Gemini key lagayein, ya Engine 'Puter (FREE)' kar dein."); return Promise.resolve(0); }
-  if (eng === "openai" && !openaiSavedKey()) { say("⚠ AI Engine 'ChatGPT (OpenAI API Key)' chuna hai lekin koi key save nahi — neeche Photo wale hisse mein Engine ke neeche apni OpenAI key lagayein, ya Engine 'Puter (FREE)' kar dein."); return Promise.resolve(0); }
-  if (eng === "puter" && !puterReady()) { say("⚠ Puter library load nahi hui — internet check karke page refresh karein."); return Promise.resolve(0); }
+  if (eng === "gemini" && !geminiSavedKey()) { say("⚠ The AI Engine 'Your Own Gemini Key' is selected but no key is saved — add your Gemini key under the Engine in the Photo section below, or set the Engine to 'Puter (FREE)'."); return Promise.resolve(0); }
+  if (eng === "openai" && !openaiSavedKey()) { say("⚠ The AI Engine 'ChatGPT (OpenAI API Key)' is selected but no key is saved — add your OpenAI key under the Engine in the Photo section below, or set the Engine to 'Puter (FREE)'."); return Promise.resolve(0); }
+  if (eng === "puter" && !puterReady()) { say("⚠ The Puter library did not load — check your internet and refresh the page."); return Promise.resolve(0); }
   var items = collectTranslateItems();
-  if (!items.length) { say("⚠ Abhi paper mein koi statement nahi — pehle sawal shamil karein."); return Promise.resolve(0); }
+  if (!items.length) { say("⚠ There is no statement in the paper yet — add questions first."); return Promise.resolve(0); }
   function go() {
     var batches = [];
     for (var i = 0; i < items.length; i += 40) batches.push(items.slice(i, i + 40));
@@ -1938,11 +2036,11 @@ function runTranslate() {
     batches.forEach(function (batch, bi) {
       chain = chain.then(function () {
         say(batches.length > 1
-          ? "🌐 Tarjuma ho raha hai… Batch " + (bi + 1) + "/" + batches.length
-          : "🌐 AI statements ka Urdu tarjuma kar raha hai…");
+          ? "🌐 Translating… Batch " + (bi + 1) + "/" + batches.length
+          : "🌐 The AI is translating the statements into Urdu…");
         return aiChatText(buildTranslatePrompt(batch.map(function (it) { return it.text; }))).then(function (txt) {
           var arr = parseTranslateReply(txt, batch.length);
-          if (!arr) throw new Error("AI ke jawab ki shakal durust nahi mili — koi tabdeeli nahi ki gayi. Dobara koshish karein.");
+          if (!arr) throw new Error("The AI reply was not in the correct format — no change was made. Please try again.");
           results = results.concat(arr);
         });
       });
@@ -1959,21 +2057,21 @@ function runTranslate() {
       });
       editCtx = null;
       renderAll(); persist(); renderTranslateBox();
-      say("✔ " + items.length + " statements translate ho gayin" + (medium === "bi" ? " (har statement ke neeche Urdu line jud gayi)" : "") + " — paper preview check kar lein. Pasand na aye to ↩ Asal text wapas karein dabayein.");
+      say("✔ " + items.length + " statements have been translated" + (medium === "bi" ? " (an Urdu line has been added below each statement)" : "") + " — check the paper preview. If you do not like it, press ↩ Restore Original Text.");
       return items.length;
     }).catch(function (e) {
       var um = aiUserMsg(e);
       if (um) { say(um); return 0; }
       if (isAiLimitError(e)) { say(PUTER_LIMIT_MSG); return 0; }
-      say("⚠ Tarjuma fail: " + (e && e.message ? e.message : e) + " Paper mein koi tabdeeli nahi hui.");
+      say("⚠ Translation failed: " + (e && e.message ? e.message : e) + " No change was made to the paper.");
       return 0;
     });
   }
   if (eng !== "puter") return go();
   if (puterSignedIn()) return go();
-  say("🔐 Pehle FREE Puter sign in chahiye — popup khul raha hai…");
+  say("🔐 A FREE Puter sign in is needed first — opening the popup…");
   return puterDoSignIn().then(function (ok) {
-    if (!ok) { say("⚠ Pehle FREE Puter account se sign in karein (neeche Photo wale hisse ka Sign In button) — baghair sign in ke AI tarjuma nahi chalega."); return 0; }
+    if (!ok) { say("⚠ Sign in with a FREE Puter account first (the Sign In button in the Photo section below) — the AI translation will not run without sign-in."); return 0; }
     return go();
   });
 }
@@ -1995,7 +2093,7 @@ function undoTranslate() {
   editCtx = null;
   renderAll(); persist(); renderTranslateBox();
   var stEl = document.getElementById("translateStatus");
-  if (stEl) stEl.textContent = "↩ Asal text wapas aa gaya hai.";
+  if (stEl) stEl.textContent = "↩ The original text has been restored.";
   return true;
 }
 
@@ -2068,8 +2166,8 @@ function effectiveLayout(st) {
 function layoutStatusText(st) {
   var t = computeTotals(st);
   return effectiveLayout(st) === "back"
-    ? "Abhi: Front + Back lagega (kul number " + t.marks + ")"
-    : "Abhi: Sirf Front Side lagega (kul number " + t.marks + ")";
+    ? "Current: Front + Back will be used (total marks " + t.marks + ")"
+    : "Current: Front Side Only will be used (total marks " + t.marks + ")";
 }
 /* ---- Bilingual Presentation: Line-by-line (purana) ya Side-by-Side ----
    Owner ki hidayat: Bilingual medium mein agar "Side by Side" chuna
@@ -2429,16 +2527,16 @@ function renderSections() {
     var editing = editCtx && editCtx.secId === sec.id;
     html += '<div class="sec-card" data-sec="' + sec.id + '">';
     html += '<div class="sec-head"><span class="t">' + (si + 1) + ". " + esc(sec.title) +
-      ' <small style="color:var(--mut)">(' + sec.questions.length + " sawal, " + c.marks + " marks)</small></span>" +
-      '<span><button type="button" class="mini" data-act="sec-up" title="Upar">↑</button> ' +
-      '<button type="button" class="mini" data-act="sec-down" title="Neeche">↓</button> ' +
+      ' <small style="color:var(--mut)">(' + sec.questions.length + " questions, " + c.marks + " marks)</small></span>" +
+      '<span><button type="button" class="mini" data-act="sec-up" title="Up">↑</button> ' +
+      '<button type="button" class="mini" data-act="sec-down" title="Down">↓</button> ' +
       '<button type="button" class="mini" data-act="sec-del" title="Section delete">🗑</button></span></div>';
     html += '<label class="fl">Section Title</label><input type="text" data-field="title" value="' + esc(sec.title) + '">';
     html += '<div class="row3">' +
       '<div><label class="fl">Marks per Question</label><input type="number" min="0" step="0.5" data-field="marksEach" value="' + sec.marksEach + '"></div>' +
-      '<div><label class="fl">Attempt any (khaali = sab)</label><input type="number" min="0" data-field="attempt" value="' + esc(sec.attempt) + '"></div>' +
+      '<div><label class="fl">Attempt any (blank = all)</label><input type="number" min="0" data-field="attempt" value="' + esc(sec.attempt) + '"></div>' +
       '<div><label class="fl">Type</label><input type="text" value="' + sec.type.toUpperCase() + '" disabled></div></div>';
-    html += '<label class="fl">Instruction / Note (paper par chhape ga)</label><input type="text" data-field="note" value="' + esc(sec.note) + '">';
+    html += '<label class="fl">Instruction / Note (will be printed on the paper)</label><input type="text" data-field="note" value="' + esc(sec.note) + '">';
     /* questions list */
     sec.questions.forEach(function (q, qi) {
       html += '<div class="qrow"><span class="qn">' + (qi + 1) + '.</span><span class="qt" dir="auto">' + esc(q.q);
@@ -2452,21 +2550,21 @@ function renderSections() {
         '<button type="button" class="mini" data-act="q-up" data-q="' + qi + '">↑</button>' +
         '<button type="button" class="mini" data-act="q-down" data-q="' + qi + '">↓</button>' +
         '<button type="button" class="mini" data-act="q-edit" data-q="' + qi + '">✎</button>' +
-        (q.diagram ? '<button type="button" class="mini" data-act="q-diagram-del" data-q="' + qi + '" title="Diagram hatayein">🖼✕</button>' : "") +
+        (q.diagram ? '<button type="button" class="mini" data-act="q-diagram-del" data-q="' + qi + '" title="Remove diagram">🖼✕</button>' : "") +
         '<button type="button" class="mini" data-act="q-del" data-q="' + qi + '">🗑</button></span></div>';
     });
-    if (!sec.questions.length) html += '<div class="hint">Is section mein abhi koi sawal nahi.</div>';
+    if (!sec.questions.length) html += '<div class="hint">There is no question in this section yet.</div>';
     /* add / edit form */
-    if (editing) html += '<div class="editing-note">✎ Question #' + (editCtx.idx + 1) + ' edit ho raha hai — neeche badal kar "Save Edit" dabayein.</div>';
-    html += '<label class="fl">' + (editing ? "Edit Question" : "Naya Sawal") + '</label>' +
-      '<textarea data-form="q" rows="2" placeholder="Sawal yahan likhein (Urdu ya English)">' + esc(buf.q) + "</textarea>";
+    if (editing) html += '<div class="editing-note">✎ Question #' + (editCtx.idx + 1) + ' is being edited — change it below and press "Save Edit".</div>';
+    html += '<label class="fl">' + (editing ? "Edit Question" : "New Question") + '</label>' +
+      '<textarea data-form="q" rows="2" placeholder="Write the question here (Urdu or English)">' + esc(buf.q) + "</textarea>";
     if (state.scheme) {
       /* Chapter/unit tag — sirf scheme progress ke liye, paper par print nahi hota */
       var chOpts = schemeChapters(state.scheme);
       var curCh = buf.chapter || "";
       if (curCh && curCh !== "Other" && chOpts.indexOf(curCh) < 0) chOpts.push(curCh);
-      html += '<label class="fl">Chapter / Unit Tag (scheme — paper par print nahi hoga)</label><select data-form="chapter">' +
-        '<option value=""' + (curCh === "" ? " selected" : "") + ">— chapter nahi —</option>" +
+      html += '<label class="fl">Chapter / Unit Tag (for the scheme — will not be printed on the paper)</label><select data-form="chapter">' +
+        '<option value=""' + (curCh === "" ? " selected" : "") + ">— no chapter —</option>" +
         chOpts.map(function (c) { return '<option value="' + esc(c) + '"' + (curCh === c ? " selected" : "") + ">" + esc(c) + "</option>"; }).join("") +
         '<option value="Other"' + (curCh === "Other" ? " selected" : "") + ">Other</option></select>";
     }
@@ -2475,8 +2573,8 @@ function renderSections() {
         [0, 1, 2, 3].map(function (oi) {
           return '<input type="text" data-form="o' + oi + '" placeholder="Option ' + LETTERS[oi] + '" value="' + esc(buf["o" + oi]) + '">';
         }).join("") + "</div>";
-      html += '<label class="fl">Sahi Jawab (Correct Answer)</label><select data-form="ans">' +
-        '<option value="-1"' + (buf.ans === "-1" ? " selected" : "") + '>? — abhi mark nahi</option>' +
+      html += '<label class="fl">Correct Answer</label><select data-form="ans">' +
+        '<option value="-1"' + (buf.ans === "-1" ? " selected" : "") + '>? — not marked yet</option>' +
         [0, 1, 2, 3].map(function (oi) {
           return '<option value="' + oi + '"' + (buf.ans === String(oi) ? " selected" : "") + ">" + LETTERS[oi] + "</option>";
         }).join("") + "</select>";
@@ -2489,20 +2587,20 @@ function renderSections() {
     if (!editing) {
       var bcVal = blankCountBuf[sec.id];
       if (bcVal === undefined || bcVal === "") bcVal = 5;
-      html += '<div style="margin-top:6px"><label class="fl" style="display:inline-block;margin-right:6px">Kitne sawal jodein?</label>' +
+      html += '<div style="margin-top:6px"><label class="fl" style="display:inline-block;margin-right:6px">How many questions to add?</label>' +
         '<input type="number" min="1" max="20" step="1" value="' + esc(bcVal) + '" data-bulk-count style="width:76px;display:inline-block;margin-right:6px">' +
-        '<button type="button" class="btn small ghost" data-act="q-add-blank">＋ Itne sawal jodein</button>' +
-        '<div class="hint">Utne khaali sawal ek sath jud jayenge — phir har sawal ke ✎ par click karke usay bhar dein.</div></div>';
+        '<button type="button" class="btn small ghost" data-act="q-add-blank">＋ Add That Many Questions</button>' +
+        '<div class="hint">That many blank questions will be added at once — then click the ✎ of each question to fill it in.</div></div>';
     }
     /* bulk paste */
     html += "<h3>📋 Bulk Paste</h3>";
     if (sec.type === "mcq") {
-      html += '<textarea data-bulk rows="4" placeholder="Har MCQ is tarah:\n1. Sawal ka text\nA. option one\nB. option two\nC. option three\nD. option four\nAnswer: B">' + esc(bulkBuf[sec.id] || "") + "</textarea>" +
-        '<div><button type="button" class="btn small ghost" data-act="bulk-add">Bulk se MCQs Shamil Karein</button></div>' +
-        '<div class="hint">Option ke aakhir mein * lagane se bhi wo sahi jawab ban jata hai (e.g. B. Lahore *).</div>';
+      html += '<textarea data-bulk rows="4" placeholder="Each MCQ like this:\n1. Question text\nA. option one\nB. option two\nC. option three\nD. option four\nAnswer: B">' + esc(bulkBuf[sec.id] || "") + "</textarea>" +
+        '<div><button type="button" class="btn small ghost" data-act="bulk-add">Add MCQs from Bulk</button></div>' +
+        '<div class="hint">Putting a * at the end of an option also makes it the correct answer (e.g. B. Lahore *).</div>';
     } else {
-      html += '<textarea data-bulk rows="4" placeholder="Har line = ek sawal">' + esc(bulkBuf[sec.id] || "") + "</textarea>" +
-        '<div><button type="button" class="btn small ghost" data-act="bulk-add">Bulk se Sawal Shamil Karein</button></div>';
+      html += '<textarea data-bulk rows="4" placeholder="Each line = one question">' + esc(bulkBuf[sec.id] || "") + "</textarea>" +
+        '<div><button type="button" class="btn small ghost" data-act="bulk-add">Add Questions from Bulk</button></div>';
     }
     html += "</div>";
   });
@@ -2558,8 +2656,8 @@ function renderDrafts() {
     return '<option value="' + esc(n) + '"' + (n === cur ? " selected" : "") + ">" + esc(n) + "</option>";
   }).join("");
 }
-function renderAll() { renderSetup(); renderSections(); renderPreview(); renderDrafts(); renderSchemeProgress(); renderTranslateBox(); renderBiStyleBox(); renderTemplateBar(); }
-function refreshLight() { renderPreview(); persist(); renderSchemeProgress(); renderTranslateBox(); renderBiStyleBox(); renderTemplateBar(); }
+function renderAll() { renderSetup(); renderSections(); renderPreview(); renderDrafts(); renderSchemeProgress(); renderTranslateBox(); renderBiStyleBox(); renderTemplateBar(); renderTwoUpUI(); }
+function refreshLight() { renderPreview(); persist(); renderSchemeProgress(); renderTranslateBox(); renderBiStyleBox(); renderTemplateBar(); renderTwoUpUI(); }
 
 /* ================= EVENTS: SETUP ================= */
 function bindSetup() {
@@ -2584,6 +2682,17 @@ function bindSetup() {
     _lastAutoCode = state.setup.code;
     document.getElementById("inCode").value = state.setup.code;
     refreshLight();
+  });
+  /* ✂ 2-up checkboxes (Finish wala + Page Layout ke paas wala) —
+     dono ek hi state (setup.twoUp) se bandhe hain; change par
+     doosra bhi sync ho jata hai aur draft ke sath persist hota hai. */
+  ["inTwoUp", "inTwoUpTop"].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener("change", function () {
+      state.setup.twoUp = !!el.checked;
+      renderTwoUpUI();
+      persist();
+    });
   });
   /* Subject SELECT: mashhoor subject chunne par setup.subject wahi
      naam ho jata hai (header mein wahi jayega) aur auto code bhi
@@ -2614,6 +2723,17 @@ function bindSetup() {
   });
   var btnTpl = document.getElementById("btnApplyTemplate");
   if (btnTpl) btnTpl.addEventListener("click", function () { applySubjectTemplate(); });
+  var tplBar = document.getElementById("subjTplBar");
+  if (tplBar) tplBar.addEventListener("change", function (e) {
+    var ix = e.target && e.target.getAttribute ? e.target.getAttribute("data-tplchk") : null;
+    if (ix === null || ix === undefined) return;
+    var i = parseInt(ix, 10);
+    if (i >= 0 && i < tplChecks.length) { tplChecks[i] = !!e.target.checked; renderTemplateBar(); }
+  });
+  var bTplAll = document.getElementById("btnTplAll");
+  if (bTplAll) bTplAll.addEventListener("click", function () { tplChecks = tplChecks.map(function () { return true; }); renderTemplateBar(); });
+  var bTplNone = document.getElementById("btnTplNone");
+  if (bTplNone) bTplNone.addEventListener("click", function () { tplChecks = tplChecks.map(function () { return false; }); renderTemplateBar(); });
   renderSubjectField();
   renderTemplateBar();
   document.getElementById("btnTranslate").addEventListener("click", function () { runTranslate(); });
@@ -2635,7 +2755,7 @@ function bindSections() {
       else sec[f] = e.target.value;
       refreshLight();
       var t = document.querySelector('.sec-card[data-sec="' + sec.id + '"] .sec-head .t small');
-      if (t) { var c = sectionCountedMarks(sec); t.textContent = "(" + sec.questions.length + " sawal, " + c.marks + " marks)"; }
+      if (t) { var c = sectionCountedMarks(sec); t.textContent = "(" + sec.questions.length + " questions, " + c.marks + " marks)"; }
       return;
     }
     var fm = e.target.getAttribute("data-form");
@@ -2675,7 +2795,7 @@ function bindSections() {
     else if (act === "q-cancel-edit") { editCtx = null; formBuf[sec.id] = { q: "", o0: "", o1: "", o2: "", o3: "", ans: "0", chapter: "" }; renderSections(); }
     else if (act === "q-save-edit" && editCtx) {
       var b2 = bufFor(sec.id); var q2 = sec.questions[editCtx.idx];
-      if (!b2.q.trim()) { alert("Sawal khaali hai — pehle sawal likhein."); return; }
+      if (!b2.q.trim()) { alert("The question is empty — write the question first."); return; }
       q2.q = b2.q.trim();
       if (b2.chapter) q2.chapter = b2.chapter; else delete q2.chapter;
       if (sec.type === "mcq") { q2.opts = [b2.o0, b2.o1, b2.o2, b2.o3].map(function (x) { return (x || "").trim(); }); q2.ans = parseInt(b2.ans, 10); if (isNaN(q2.ans)) q2.ans = 0; }
@@ -2684,7 +2804,7 @@ function bindSections() {
     }
     else if (act === "q-add") {
       var b3 = bufFor(sec.id);
-      if (!b3.q.trim()) { alert("Sawal khaali hai — pehle sawal likhein."); return; }
+      if (!b3.q.trim()) { alert("The question is empty — write the question first."); return; }
       var nq;
       if (sec.type === "mcq") {
         var ans = parseInt(b3.ans, 10); if (isNaN(ans)) ans = 0;
@@ -2704,7 +2824,7 @@ function bindSections() {
     else if (act === "bulk-add") {
       var txt = bulkBuf[sec.id] || "";
       var parsed = sec.type === "mcq" ? parseBulkMcq(txt) : parseBulkPlain(txt);
-      if (!parsed.length) { alert("Bulk text se koi sawal nahi mila — format check karein."); return; }
+      if (!parsed.length) { alert("No question was found in the bulk text — check the format."); return; }
       parsed.forEach(function (p) { sec.questions.push(p); });
       bulkBuf[sec.id] = "";
       renderSections(); refreshLight();
@@ -2728,10 +2848,10 @@ function bindActions() {
       sec.questions = sec.questions.map(function (q) { n++; return shuffleMcqOptions(q); });
     });
     renderSections(); refreshLight();
-    if (!n) alert("Shuffle ke liye pehle MCQ sawal shamil karein.");
+    if (!n) alert("Add MCQ questions first for shuffling.");
   });
   document.getElementById("btnNew").addEventListener("click", function () {
-    if (!window.confirm("Naya paper shuru karein? Mojooda sawal khatam ho jayenge (draft save hai to mehfooz rahe ga).")) return;
+    if (!window.confirm("Start a new paper? The current questions will be removed (if a draft is saved, it will stay safe).")) return;
     state = defaultState(); editCtx = null; formBuf = {}; bulkBuf = {};
     renderAll(); persist();
   });
@@ -2739,18 +2859,18 @@ function bindActions() {
     var name = document.getElementById("draftName").value.trim();
     if (!name) name = (state.setup.code || "Paper") + " — " + (state.setup.subject || "Draft");
     saveDraft(name); renderDrafts();
-    document.getElementById("draftMsg").textContent = "✔ Draft save ho gaya: " + name;
+    document.getElementById("draftMsg").textContent = "✔ Draft saved: " + name;
   });
   document.getElementById("btnLoadDraft").addEventListener("click", function () {
     var name = document.getElementById("draftsList").value;
-    if (!name) { alert("Pehle list se draft chunein."); return; }
-    if (loadDraft(name)) { renderAll(); document.getElementById("draftMsg").textContent = "✔ Draft load ho gaya: " + name; }
+    if (!name) { alert("Select a draft from the list first."); return; }
+    if (loadDraft(name)) { renderAll(); document.getElementById("draftMsg").textContent = "✔ Draft loaded: " + name; }
   });
   document.getElementById("btnDeleteDraft").addEventListener("click", function () {
     var name = document.getElementById("draftsList").value;
-    if (!name) { alert("Pehle list se draft chunein."); return; }
+    if (!name) { alert("Select a draft from the list first."); return; }
     deleteDraft(name); renderDrafts();
-    document.getElementById("draftMsg").textContent = "Draft delete ho gaya: " + name;
+    document.getElementById("draftMsg").textContent = "Draft deleted: " + name;
   });
   document.getElementById("btnDownloadPdf").addEventListener("click", function () { downloadPDF("paper"); });
   document.getElementById("btnDownloadKey").addEventListener("click", function () { downloadPDF("key"); });
@@ -2760,7 +2880,19 @@ function bindActions() {
 
 function printHTML(kind) {
   var root = document.getElementById("printRoot");
-  root.innerHTML = kind === "key" ? keyHTML(state) : paperHTML(state);
+  if (kind === "paper" && twoUpOn(state)) {
+    /* ✂ 2-up print: paper ke har .paper page ki do copies wali
+       landscape sheets printRoot mein banti hain (print CSS .twoup-*
+       scale/cut line/reminder sambhalta hai). Screen preview par
+       koi asar nahi. Answer Key is raste par kabhi nahi ati. */
+    root.innerHTML = paperHTML(state);
+    var pEls = root.querySelectorAll(".paper");
+    var pages = [];
+    for (var pi = 0; pi < pEls.length; pi++) pages.push(pEls[pi].outerHTML);
+    root.innerHTML = pages.length ? twoUpPrintHTML(pages) : paperHTML(state);
+  } else {
+    root.innerHTML = kind === "key" ? keyHTML(state) : paperHTML(state);
+  }
   var old = document.title;
   document.title = (state.setup.code || "Paper") + " - " + (state.setup.subject || "Test") + (kind === "key" ? " - Answer Key" : " - Paper");
   window.print();
@@ -2825,7 +2957,7 @@ function buildPdfClone(kind) {
   stage.setAttribute("role", "status");
   stage.style.cssText = "position:fixed;inset:0;background:#ffffff;z-index:99999;overflow:auto;padding:0;display:block;text-align:left;";
   var note = document.createElement("div");
-  note.textContent = "⏳ PDF tayyar ho raha hai…";
+  note.textContent = "⏳ Preparing the PDF…";
   note.style.cssText = "text-align:center;font:600 15px/1.4 system-ui,sans-serif;color:#333333;margin:0 0 12px;";
   stage.appendChild(note);
   var holder = document.createElement("div");
@@ -2885,7 +3017,7 @@ function saveBlobFile(blob, fname) {
   }, 4000);
 }
 function pdfPrintFallback(kind, why) {
-  pdfStatus("⚠ " + why + " — print wala tareeqa khul raha hai: khulne wale print window mein Destination 'Save as PDF' chunein to sahi PDF ban jayega.");
+  pdfStatus("⚠ " + why + " — opening the print method instead: in the print window that opens, choose the Destination 'Save as PDF' and the correct PDF will be created.");
   printHTML(kind);
 }
 function waitFrames(n) {
@@ -2899,7 +3031,7 @@ function loadPngImage(dataUrl) {
   return new Promise(function (resolve, reject) {
     var img = new Image();
     img.onload = function () { resolve(img); };
-    img.onerror = function () { reject(new Error("PNG image load nahi hui")); };
+    img.onerror = function () { reject(new Error("The PNG image did not load")); };
     img.src = dataUrl;
   });
 }
@@ -2918,10 +3050,10 @@ function pdfPageSlices(imgW, imgH) {
 }
 function pdfDocFromImage(img) {
   var JsPDF = window.jspdf && window.jspdf.jsPDF;
-  if (!JsPDF) throw new Error("jsPDF library nahi mili");
+  if (!JsPDF) throw new Error("The jsPDF library was not found");
   var W = img.naturalWidth || img.width;
   var H = img.naturalHeight || img.height;
-  if (!W || !H) throw new Error("PNG ka size nahi mila");
+  if (!W || !H) throw new Error("The PNG size was not found");
   var slices = pdfPageSlices(W, H);
   var doc = new JsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
   slices.forEach(function (s, i) {
@@ -2930,7 +3062,7 @@ function pdfDocFromImage(img) {
     c.width = W;
     c.height = s.ph;
     var ctx = c.getContext("2d");
-    if (!ctx) throw new Error("canvas context nahi mila");
+    if (!ctx) throw new Error("The canvas context was not found");
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, W, s.ph);
     ctx.drawImage(img, 0, s.sy, W, s.sh, 0, 0, W, s.sh);
@@ -2944,19 +3076,19 @@ function pdfDocFromImage(img) {
    taake duplex print mein back side hamesha page 2 par hi aye. */
 function pdfDocFromPageImages(imgs) {
   var JsPDF = window.jspdf && window.jspdf.jsPDF;
-  if (!JsPDF) throw new Error("jsPDF library nahi mili");
+  if (!JsPDF) throw new Error("The jsPDF library was not found");
   var doc = new JsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
   imgs.forEach(function (img, i) {
     if (i > 0) doc.addPage();
     var W = img.naturalWidth || img.width;
     var H = img.naturalHeight || img.height;
-    if (!W || !H) throw new Error("PNG ka size nahi mila");
+    if (!W || !H) throw new Error("The PNG size was not found");
     var pageH = Math.max(1, Math.round(W * PDF_A4_RATIO));
     var c = document.createElement("canvas");
     c.width = W;
     c.height = pageH;
     var ctx = c.getContext("2d");
-    if (!ctx) throw new Error("canvas context nahi mila");
+    if (!ctx) throw new Error("The canvas context was not found");
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, W, pageH);
     var dw = W, dh = H;
@@ -2971,16 +3103,16 @@ function pdfDocFromPageImages(imgs) {
    nahi), taake poori sheet ek hi landscape page par aye. */
 function pdfDocFromLandscapeImage(img) {
   var JsPDF = window.jspdf && window.jspdf.jsPDF;
-  if (!JsPDF) throw new Error("jsPDF library nahi mili");
+  if (!JsPDF) throw new Error("The jsPDF library was not found");
   var W = img.naturalWidth || img.width;
   var H = img.naturalHeight || img.height;
-  if (!W || !H) throw new Error("PNG ka size nahi mila");
+  if (!W || !H) throw new Error("The PNG size was not found");
   var doc = new JsPDF({ unit: "mm", format: "a4", orientation: "landscape" });
   var c = document.createElement("canvas");
   c.width = W;
   c.height = H;
   var ctx = c.getContext("2d");
-  if (!ctx) throw new Error("canvas context nahi mila");
+  if (!ctx) throw new Error("The canvas context was not found");
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, W, H);
   ctx.drawImage(img, 0, 0, W, H);
@@ -2988,6 +3120,109 @@ function pdfDocFromLandscapeImage(img) {
   var dw = Math.round(W * sc * 100) / 100, dh = Math.round(H * sc * 100) / 100;
   doc.addImage(c.toDataURL("image/jpeg", 0.95), "JPEG", Math.round((297 - dw) * 50) / 100, Math.round((210 - dh) * 50) / 100, dw, dh);
   return doc;
+}
+/* ================= ✂ EK PAGE PAR 2 TEST (2-UP) =================
+   Owner ka standard delivery format: ek LANDSCAPE A4 sheet par paper
+   ki DO copies side-by-side, darmiyan mein grey dashed cut line aur
+   neeche reminder strip — photocopy karke darmiyan se kaat lete hain.
+   Choice setup.twoUp mein rehti hai (default OFF; purane drafts par
+   false). Sirf PAPER par lagta hai — Answer Key hamesha single.
+   Bilingual Side-by-Side pehle hi ek poori landscape sheet hai, is
+   liye wahan 2-up khud band ho jata hai (UI mein checkbox disable +
+   note). PDF: normal capture(s) ke baad har source page ki tasveer
+   ek landscape page par do dafa rakhi jati hai. Print: print-only
+   wrapper (.twoup-*) mein har page ki do scaled copies. */
+var TWOUP_REMINDER = "Print at Actual size / 100% • Cut along the dashed line";
+function twoUpOn(st) {
+  return !!(st && st.setup && st.setup.twoUp) && !isSideBySide(st);
+}
+/* 2-up sheet ki geometry (pure — testable). Source page ka nap mm
+   mein (aam tor par 210 x ~297) do to landscape sheet (297 x 210)
+   par har copy ki jagah nikalti hai: sheet margin 6mm, neeche 10mm
+   ki reminder patti, har half 148.5mm — copy half ke andar fit +
+   center, cut line bilkul darmiyan (148.5) par. */
+function twoUpGeometry(pageWmm, pageHmm) {
+  var sheetW = 297, sheetH = 210;
+  var margin = 6, strip = 10;
+  var halfW = sheetW / 2;
+  var availW = halfW - margin * 2;
+  var availH = sheetH - margin - strip;
+  var sc = Math.min(availW / pageWmm, availH / pageHmm);
+  var r2 = function (n) { return Math.round(n * 100) / 100; };
+  var copyW = r2(pageWmm * sc), copyH = r2(pageHmm * sc);
+  return {
+    sheetW: sheetW, sheetH: sheetH,
+    copyW: copyW, copyH: copyH,
+    x1: r2((halfW - copyW) / 2),
+    x2: r2(halfW + (halfW - copyW) / 2),
+    y: r2(margin + (availH - copyH) / 2),
+    cutX: halfW, cutTop: margin, cutBottom: sheetH - strip,
+    reminderY: sheetH - 3.5
+  };
+}
+/* 2-up PDF: har source page ki tasveer EK landscape A4 page par do
+   dafa (left + right copy), darmiyan mein dashed cut line, neeche
+   reminder line. Front+Back ho to har source page ki apni sheet —
+   kul 2 landscape sheets. */
+function pdfDocFromTwoUpImages(imgs) {
+  var JsPDF = window.jspdf && window.jspdf.jsPDF;
+  if (!JsPDF) throw new Error("The jsPDF library was not found");
+  var doc = new JsPDF({ unit: "mm", format: "a4", orientation: "landscape" });
+  imgs.forEach(function (img, i) {
+    if (i > 0) doc.addPage();
+    var W = img.naturalWidth || img.width;
+    var H = img.naturalHeight || img.height;
+    if (!W || !H) throw new Error("The PNG size was not found");
+    var g = twoUpGeometry(210, H * 210 / W);
+    var c = document.createElement("canvas");
+    c.width = W;
+    c.height = H;
+    var ctx = c.getContext("2d");
+    if (!ctx) throw new Error("The canvas context was not found");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, W, H);
+    ctx.drawImage(img, 0, 0, W, H);
+    var url = c.toDataURL("image/jpeg", 0.95);
+    doc.addImage(url, "JPEG", g.x1, g.y, g.copyW, g.copyH);
+    doc.addImage(url, "JPEG", g.x2, g.y, g.copyW, g.copyH);
+    if (typeof doc.setDrawColor === "function") doc.setDrawColor(150, 150, 150);
+    if (typeof doc.setLineWidth === "function") doc.setLineWidth(0.4);
+    if (typeof doc.setLineDashPattern === "function") doc.setLineDashPattern([3, 2], 0);
+    if (typeof doc.line === "function") doc.line(g.cutX, g.cutTop, g.cutX, g.cutBottom);
+    if (typeof doc.setLineDashPattern === "function") doc.setLineDashPattern([], 0);
+    if (typeof doc.setTextColor === "function") doc.setTextColor(120, 120, 120);
+    if (typeof doc.setFontSize === "function") doc.setFontSize(8);
+    if (typeof doc.text === "function") doc.text(TWOUP_REMINDER, g.sheetW / 2, g.reminderY, { align: "center" });
+  });
+  return doc;
+}
+/* 2-up print ka HTML (pure — testable): har source page ke HTML se
+   ek .twoup-sheet banti hai — do copies + cut line + reminder.
+   Asli nap/scale print CSS (.twoup-*) mein hai; screen preview par
+   is ka koi asar nahi (printRoot sirf print mein dikhta hai). */
+function twoUpPrintHTML(pages) {
+  var sheets = (pages || []).map(function (p) {
+    return '<div class="twoup-sheet">' +
+      '<div class="twoup-copy twoup-copy-l">' + p + "</div>" +
+      '<div class="twoup-copy twoup-copy-r">' + p + "</div>" +
+      '<div class="twoup-cut"></div>' +
+      '<div class="twoup-reminder">' + TWOUP_REMINDER + "</div></div>";
+  });
+  return '<div class="twoup-print">' + sheets.join("") + "</div>";
+}
+/* Dono 2-up checkboxes (Finish + Page Layout ke paas wali) ko state
+   se sync rakho; Side-by-Side par dono disable + note zahir. */
+function renderTwoUpUI() {
+  var on = !!(state.setup && state.setup.twoUp);
+  var blocked = isSideBySide(state);
+  ["inTwoUp", "inTwoUpTop"].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) { el.checked = on; el.disabled = blocked; }
+  });
+  var n1 = document.getElementById("twoUpNote");
+  if (n1) n1.style.display = blocked ? "" : "none";
+  var n2 = document.getElementById("twoUpTopNote");
+  if (n2) n2.style.display = blocked ? "" : "none";
 }
 /* ---- Capture self-check (fix #3): tasveer ke ghair-safed kinare ----
    pdfEdgesFromImageData: har column ko scan karke sab se left aur sab
@@ -3021,7 +3256,7 @@ function pdfCheckCaptureImage(img) {
   c.width = W;
   c.height = H;
   var ctx = c.getContext("2d");
-  if (!ctx || typeof ctx.getImageData !== "function") throw new Error("capture check nahi ho saka");
+  if (!ctx || typeof ctx.getImageData !== "function") throw new Error("The capture check could not be done");
   ctx.drawImage(img, 0, 0, W, H);
   var d = ctx.getImageData(0, 0, W, H);
   var e = pdfEdgesFromImageData(d.data, W, H);
@@ -3034,7 +3269,7 @@ function captureOnePdfPage(el) {
     pixelRatio: 2, backgroundColor: "#ffffff",
     width: el.offsetWidth, height: el.offsetHeight
   }).then(function (dataUrl) {
-    if (!dataUrl || typeof dataUrl !== "string" || dataUrl.length < 1000) throw new Error("capture khaali aya");
+    if (!dataUrl || typeof dataUrl !== "string" || dataUrl.length < 1000) throw new Error("the capture came out empty");
     return loadPngImage(dataUrl);
   }).then(function (img) {
     var chk;
@@ -3080,38 +3315,41 @@ function attemptPdfCapture(kind) {
     });
 }
 function downloadPDF(kind) {
-  var fname = (state.setup.code || "paper") + (kind === "key" ? "-answer-key" : "-paper") + ".pdf";
-  if (!window.htmlToImage || !window.jspdf || !window.jspdf.jsPDF) { pdfPrintFallback(kind, "PDF library load nahi hui (internet check karein)"); return Promise.resolve(false); }
-  pdfStatus("⏳ PDF ban raha hai…");
+  /* ✂ 2-up sirf PAPER par: filename mein -2up, doc 2-up builder se.
+     Answer Key hamesha single (aam raste se) banti hai. */
+  var twoUp = kind === "paper" && twoUpOn(state);
+  var fname = (state.setup.code || "paper") + (kind === "key" ? "-answer-key" : "-paper") + (twoUp ? "-2up" : "") + ".pdf";
+  if (!window.htmlToImage || !window.jspdf || !window.jspdf.jsPDF) { pdfPrintFallback(kind, "The PDF library did not load (check your internet)"); return Promise.resolve(false); }
+  pdfStatus("⏳ Creating the PDF…");
   return attemptPdfCapture(kind)
     .then(function (res) {
       if (!res.defective) return res;
       /* Pehli tasveer shift/crop ayi — fresh clone se EK dafa dobara.
          Dobara bhi kharab ho to shift wali PDF nahi bhejte. */
       removePdfStage(res.built);
-      pdfStatus("⏳ PDF ban raha hai… (tasveer theek nahi ayi, dobara koshish)");
+      pdfStatus("⏳ Creating the PDF… (the image did not come out right, trying again)");
       return attemptPdfCapture(kind);
     })
     .then(function (res) {
       removePdfStage(res.built);
       if (res.defective) {
-        pdfPrintFallback(kind, "PDF ki tasveer do dafa shift/crop ayi, is liye kharab PDF nahi bheja");
+        pdfPrintFallback(kind, "The PDF image came out shifted/cropped twice, so the faulty PDF was not sent");
         return false;
       }
       var isLandImg = !!res.img && ((res.img.naturalWidth || res.img.width || 0) > (res.img.naturalHeight || res.img.height || 0));
-      var doc = (res.imgs && res.imgs.length > 1) ? pdfDocFromPageImages(res.imgs) : (isLandImg ? pdfDocFromLandscapeImage(res.img) : pdfDocFromImage(res.img));
+      var doc = twoUp ? pdfDocFromTwoUpImages(res.imgs) : ((res.imgs && res.imgs.length > 1) ? pdfDocFromPageImages(res.imgs) : (isLandImg ? pdfDocFromLandscapeImage(res.img) : pdfDocFromImage(res.img)));
       var blob = doc.output("blob");
       if (!blob || typeof blob.size !== "number" || blob.size < PDF_MIN_BYTES) {
-        pdfPrintFallback(kind, "PDF khaali bana (file size bohat chhota)");
+        pdfPrintFallback(kind, "The PDF came out empty (file size too small)");
         return false;
       }
       saveBlobFile(blob, fname);
-      pdfStatus("✔ PDF download ho gaya: " + fname + " — file khol kar zaroor check kar lein.");
+      pdfStatus("✔ PDF downloaded: " + fname + " — do open the file and check it.");
       return true;
     })
     .catch(function () {
       removePdfStage(null);
-      pdfPrintFallback(kind, "PDF banane mein ghalti hui");
+      pdfPrintFallback(kind, "An error occurred while creating the PDF");
       return false;
     });
 }
@@ -3154,19 +3392,19 @@ function renderCandidates() {
   var box = document.getElementById("candList");
   var qnote = document.getElementById("candQuality");
   if (!photoCandidates.length) {
-    box.innerHTML = '<div class="hint">Abhi koi sawal nahi. Photo laga kar upar wala AI button dabayein to sawal yahan aayenge.</div>';
+    box.innerHTML = '<div class="hint">No questions yet. Attach a photo and press the AI button above and the questions will appear here.</div>';
     if (qnote) qnote.textContent = "";
     return;
   }
   var badCount = 0;
   photoCandidates.forEach(function (c) { if (!c.gen && candidateQuality(c).bad) badCount++; });
-  if (qnote) qnote.textContent = badCount ? ("⚠ " + badCount + " / " + photoCandidates.length + " sawalon ka text mashkook lag raha hai (⚠ nishan walay) — ye khud se select nahi hue; photo se mila kar theek karein, phir tick karein.") : "";
+  if (qnote) qnote.textContent = badCount ? ("⚠ " + badCount + " / " + photoCandidates.length + " questions have doubtful-looking text (the ones marked ⚠) — they have not been auto-selected; correct them against the photo, then tick them.") : "";
   var html = "";
   photoCandidates.forEach(function (c, i) {
     var qual = c.gen ? { bad: false } : candidateQuality(c);
     html += '<div class="qrow" data-cand="' + i + '"' + (qual.bad ? ' style="border:1px solid var(--warn);border-radius:7px"' : "") + '><input type="checkbox" data-cf="sel"' + (c.checked === false ? "" : " checked") + ' style="margin-top:4px">';
     html += '<div style="flex:1"><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">' +
-      '<b>#' + (i + 1) + '</b>' + (qual.bad ? '<span style="color:var(--warn);font-size:12px">⚠ text mashkook — photo se check karein</span>' : "") +
+      '<b>#' + (i + 1) + '</b>' + (qual.bad ? '<span style="color:var(--warn);font-size:12px">⚠ text looks doubtful — check it against the photo</span>' : "") +
       '<select data-cf="type"><option value="mcq"' + (c.type === "mcq" ? " selected" : "") + '>MCQ</option><option value="short"' + (c.type === "short" ? " selected" : "") + '>Short</option><option value="long"' + (c.type === "long" ? " selected" : "") + '>Long</option></select>' +
       '<button type="button" class="mini" data-cact="del">🗑</button></div>';
     html += '<textarea data-cf="q" rows="2">' + esc(c.q) + "</textarea>";
@@ -3174,8 +3412,8 @@ function renderCandidates() {
       html += '<div class="optgrid">' + [0, 1, 2, 3].map(function (oi) {
         return '<input type="text" data-cf="o' + oi + '" placeholder="Option ' + LETTERS[oi] + '" value="' + esc(c.opts[oi] || "") + '">';
       }).join("") + "</div>";
-      html += '<label class="fl">Sahi Jawab</label><select data-cf="ans">' +
-        '<option value="-1"' + (c.ans === -1 ? " selected" : "") + '>? — nahi maloom (key mein khaali)</option>' +
+      html += '<label class="fl">Correct Answer</label><select data-cf="ans">' +
+        '<option value="-1"' + (c.ans === -1 ? " selected" : "") + '>? — unknown (blank in the key)</option>' +
         [0, 1, 2, 3].map(function (oi) {
           return '<option value="' + oi + '"' + (c.ans === oi ? " selected" : "") + ">" + LETTERS[oi] + "</option>";
         }).join("") + "</select>";
@@ -3246,7 +3484,7 @@ function showPreviews(files) {
    Long 0–10; khaali/ghalat value par default (5/5/1). 0 ka matlab
    hai wo qisam skip — aur teeno 0 hon to Generate ruk jata hai. */
 var AI_COUNT_LIMITS = { aiMcqCount: [0, 30, 5], aiShortCount: [0, 20, 5], aiLongCount: [0, 10, 1] };
-var AI_ZERO_MSG = "⚠ Teeno counts 0 hain — kam az kam ek qisam (MCQ / Short / Long) ki tadaad 1 ya zyada rakhein, phir Generate dabayein.";
+var AI_ZERO_MSG = "⚠ All three counts are 0 — keep the count of at least one type (MCQ / Short / Long) at 1 or more, then press Generate.";
 function aiCountVal(id) {
   var lim = AI_COUNT_LIMITS[id];
   var el = document.getElementById(id);
@@ -3434,32 +3672,32 @@ function refreshPuterAuthUI() {
   var outBtn = document.getElementById("btnPuterSignOut");
   if (!stEl || !inBtn || !outBtn) return;
   if (!puterReady()) {
-    stEl.textContent = "⚠ Puter library load nahi hui — internet check karke page refresh karein. Tab tak AI Engine se apni Gemini ya ChatGPT key wala tareeqa use ho sakta hai.";
+    stEl.textContent = "⚠ The Puter library did not load — check your internet and refresh the page. Until then, the AI Engine method with your own Gemini or ChatGPT key can be used.";
     inBtn.style.display = "none"; outBtn.style.display = "none";
     return;
   }
   if (puterSignedIn()) {
     inBtn.style.display = "none"; outBtn.style.display = "";
-    stEl.textContent = "✔ Aap Puter account se sign in hain — ab neeche photo laga kar AI wala button dabayein.";
+    stEl.textContent = "✔ You are signed in with a Puter account — now attach a photo below and press the AI button.";
     try {
       Promise.resolve(window.puter.auth.getUser()).then(function (u) {
-        if (u && (u.username || u.email)) stEl.textContent = "✔ Puter sign in hai: " + (u.username || u.email) + " — ab photo laga kar AI wala button dabayein.";
+        if (u && (u.username || u.email)) stEl.textContent = "✔ Signed in to Puter: " + (u.username || u.email) + " — now attach a photo and press the AI button.";
       }).catch(function () {});
     } catch (e) {}
   } else {
     inBtn.style.display = ""; outBtn.style.display = "none";
-    stEl.textContent = "ℹ AI se sawal banane ke liye pehle ek dafa FREE Puter account se sign in karein (sirf ek dafa — browser yaad rakhta hai). Account na ho to isi popup mein naya free account bhi ban jata hai.";
+    stEl.textContent = "ℹ To generate questions with AI, first sign in once with a FREE Puter account (only once — the browser remembers it). If you do not have an account, a new free account can also be created in the same popup.";
   }
 }
 function puterDoSignIn() {
   var st = document.getElementById("aiGenStatus");
-  if (!puterReady()) { if (st) st.textContent = "⚠ Puter library load nahi hui — internet check karke page refresh karein."; return Promise.resolve(false); }
+  if (!puterReady()) { if (st) st.textContent = "⚠ The Puter library did not load — check your internet and refresh the page."; return Promise.resolve(false); }
   if (puterSignedIn()) { refreshPuterAuthUI(); return Promise.resolve(true); }
   return Promise.resolve()
     .then(function () { return window.puter.auth.signIn(); })
     .then(function () { refreshPuterAuthUI(); return puterSignedIn(); })
     .catch(function () {
-      if (st) st.textContent = "⚠ Sign in mukammal nahi hua — popup band ho gaya ho ga. Upar wala Sign In button dobara dabayein.";
+      if (st) st.textContent = "⚠ The sign-in did not complete — the popup may have closed. Press the Sign In button above again.";
       return false;
     });
 }
@@ -3494,7 +3732,7 @@ function puterChatOnce(prompt, file) {
     return Promise.resolve().then(function () { return window.puter.ai.chat(prompt, file, false, opts); })
       .then(function (resp) {
         var t = puterRespText(resp);
-        if (!t) throw new Error("AI ne khaali jawab diya");
+        if (!t) throw new Error("The AI returned an empty reply");
         return t;
       });
   }
@@ -3508,30 +3746,30 @@ function puterChatOnce(prompt, file) {
 }
 function runPuterGen(files) {
   var st = document.getElementById("aiGenStatus");
-  if (!files || !files.length) { st.textContent = "⚠ Pehle page ki photo select karein."; return Promise.resolve(0); }
+  if (!files || !files.length) { st.textContent = "⚠ Select a photo of the page first."; return Promise.resolve(0); }
   var counts = aiCounts();
   if (aiCountsAllZero(counts)) { st.textContent = AI_ZERO_MSG; return Promise.resolve(0); }
   var use = files.slice(0, 3);
-  if (files.length > 3) st.textContent = "ℹ Ek dafa mein zyada se zyada 3 photos — pehli 3 li ja rahi hain.";
+  if (files.length > 3) st.textContent = "ℹ At most 3 photos at a time — taking the first 3.";
   function go() {
     var prompt = buildGenPrompt(counts.nMcq, counts.nShort, counts.nLong, true);
-    st.textContent = "🤖 AI ko photo bhej rahe hain…";
+    st.textContent = "🤖 Sending the photo to the AI…";
     var all = [], failed = 0, limitHit = false, fatalMsg = "";
     var chain = Promise.resolve();
     use.forEach(function (f, i) {
       chain = chain.then(function () {
         if (limitHit || fatalMsg) return; /* limit/fatal ke baad baqi photos par koi call nahi */
-        st.textContent = "🤖 Photo " + (i + 1) + "/" + use.length + " — AI safha parh kar sawal bana raha hai…";
+        st.textContent = "🤖 Photo " + (i + 1) + "/" + use.length + " — the AI is reading the page and creating questions…";
         return aiChatPhoto(prompt, f).then(function (txt) {
           var cands = parseAiQuestions(txt);
-          if (!cands.length) throw new Error("AI ke jawab se koi sawal nahi bana — photo saaf aur qareeb se le kar dobara koshish karein");
+          if (!cands.length) throw new Error("No question could be created from the AI reply — take a clear, close-up photo and try again");
           all = all.concat(cands);
         }).catch(function (e) {
           var um = aiUserMsg(e);
           if (um) { fatalMsg = um; return; }
           if (isAiLimitError(e)) { limitHit = true; return; }
           failed++;
-          st.textContent = "⚠ Photo " + (i + 1) + " fail: " + (e && e.message ? e.message : e) + (use.length > 1 ? " — baqi photos jari hain…" : "");
+          st.textContent = "⚠ Photo " + (i + 1) + " failed: " + (e && e.message ? e.message : e) + (use.length > 1 ? " — continuing with the remaining photos…" : "");
         });
       });
     });
@@ -3539,7 +3777,7 @@ function runPuterGen(files) {
       if (fatalMsg) {
         if (all.length) {
           setCandidates(all);
-          st.textContent = "✔ " + all.length + " sawal ban gaye. " + fatalMsg;
+          st.textContent = "✔ " + all.length + " questions created. " + fatalMsg;
           return all.length;
         }
         st.textContent = fatalMsg;
@@ -3548,38 +3786,38 @@ function runPuterGen(files) {
       if (limitHit) {
         if (all.length) {
           setCandidates(all);
-          st.textContent = "✔ " + all.length + " sawal ban gaye. " + PUTER_LIMIT_MSG;
+          st.textContent = "✔ " + all.length + " questions created. " + PUTER_LIMIT_MSG;
           return all.length;
         }
         st.textContent = PUTER_LIMIT_MSG;
         return 0;
       }
       if (!all.length) {
-        if (!failed) st.textContent = "⚠ AI se koi sawal nahi bana. Photo saaf, seedhi aur qareeb se ho to dobara koshish karein.";
-        else if (use.length === 1) st.textContent += " Agar ye ghalti baar baar aaye to ho sakta hai is month ki free allowance khatam ho — kuch dair baad dobara koshish karein, ya AI Engine se apni Gemini/ChatGPT key wala tareeqa azmayein.";
+        if (!failed) st.textContent = "⚠ The AI could not create any question. Try again with a clear, straight, close-up photo.";
+        else if (use.length === 1) st.textContent += " If this error keeps coming, this month's free allowance may be finished — try again after a while, or try the AI Engine method with your own Gemini/ChatGPT key.";
         return 0;
       }
       setCandidates(all);
       var nm = all.filter(function (c) { return c.type === "mcq"; }).length;
       var ns = all.filter(function (c) { return c.type === "short"; }).length;
       var nl = all.filter(function (c) { return c.type === "long"; }).length;
-      st.textContent = "✔ AI ne " + all.length + " sawal banaye (" + nm + " MCQ, " + ns + " Short, " + nl + " Long) — neeche Review mein sawal aur sahi jawab check karke paper mein shamil karein.";
+      st.textContent = "✔ The AI created " + all.length + " questions (" + nm + " MCQ, " + ns + " Short, " + nl + " Long) — check the questions and correct answers in the Review below and add them to the paper.";
       return all.length;
     });
   }
   if (aiEngine() === "gemini") {
-    if (!geminiSavedKey()) { refreshEngineUI(); st.textContent = "⚠ AI Engine 'Apni Gemini Key' chuna hai lekin koi key save nahi — pehle Engine ke neeche apni Gemini key lagayein (FREE milti hai), ya Engine 'Puter (FREE)' kar dein."; return Promise.resolve(0); }
+    if (!geminiSavedKey()) { refreshEngineUI(); st.textContent = "⚠ The AI Engine 'Your Own Gemini Key' is selected but no key is saved — first add your Gemini key under the Engine (it is FREE), or set the Engine to 'Puter (FREE)'."; return Promise.resolve(0); }
     return go();
   }
   if (aiEngine() === "openai") {
-    if (!openaiSavedKey()) { refreshEngineUI(); st.textContent = "⚠ AI Engine 'ChatGPT (OpenAI API Key)' chuna hai lekin koi key save nahi — pehle Engine ke neeche apni OpenAI key lagayein, ya Engine 'Puter (FREE)' kar dein."; return Promise.resolve(0); }
+    if (!openaiSavedKey()) { refreshEngineUI(); st.textContent = "⚠ The AI Engine 'ChatGPT (OpenAI API Key)' is selected but no key is saved — first add your OpenAI key under the Engine, or set the Engine to 'Puter (FREE)'."; return Promise.resolve(0); }
     return go();
   }
-  if (!puterReady()) { st.textContent = "⚠ Puter library load nahi hui — internet check karke page refresh karein."; return Promise.resolve(0); }
+  if (!puterReady()) { st.textContent = "⚠ The Puter library did not load — check your internet and refresh the page."; return Promise.resolve(0); }
   if (puterSignedIn()) return go();
-  st.textContent = "🔐 Pehle FREE Puter sign in chahiye — popup khul raha hai…";
+  st.textContent = "🔐 A FREE Puter sign in is needed first — opening the popup…";
   return puterDoSignIn().then(function (ok) {
-    if (!ok) { st.textContent = "⚠ Pehle FREE Puter account se sign in karein (upar wala Sign In button) — baghair sign in ke AI nahi chalega. Account bilkul free hai, sirf email se banta hai."; return 0; }
+    if (!ok) { st.textContent = "⚠ Sign in with a FREE Puter account first (the Sign In button above) — the AI will not run without sign-in. The account is completely free; it is created with just an email."; return 0; }
     return go();
   });
 }
@@ -3744,7 +3982,7 @@ function attemptFromString(s, count) {
 function applyPaperPhoto(parsed) {
   var st = document.getElementById("aiGenStatus");
   function say(m) { if (st) st.textContent = m; }
-  if (!parsed || !Array.isArray(parsed.sections)) { say("⚠ Paper samajh nahi aya — photo saaf aur seedhi ho, phir dobara koshish karein."); return 0; }
+  if (!parsed || !Array.isArray(parsed.sections)) { say("⚠ The paper could not be understood — the photo should be clear and straight, then try again."); return 0; }
   var newSections = [], counts = { mcq: 0, short: 0, long: 0 }, diagrams = 0, unreadable = 0;
   parsed.sections.forEach(function (ps) {
     var type = (ps && ["mcq", "short", "long"].indexOf(ps.type) >= 0) ? ps.type : "short";
@@ -3775,10 +4013,10 @@ function applyPaperPhoto(parsed) {
     newSections.push(sec);
   });
   var total = counts.mcq + counts.short + counts.long;
-  if (!total) { say("⚠ Photo se koi sawal nahi mila — photo saaf aur seedhi ho, phir dobara koshish karein."); return 0; }
+  if (!total) { say("⚠ No question was found in the photo — the photo should be clear and straight, then try again."); return 0; }
   var hasQ = state.sections.some(function (sx) { return sx.questions.length; });
-  if (hasQ && !window.confirm("Maujooda paper mein pehle se sawal hain. Paper ki Photo wala paper un ki jagah le lega (purane sawal hat jayenge). Kya aap waqai ye paper lagana chahte hain?")) {
-    say("Paper nahi badla — maujooda paper mehfooz hai.");
+  if (hasQ && !window.confirm("The current paper already has questions. The paper from Paper Photo will replace them (the old questions will be removed). Do you really want to apply this paper?")) {
+    say("The paper was not changed — the current paper is safe.");
     return 0;
   }
   var ns = defaultState();
@@ -3793,8 +4031,8 @@ function applyPaperPhoto(parsed) {
   state = ns;
   persist();
   renderAll();
-  say("✔ Paper tayyar: " + total + " sawal (" + counts.mcq + " MCQ, " + counts.short + " Short, " + counts.long + " Long), " + diagrams + " diagrams" +
-    (unreadable ? " — " + unreadable + " sawal mein [naqabil-e-parhai] nishan hai, editor mein woh hissa theek kar lein" : ""));
+  say("✔ Paper ready: " + total + " questions (" + counts.mcq + " MCQ, " + counts.short + " Short, " + counts.long + " Long), " + diagrams + " diagrams" +
+    (unreadable ? " — " + unreadable + " questions have a [naqabil-e-parhai] mark; fix that part in the editor" : ""));
   return total;
 }
 function selectedPaperFiles() {
@@ -3819,16 +4057,16 @@ function runPaperPhoto(files) {
   var st = document.getElementById("aiGenStatus");
   function say(m) { if (st) st.textContent = m; }
   files = (files || []).slice(0, 4);
-  if (!files.length) { say("⚠ Pehle paper ki kam az kam 1 photo chunein."); return Promise.resolve(0); }
+  if (!files.length) { say("⚠ Choose at least 1 photo of the paper first."); return Promise.resolve(0); }
   var eng = aiEngine();
-  if (eng === "gemini" && !geminiSavedKey()) { say("⚠ AI Engine 'Apni Gemini Key' chuna hai lekin koi key save nahi — upar Engine ke neeche apni Gemini key lagayein, ya Engine 'Puter (FREE)' kar dein."); return Promise.resolve(0); }
-  if (eng === "openai" && !openaiSavedKey()) { say("⚠ AI Engine 'ChatGPT (OpenAI API Key)' chuna hai lekin koi key save nahi — upar Engine ke neeche apni OpenAI key lagayein, ya Engine 'Puter (FREE)' kar dein."); return Promise.resolve(0); }
-  if (eng === "puter" && !puterReady()) { say("⚠ Puter library load nahi hui — internet check karke page refresh karein."); return Promise.resolve(0); }
+  if (eng === "gemini" && !geminiSavedKey()) { say("⚠ The AI Engine 'Your Own Gemini Key' is selected but no key is saved — add your Gemini key under the Engine above, or set the Engine to 'Puter (FREE)'."); return Promise.resolve(0); }
+  if (eng === "openai" && !openaiSavedKey()) { say("⚠ The AI Engine 'ChatGPT (OpenAI API Key)' is selected but no key is saved — add your OpenAI key under the Engine above, or set the Engine to 'Puter (FREE)'."); return Promise.resolve(0); }
+  if (eng === "puter" && !puterReady()) { say("⚠ The Puter library did not load — check your internet and refresh the page."); return Promise.resolve(0); }
   var merged = { setup: {}, sections: [] };
   var chain = Promise.resolve();
   files.forEach(function (f, i) {
     chain = chain.then(function () {
-      say("🤖 AI paper parh raha hai (page " + (i + 1) + "/" + files.length + ")… is mein kuch waqt lag sakta hai.");
+      say("🤖 The AI is reading the paper (page " + (i + 1) + "/" + files.length + ")… this may take a while.");
       return aiChatPhoto(buildPaperPhotoPrompt(i + 1, files.length), f);
     }).then(function (txt) {
       var part = parsePaperPhotoJson(txt);
@@ -3841,11 +4079,11 @@ function runPaperPhoto(files) {
     });
   });
   return chain.then(function () {
-    if (!merged.sections.length) { say("⚠ AI se paper samajh nahi aya — photo saaf aur seedhi ho, phir dobara koshish karein."); return 0; }
+    if (!merged.sections.length) { say("⚠ The AI could not understand the paper — the photo should be clear and straight, then try again."); return 0; }
     return applyPaperPhoto(merged);
   }).catch(function (e) {
     if (isAiLimitError(e)) { say(PUTER_LIMIT_MSG); return 0; }
-    say("⚠ Paper nahi ban saka: " + (e && e.message ? e.message : e));
+    say("⚠ The paper could not be created: " + (e && e.message ? e.message : e));
     return 0;
   });
 }
@@ -3959,44 +4197,44 @@ function runPuterTextGen(textOverride) {
   if (typeof textOverride === "string") text = textOverride;
   else { var ta = document.getElementById("pasteText"); text = ta ? String(ta.value || "") : ""; }
   text = normalizePasteText(text).trim();
-  if (!text) { st.textContent = "⚠ Pehle upar wale box mein book ka text paste karein."; return Promise.resolve(0); }
+  if (!text) { st.textContent = "⚠ First paste the book text in the box above."; return Promise.resolve(0); }
   var counts = aiCounts();
   if (aiCountsAllZero(counts)) { st.textContent = AI_ZERO_MSG; return Promise.resolve(0); }
   function go() {
     var clipped = text.slice(0, 8000);
     var prompt = buildTextGenPrompt(counts.nMcq, counts.nShort, counts.nLong) +
       "\n\n===== PASTED TEXT =====\n" + clipped + "\n===== END OF PASTED TEXT =====";
-    st.textContent = "🤖 AI text parh kar sawal bana raha hai…" + (text.length > 8000 ? " (text bara tha — pehle 8000 characters bheje gaye hain)" : "");
+    st.textContent = "🤖 The AI is reading the text and creating questions…" + (text.length > 8000 ? " (the text was long — the first 8000 characters have been sent)" : "");
     return aiChatText(prompt).then(function (txt) {
       var cands = parseAiQuestions(txt);
-      if (!cands.length) { st.textContent = "⚠ AI ke jawab se koi sawal nahi bana — text check karke dobara koshish karein. Agar text mein sawal hain to thora saaf hissa paste karke azmayein."; return 0; }
+      if (!cands.length) { st.textContent = "⚠ No question could be created from the AI reply — check the text and try again. If the text contains questions, try pasting a cleaner part."; return 0; }
       setCandidates(cands);
       var nm = cands.filter(function (c) { return c.type === "mcq"; }).length;
       var ns = cands.filter(function (c) { return c.type === "short"; }).length;
       var nl = cands.filter(function (c) { return c.type === "long"; }).length;
-      st.textContent = "✔ AI ne " + cands.length + " sawal banaye (" + nm + " MCQ, " + ns + " Short, " + nl + " Long) — neeche Review mein sawal aur sahi jawab check karke paper mein shamil karein.";
+      st.textContent = "✔ The AI created " + cands.length + " questions (" + nm + " MCQ, " + ns + " Short, " + nl + " Long) — check the questions and correct answers in the Review below and add them to the paper.";
       return cands.length;
     }).catch(function (e) {
       var um = aiUserMsg(e);
       if (um) { st.textContent = um; return 0; }
       if (isAiLimitError(e)) { st.textContent = PUTER_LIMIT_MSG; return 0; }
-      st.textContent = "⚠ AI fail: " + (e && e.message ? e.message : e) + " — dobara koshish karein. Agar ye ghalti baar baar aaye to ho sakta hai is month ki free allowance khatam ho — kuch dair baad dobara koshish karein.";
+      st.textContent = "⚠ AI failed: " + (e && e.message ? e.message : e) + " — please try again. If this error keeps coming, this month's free allowance may be finished — try again after a while.";
       return 0;
     });
   }
   if (aiEngine() === "gemini") {
-    if (!geminiSavedKey()) { refreshEngineUI(); st.textContent = "⚠ AI Engine 'Apni Gemini Key' chuna hai lekin koi key save nahi — pehle Engine ke neeche apni Gemini key lagayein (FREE milti hai), ya Engine 'Puter (FREE)' kar dein."; return Promise.resolve(0); }
+    if (!geminiSavedKey()) { refreshEngineUI(); st.textContent = "⚠ The AI Engine 'Your Own Gemini Key' is selected but no key is saved — first add your Gemini key under the Engine (it is FREE), or set the Engine to 'Puter (FREE)'."; return Promise.resolve(0); }
     return go();
   }
   if (aiEngine() === "openai") {
-    if (!openaiSavedKey()) { refreshEngineUI(); st.textContent = "⚠ AI Engine 'ChatGPT (OpenAI API Key)' chuna hai lekin koi key save nahi — pehle Engine ke neeche apni OpenAI key lagayein, ya Engine 'Puter (FREE)' kar dein."; return Promise.resolve(0); }
+    if (!openaiSavedKey()) { refreshEngineUI(); st.textContent = "⚠ The AI Engine 'ChatGPT (OpenAI API Key)' is selected but no key is saved — first add your OpenAI key under the Engine, or set the Engine to 'Puter (FREE)'."; return Promise.resolve(0); }
     return go();
   }
-  if (!puterReady()) { st.textContent = "⚠ Puter library load nahi hui — internet check karke page refresh karein."; return Promise.resolve(0); }
+  if (!puterReady()) { st.textContent = "⚠ The Puter library did not load — check your internet and refresh the page."; return Promise.resolve(0); }
   if (puterSignedIn()) return go();
-  st.textContent = "🔐 Pehle FREE Puter sign in chahiye — popup khul raha hai…";
+  st.textContent = "🔐 A FREE Puter sign in is needed first — opening the popup…";
   return puterDoSignIn().then(function (ok) {
-    if (!ok) { st.textContent = "⚠ Pehle FREE Puter account se sign in karein (upar wala Sign In button) — baghair sign in ke AI nahi chalega. Account bilkul free hai, sirf email se banta hai."; return 0; }
+    if (!ok) { st.textContent = "⚠ Sign in with a FREE Puter account first (the Sign In button above) — the AI will not run without sign-in. The account is completely free; it is created with just an email."; return 0; }
     return go();
   });
 }
@@ -4021,7 +4259,7 @@ function geminiCall(parts, key) {
   return fetch("https://generativelanguage.googleapis.com/v1beta/models/" + GEMINI_MODEL + ":generateContent?key=" + encodeURIComponent(key), {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ contents: [{ parts: parts }] })
-  }).then(function (r) { if (!r.ok) throw new Error("Gemini ne jawab nahi diya (" + r.status + ") — key check karein"); return r.json(); })
+  }).then(function (r) { if (!r.ok) throw new Error("Gemini did not reply (" + r.status + ") — check the key"); return r.json(); })
     .then(function (j) {
       var parts = (((j.candidates || [])[0] || {}).content || {}).parts || [];
       return parts.map(function (p) { return p.text || ""; }).join("");
@@ -4033,7 +4271,7 @@ function geminiCall(parts, key) {
    waisa hi wapas, parsing Puter wala hi (parseAiQuestions waghera). */
 function geminiText(prompt, key) {
   return geminiCall([{ text: String(prompt || "") }], key).then(function (t) {
-    if (!t) throw new Error("Gemini ne khaali jawab diya");
+    if (!t) throw new Error("Gemini returned an empty reply");
     return t;
   });
 }
@@ -4042,7 +4280,7 @@ function geminiPhotoText(prompt, file, key) {
   return fileToBase64(file).then(function (b64) {
     return geminiCall([{ text: String(prompt || "") }, { inline_data: { mime_type: file.type || "image/jpeg", data: b64 } }], key);
   }).then(function (t) {
-    if (!t) throw new Error("Gemini ne khaali jawab diya");
+    if (!t) throw new Error("Gemini returned an empty reply");
     return t;
   });
 }
@@ -4058,9 +4296,9 @@ var OPENAI_MODEL = "gpt-4o-mini";
 function openaiHttpError(status, j) {
   var code = (j && j.error) ? String(j.error.code || "") : "";
   var err;
-  if (status === 401) err = new Error("⚠ OpenAI key ghalat hai — key check karke dobara lagayein.");
-  else if (status === 429 || code === "insufficient_quota") err = new Error("⚠ OpenAI key ka balance/quota khatam hai — platform.openai.com par balance check karein, ya Engine Puter (FREE) kar dein.");
-  else err = new Error("⚠ OpenAI ne jawab nahi diya (" + status + ") — dobara koshish karein.");
+  if (status === 401) err = new Error("⚠ The OpenAI key is wrong — check the key and add it again.");
+  else if (status === 429 || code === "insufficient_quota") err = new Error("⚠ The OpenAI key's balance/quota is finished — check the balance at platform.openai.com, or set the Engine to Puter (FREE).");
+  else err = new Error("⚠ OpenAI did not reply (" + status + ") — please try again.");
   err.userMsg = true;
   return err;
 }
@@ -4078,14 +4316,14 @@ function openaiCall(messages, key) {
     });
   }).catch(function (e) {
     if (e && e.userMsg) throw e;
-    throw new Error("OpenAI se rabta nahi ho saka — internet check karke dobara koshish karein.");
+    throw new Error("Could not connect to OpenAI — check your internet and try again.");
   });
 }
 /* Engine route (text): Puter wale generation prompts ChatGPT ko —
    jawab ka text waisa hi wapas, parsing Puter wala hi. */
 function openaiText(prompt, key) {
   return openaiCall([{ role: "user", content: String(prompt || "") }], key).then(function (t) {
-    if (!t) throw new Error("ChatGPT ne khaali jawab diya");
+    if (!t) throw new Error("ChatGPT returned an empty reply");
     return t;
   });
 }
@@ -4099,7 +4337,7 @@ function openaiPhotoText(prompt, file, key) {
       { type: "image_url", image_url: { url: url } }
     ] }], key);
   }).then(function (t) {
-    if (!t) throw new Error("ChatGPT ne khaali jawab diya");
+    if (!t) throw new Error("ChatGPT returned an empty reply");
     return t;
   });
 }
@@ -4158,7 +4396,7 @@ function bindPhoto() {
   });
   document.getElementById("btnAddSelected").addEventListener("click", function () {
     var n = addSelectedCandidates();
-    document.getElementById("candMsg").textContent = n ? ("✔ " + n + " sawal paper mein shamil ho gaye — upar preview aur Answer Key mein check karein.") : "⚠ Pehle kam az kam ek sawal select karein.";
+    document.getElementById("candMsg").textContent = n ? ("✔ " + n + " questions have been added to the paper — check them in the preview above and in the Answer Key.") : "⚠ Select at least one question first.";
   });
   document.getElementById("btnCandAll").addEventListener("click", function () { photoCandidates.forEach(function (c) { c.checked = true; }); renderCandidates(); });
   document.getElementById("btnCandNone").addEventListener("click", function () { photoCandidates.forEach(function (c) { c.checked = false; }); renderCandidates(); });
@@ -4244,7 +4482,7 @@ function authSaveSession(s) {
    jawab ka masla ho to saaf Roman-Urdu error throw hota hai. */
 function apiCall(payload, timeoutMs) {
   var url = authServerUrl();
-  if (!url) return Promise.reject(new Error("Server URL set nahi hai — pehle Server Setup karein."));
+  if (!url) return Promise.reject(new Error("The Server URL is not set — do the Server Setup first."));
   var ctrl = null, signal;
   try {
     if (typeof AbortController !== "undefined") { ctrl = new AbortController(); signal = ctrl.signal; }
@@ -4262,12 +4500,12 @@ function apiCall(payload, timeoutMs) {
   }).then(function (r) { return r.text(); }).then(function (txt) {
     clearTimeout(timer);
     try { return JSON.parse(txt); }
-    catch (e) { throw new Error("Server ka jawab samajh nahi aaya — Server URL check karein."); }
+    catch (e) { throw new Error("The server reply could not be understood — check the Server URL."); }
   }).catch(function (err) {
     clearTimeout(timer);
-    if (timedOut) throw new Error("Server ne bohat der laga di — internet check karke dobara try karein.");
-    if (err && /samajh nahi aaya/.test(String(err.message || ""))) throw err;
-    throw new Error("Server se rabta nahi ho saka — internet ya Server URL check karein.");
+    if (timedOut) throw new Error("The server took too long — check your internet and try again.");
+    if (err && /could not be understood/.test(String(err.message || ""))) throw err;
+    throw new Error("Could not connect to the server — check your internet or the Server URL.");
   });
 }
 function authedPayload(extra) {
@@ -4325,7 +4563,7 @@ function setLoginTab(t) {
   if (ta) ta.classList.toggle("on", loginTab === "admin");
   var hint = authEl("lgTabHint");
   if (hint) hint.textContent = loginTab === "admin"
-    ? "Admin account se sign in karein — sirf admin ke liye."
+    ? "Sign in with an admin account — for admins only."
     : "Sign in to your account to continue.";
   authShowErr("liError", "");
   return loginTab;
@@ -4447,13 +4685,13 @@ function renderMyDrafts() {
   var meta = getDraftMeta();
   mpDraftNames = Object.keys(drafts);
   if (!mpDraftNames.length) {
-    box.innerHTML = '<div class="hint">Abhi koi saved draft nahi hai. Paper Generator mein ja kar "Save Draft" dabayein.</div>';
+    box.innerHTML = '<div class="hint">There is no saved draft yet. Go to the Paper Generator and press "Save Draft".</div>';
     return;
   }
   box.innerHTML = mpDraftNames.map(function (name, i) {
     var st = drafts[name] || {};
     var when = meta[name] ? fmtDateShort(meta[name]) : (st.setup && st.setup.date ? st.setup.date : "—");
-    var sub = "📅 " + esc(when) + " • " + draftQuestionCount(st) + " sawal" +
+    var sub = "📅 " + esc(when) + " • " + draftQuestionCount(st) + " questions" +
       (st.setup && st.setup.subject ? " • " + esc(st.setup.subject) : "") +
       (st.setup && st.setup.clazz ? " (" + esc(st.setup.clazz) + ")" : "");
     return '<div class="qrow"><div class="qt"><b>' + esc(name) + '</b><div class="hint">' + sub + "</div></div>" +
@@ -4466,7 +4704,7 @@ function renderMyDrafts() {
 /* Server URL poora kabhi panel mein nahi dikhate — darmiyan chhupa kar. */
 function maskServerUrl(u) {
   u = String(u || "");
-  if (!u) return "— (set nahi hai)";
+  if (!u) return "— (not set)";
   if (u.length <= 48) return u;
   return u.slice(0, 43) + "…" + u.slice(u.length - 5);
 }
@@ -4490,10 +4728,10 @@ function doLogin() {
   var u = authEl("liUser").value.trim();
   var p = authEl("liPass").value;
   authShowErr("liError", "");
-  if (!u || !p) { authShowErr("liError", "⚠ Username aur password likhein."); return Promise.resolve(false); }
+  if (!u || !p) { authShowErr("liError", "⚠ Write the username and password."); return Promise.resolve(false); }
   var btn = authEl("btnLogin");
   btn.disabled = true;
-  btn.textContent = "⏳ Login ho raha hai…";
+  btn.textContent = "⏳ Signing in…";
   function done() { btn.disabled = false; btn.textContent = "Sign In"; }
   return apiCall({ action: "login", user: u, pass: p }).then(function (r) {
     done();
@@ -4503,11 +4741,11 @@ function doLogin() {
          match kare. */
       var isAdm = r.role === "admin";
       if (loginTab === "admin" && !isAdm) {
-        authShowErr("liError", "⚠ Ye admin account nahi hai — User Login se dakhil hon.");
+        authShowErr("liError", "⚠ This is not an admin account — sign in through User Login.");
         return false;
       }
       if (loginTab === "user" && isAdm) {
-        authShowErr("liError", "⚠ Ye admin account hai — Admin Login se dakhil hon.");
+        authShowErr("liError", "⚠ This is an admin account — sign in through Admin Login.");
         return false;
       }
       authSaveSession({ user: r.user, role: r.role, token: r.token, created: r.created || "" });
@@ -4517,7 +4755,7 @@ function doLogin() {
       if (authSession && authSession.role === "admin") loadAdminUsers();
       return true;
     }
-    authShowErr("liError", "⚠ " + ((r && r.error) || "Login nahi ho saka."));
+    authShowErr("liError", "⚠ " + ((r && r.error) || "Could not sign in."));
     return false;
   }).catch(function (e) {
     done();
@@ -4536,7 +4774,7 @@ function doChangePassword() {
   var oldP = authEl("cpOld").value, newP = authEl("cpNew").value;
   var msg = authEl("cpMsg");
   if (!oldP || newP.length < 6) {
-    msg.textContent = "⚠ Purana password likhein aur naya kam az kam 6 harf ka rakhein.";
+    msg.textContent = "⚠ Write the old password and keep the new one at least 6 characters long.";
     return Promise.resolve(false);
   }
   return apiCall(authedPayload({ action: "change_my_password", oldpass: oldP, newpass: newP })).then(function (r) {
@@ -4545,10 +4783,10 @@ function doChangePassword() {
         authSaveSession({ user: authSession.user, role: authSession.role, token: r.token, created: authSession.created || "" });
       }
       authEl("cpOld").value = ""; authEl("cpNew").value = "";
-      msg.textContent = "✔ " + (r.msg || "Password badal gaya.");
+      msg.textContent = "✔ " + (r.msg || "The password has been changed.");
       return true;
     }
-    msg.textContent = "⚠ " + ((r && r.error) || "Password nahi badla.");
+    msg.textContent = "⚠ " + ((r && r.error) || "The password was not changed.");
     return false;
   }).catch(function (e) {
     msg.textContent = "⚠ " + e.message;
@@ -4568,7 +4806,7 @@ function renderAdminUsers(users) {
   if (su) su.textContent = String(users.length);
   if (sa) sa.textContent = String(adminCount);
   if (!users.length) {
-    tb.innerHTML = '<tr><td colspan="5">Abhi koi user nahi.</td></tr>';
+    tb.innerHTML = '<tr><td colspan="5">No users yet.</td></tr>';
     return;
   }
   var h = "";
@@ -4580,11 +4818,11 @@ function renderAdminUsers(users) {
        aakhri admin bhi nahi (server bhi yehi rokta hai). */
     var delPart;
     if (self) delPart = "";
-    else if (u.role === "admin" && adminCount <= 1) delPart = ' <span class="hint">(aakhri admin — delete nahi ho sakta)</span>';
+    else if (u.role === "admin" && adminCount <= 1) delPart = ' <span class="hint">(last admin — cannot be deleted)</span>';
     else delPart = ' <button type="button" class="btn small danger" data-admdel="' + esc(u.user) + '">Delete</button>';
-    h += "<tr><td><b>" + esc(u.user) + "</b>" + (self ? ' <span class="hint">(aap)</span>' : "") + "</td>" +
+    h += "<tr><td><b>" + esc(u.user) + "</b>" + (self ? ' <span class="hint">(you)</span>' : "") + "</td>" +
       "<td>" + esc(u.role || "user") + "</td><td>" + esc(created) + "</td>" +
-      '<td><input type="password" data-admpass="' + esc(u.user) + '" placeholder="naya password" autocomplete="new-password"></td>' +
+      '<td><input type="password" data-admpass="' + esc(u.user) + '" placeholder="new password" autocomplete="new-password"></td>' +
       '<td><button type="button" class="btn small ghost" data-admreset="' + esc(u.user) + '">Reset</button>' +
       delPart + "</td></tr>";
   });
@@ -4594,7 +4832,7 @@ function loadAdminUsers() {
   if (!authSession || authSession.role !== "admin") return Promise.resolve(false);
   return apiCall(authedPayload({ action: "admin_list" })).then(function (r) {
     if (r && r.ok) { renderAdminUsers(r.users || []); return true; }
-    authEl("admMsg").textContent = "⚠ " + ((r && r.error) || "Users ki list nahi aayi.");
+    authEl("admMsg").textContent = "⚠ " + ((r && r.error) || "The users list did not arrive.");
     return false;
   }).catch(function (e) {
     authEl("admMsg").textContent = "⚠ " + e.message;
@@ -4606,16 +4844,16 @@ function admAddUser() {
   var np = authEl("admNewPass").value;
   var role = authEl("admNewRole").value;
   var msg = authEl("admMsg");
-  if (nu.length < 3) { msg.textContent = "⚠ Username kam az kam 3 harf ka rakhein."; return Promise.resolve(false); }
-  if (np.length < 6) { msg.textContent = "⚠ Password kam az kam 6 harf ka rakhein."; return Promise.resolve(false); }
+  if (nu.length < 3) { msg.textContent = "⚠ Keep the username at least 3 characters long."; return Promise.resolve(false); }
+  if (np.length < 6) { msg.textContent = "⚠ Keep the password at least 6 characters long."; return Promise.resolve(false); }
   return apiCall(authedPayload({ action: "admin_add", newuser: nu, newpass: np, newrole: role })).then(async function (r) {
     if (r && r.ok) {
-      msg.textContent = "✔ " + (r.msg || "User ban gaya.");
+      msg.textContent = "✔ " + (r.msg || "The user has been created.");
       authEl("admNewUser").value = ""; authEl("admNewPass").value = "";
       await loadAdminUsers();
       return true;
     }
-    msg.textContent = "⚠ " + ((r && r.error) || "User nahi bana.");
+    msg.textContent = "⚠ " + ((r && r.error) || "The user was not created.");
     return false;
   }).catch(function (e) {
     msg.textContent = "⚠ " + e.message;
@@ -4625,12 +4863,12 @@ function admAddUser() {
 function admSetPass(target, newpass) {
   var msg = authEl("admMsg");
   if (!newpass || newpass.length < 6) {
-    msg.textContent = "⚠ " + target + " ke liye naya password kam az kam 6 harf ka likhein.";
+    msg.textContent = "⚠ Write a new password for " + target + " of at least 6 characters.";
     return Promise.resolve(false);
   }
   return apiCall(authedPayload({ action: "admin_setpass", target: target, newpass: newpass })).then(function (r) {
-    if (r && r.ok) { msg.textContent = "✔ " + (r.msg || "Password badal gaya."); return true; }
-    msg.textContent = "⚠ " + ((r && r.error) || "Password nahi badla.");
+    if (r && r.ok) { msg.textContent = "✔ " + (r.msg || "The password has been changed."); return true; }
+    msg.textContent = "⚠ " + ((r && r.error) || "The password was not changed.");
     return false;
   }).catch(function (e) {
     msg.textContent = "⚠ " + e.message;
@@ -4641,11 +4879,11 @@ function admDeleteUser(target) {
   var msg = authEl("admMsg");
   return apiCall(authedPayload({ action: "admin_del", deluser: target })).then(async function (r) {
     if (r && r.ok) {
-      msg.textContent = "✔ " + (r.msg || "User delete ho gaya.");
+      msg.textContent = "✔ " + (r.msg || "The user has been deleted.");
       await loadAdminUsers();
       return true;
     }
-    msg.textContent = "⚠ " + ((r && r.error) || "User delete nahi hua.");
+    msg.textContent = "⚠ " + ((r && r.error) || "The user was not deleted.");
     return false;
   }).catch(function (e) {
     msg.textContent = "⚠ " + e.message;
@@ -4658,12 +4896,12 @@ function saveServerUrlFrom(inputId, msgId) {
   var u = authEl(inputId).value.trim();
   var msg = authEl(msgId);
   if (!authValidUrl(u)) {
-    if (msg) msg.textContent = "⚠ URL theek nahi lag raha — https://script.google.com/macros/s/.../exec wali poori link lagayein.";
+    if (msg) msg.textContent = "⚠ The URL does not look right — paste the full https://script.google.com/macros/s/.../exec link.";
     return false;
   }
   authSetServerUrl(u);
   setupBypass = false; /* URL lag gaya — ab sirf login chalega */
-  if (msg) msg.textContent = "✔ Server URL save ho gaya.";
+  if (msg) msg.textContent = "✔ The Server URL has been saved.";
   applyAuthUI();
   return true;
 }
@@ -4732,14 +4970,14 @@ function bindAuth() {
       if (name && loadDraft(name)) {
         renderAll();
         showView("generator");
-      } else if (msg) { msg.textContent = "⚠ Draft nahi khula."; }
+      } else if (msg) { msg.textContent = "⚠ The draft did not open."; }
     } else if (db) {
       var dn = mpDraftNames[parseInt(db.getAttribute("data-mpdel"), 10)];
-      if (dn && window.confirm("Draft \"" + dn + "\" delete kar dein?")) {
+      if (dn && window.confirm("Delete the draft \"" + dn + "\"?")) {
         deleteDraft(dn);
         renderDrafts();
         renderMyDrafts();
-        if (msg) msg.textContent = "Draft delete ho gaya: " + dn;
+        if (msg) msg.textContent = "Draft deleted: " + dn;
       }
     }
   });
@@ -4754,7 +4992,7 @@ function bindAuth() {
       admSetPass(user, inp ? inp.value : "").then(function (ok) { if (ok && inp) inp.value = ""; });
     } else if (db) {
       var du = db.getAttribute("data-admdel");
-      if (window.confirm("User \"" + du + "\" delete kar dein? Ye wapas nahi aayega.")) admDeleteUser(du);
+      if (window.confirm("Delete the user \"" + du + "\"? This cannot be undone.")) admDeleteUser(du);
     }
   });
 }
@@ -4781,25 +5019,25 @@ function bindScheme() {
     var isPdf = /pdf$/i.test(f.type) || /\.pdf$/i.test(f.name);
     var isTxt = /^text\//.test(f.type) || /\.txt$/i.test(f.name);
     if (isPdf) {
-      msg("schemeFileStatus", "📄 PDF parh rahe hain…");
+      msg("schemeFileStatus", "📄 Reading the PDF…");
       pdfFileToText(f).then(function (text) {
-        if (!text.trim()) { msg("schemeFileStatus", "⚠ PDF se text nahi mila — ho sakta hai ye scanned photo PDF ho. Is ki photo bana kar image upload karein."); return; }
+        if (!text.trim()) { msg("schemeFileStatus", "⚠ No text was found in the PDF — it may be a scanned photo PDF. Take a photo of it and upload the image."); return; }
         document.getElementById("schemeText").value = text.slice(0, 12000);
-        msg("schemeFileStatus", "✔ PDF ka text neeche wale box mein aa gaya hai — ab 'AI se Scheme Parhein' dabayein.");
+        msg("schemeFileStatus", "✔ The PDF text has been placed in the box below — now press 'Read Scheme with AI'.");
       }).catch(function (e) { msg("schemeFileStatus", "⚠ " + (e && e.message ? e.message : e)); });
     } else if (isTxt) {
       var r = new FileReader();
       r.onload = function () {
         document.getElementById("schemeText").value = String(r.result || "").slice(0, 12000);
-        msg("schemeFileStatus", "✔ Text file ka text neeche wale box mein aa gaya hai — ab 'AI se Scheme Parhein' dabayein.");
+        msg("schemeFileStatus", "✔ The text file's text has been placed in the box below — now press 'Read Scheme with AI'.");
       };
-      r.onerror = function () { msg("schemeFileStatus", "⚠ File parh nahi sakay."); };
+      r.onerror = function () { msg("schemeFileStatus", "⚠ Could not read the file."); };
       r.readAsText(f);
     } else if (/^image\//.test(f.type)) {
       schemePendingFile = f;
-      msg("schemeFileStatus", "🖼 Scheme ki photo select ho gayi (" + f.name + ") — ab 'AI se Scheme Parhein' dabayein.");
+      msg("schemeFileStatus", "🖼 The scheme photo has been selected (" + f.name + ") — now press 'Read Scheme with AI'.");
     } else {
-      msg("schemeFileStatus", "⚠ Ye file type nahi chalega — image, PDF ya .txt file dein.");
+      msg("schemeFileStatus", "⚠ This file type will not work — provide an image, PDF or .txt file.");
     }
   });
 
@@ -4838,40 +5076,40 @@ function bindScheme() {
       "class": document.getElementById("schEdClass").value.trim(),
       subject: document.getElementById("schEdSubject").value.trim()
     });
-    if (!sc) { msg("schemeEdMsg", "⚠ Rows se scheme nahi bani — har row mein Section, Chapter aur Given (number) zaroor likhein."); return; }
+    if (!sc) { msg("schemeEdMsg", "⚠ No scheme could be made from the rows — in every row, Section, Chapter and Given (count) must be written."); return; }
     applyScheme(sc);
-    msg("schemeEdMsg", "✔ Scheme ban kar lag gayi: " + sc.name);
+    msg("schemeEdMsg", "✔ Scheme created and applied: " + sc.name);
   });
 
   document.getElementById("btnSchemeClear").addEventListener("click", function () {
     clearScheme();
-    msg("schemeAiStatus", "Scheme hata di gayi — paper aur sawal waisay hi hain.");
+    msg("schemeAiStatus", "The scheme has been removed — the paper and questions are unchanged.");
   });
 
   /* My Schemes */
   document.getElementById("btnMySchemeSave").addEventListener("click", function () {
     var name = document.getElementById("mySchemeName").value.trim();
-    if (!name) { msg("mySchemeMsg", "⚠ Pehle scheme ka naam likhein."); return; }
+    if (!name) { msg("mySchemeMsg", "⚠ Write the scheme name first."); return; }
     var sc = getActiveScheme();
-    if (!sc) { msg("mySchemeMsg", "⚠ Abhi koi scheme active nahi — pehle tayyar scheme lagayein, upload karein ya manual editor se banayein."); return; }
+    if (!sc) { msg("mySchemeMsg", "⚠ No scheme is active yet — first apply a ready scheme, upload one, or create one with the manual editor."); return; }
     if (saveMyScheme(name, sc)) {
       renderMySchemes();
       document.getElementById("mySchemesList").value = name;
-      msg("mySchemeMsg", "✔ Scheme save ho gayi: " + name);
+      msg("mySchemeMsg", "✔ Scheme saved: " + name);
     }
   });
   document.getElementById("btnMySchemeLoad").addEventListener("click", function () {
     var name = document.getElementById("mySchemesList").value;
     var all = getMySchemes();
-    if (!name || !all[name]) { msg("mySchemeMsg", "⚠ Pehle list se scheme chunein."); return; }
-    if (applyScheme(all[name])) msg("mySchemeMsg", "✔ Scheme lag gayi: " + name);
+    if (!name || !all[name]) { msg("mySchemeMsg", "⚠ Select a scheme from the list first."); return; }
+    if (applyScheme(all[name])) msg("mySchemeMsg", "✔ Scheme applied: " + name);
   });
   document.getElementById("btnMySchemeDelete").addEventListener("click", function () {
     var name = document.getElementById("mySchemesList").value;
-    if (!name) { msg("mySchemeMsg", "⚠ Pehle list se scheme chunein."); return; }
+    if (!name) { msg("mySchemeMsg", "⚠ Select a scheme from the list first."); return; }
     deleteMyScheme(name);
     renderMySchemes();
-    msg("mySchemeMsg", "🗑 Scheme delete ho gayi: " + name);
+    msg("mySchemeMsg", "🗑 Scheme deleted: " + name);
   });
 }
 
@@ -4891,8 +5129,8 @@ function bindScheme() {
    Prompt + aiChatText + Review list) ko jata hai. */
 var BOOKS_DB_NAME = "kpg-books";
 var BOOK_TEXT_CAP = 24000;
-var BOOK_TRUNC_MSG = "⚠ Selection bohat lamba tha — pehle 24,000 characters bheje gaye hain. Kam pages select karein.";
-var BOOK_EMPTY_MSG = "⚠ Select kiye hue pages par koi text nahi mila — ye pages scanned lagte hain. 📷 Photo wala tareeqa use karein ya doosre pages select karein.";
+var BOOK_TRUNC_MSG = "⚠ The selection was too long — the first 24,000 characters have been sent. Select fewer pages.";
+var BOOK_EMPTY_MSG = "⚠ No text was found on the selected pages — these pages look scanned. Use the 📷 Photo method or select other pages.";
 var GH_REPO_LS = "kpg_github_repo";
 var GH_TOKEN_LS = "kpg_github_token";
 var GH_DEFAULT_REPO = "keps-science-academy/keps-books";
@@ -4963,7 +5201,7 @@ function booksIdbAvailable() {
 }
 function idbOpenBooks() {
   return new Promise(function (resolve, reject) {
-    if (!booksIdbAvailable()) { reject(new Error("Is browser mein IndexedDB band hai — book is device par save nahi ho sakti.")); return; }
+    if (!booksIdbAvailable()) { reject(new Error("IndexedDB is disabled in this browser — the book cannot be saved on this device.")); return; }
     var req;
     try { req = indexedDB.open(BOOKS_DB_NAME, 1); } catch (e) { reject(e); return; }
     req.onupgradeneeded = function () {
@@ -4971,7 +5209,7 @@ function idbOpenBooks() {
       if (!db.objectStoreNames.contains("books")) db.createObjectStore("books", { keyPath: "id" });
     };
     req.onsuccess = function () { resolve(req.result); };
-    req.onerror = function () { reject(req.error || new Error("IndexedDB nahi khuli")); };
+    req.onerror = function () { reject(req.error || new Error("IndexedDB did not open")); };
   });
 }
 function idbBooksDo(mode, fn) {
@@ -5002,7 +5240,7 @@ function setBookStore(impl) { bookStoreOverride = impl || null; return bookStore
    outline bilkul na ho ya fail ho to chapters khaali rehte hain. */
 function loadPdfJsDoc(file) {
   if (!window.pdfjsLib || typeof window.pdfjsLib.getDocument !== "function") {
-    return Promise.reject(new Error("PDF library (pdf.js) load nahi hui — internet check karke page refresh karein"));
+    return Promise.reject(new Error("The PDF library (pdf.js) did not load — check your internet and refresh the page"));
   }
   try {
     if (window.pdfjsLib.GlobalWorkerOptions && !window.pdfjsLib.GlobalWorkerOptions.workerSrc) {
@@ -5139,9 +5377,9 @@ function ghSaveSettings() {
     if (repo) localStorage.setItem(GH_REPO_LS, repo);
     if (tok) localStorage.setItem(GH_TOKEN_LS, tok);
   } catch (e) {}
-  if (!ghRepoValid(repo)) { bookMsg("ghStatus", "⚠ Repo ka naam theek nahi — is shakal mein likhein: username/repo (masalan keps-science-academy/keps-books)."); return false; }
-  if (!tok) { bookMsg("ghStatus", "⚠ Token khaali hai — token lagayein taake books GitHub par save ho saken."); return false; }
-  bookMsg("ghStatus", "✔ GitHub settings save ho gayi (" + repo + "). Ab har nayi book GitHub par bhi save hogi.");
+  if (!ghRepoValid(repo)) { bookMsg("ghStatus", "⚠ The repo name is not right — write it in this form: username/repo (for example keps-science-academy/keps-books)."); return false; }
+  if (!tok) { bookMsg("ghStatus", "⚠ The token is empty — add the token so books can be saved on GitHub."); return false; }
+  bookMsg("ghStatus", "✔ GitHub settings saved (" + repo + "). Every new book will now also be saved on GitHub.");
   refreshBookList();
   return true;
 }
@@ -5161,7 +5399,7 @@ function ghB64Decode(s) { return decodeURIComponent(escape(atob(String(s || "").
 function ghGetFile(path) {
   return fetch(ghContentsUrl(path), { headers: ghHeaders() }).then(function (r) {
     if (r.status === 404) return null;
-    if (!r.ok) throw new Error("GitHub ne jawab nahi diya (" + r.status + ")");
+    if (!r.ok) throw new Error("GitHub did not reply (" + r.status + ")");
     return r.json();
   }).then(function (j) {
     if (!j) return null;
@@ -5174,7 +5412,7 @@ function ghPutFile(path, text, message, sha) {
   return fetch(ghContentsUrl(path), {
     method: "PUT", headers: ghHeaders(), body: JSON.stringify(body)
   }).then(function (r) {
-    if (!r.ok) throw new Error("GitHub par file save nahi ho saki (" + r.status + ")");
+    if (!r.ok) throw new Error("The file could not be saved on GitHub (" + r.status + ")");
     return r.json();
   });
 }
@@ -5183,7 +5421,7 @@ function ghDeleteFile(path, sha, message) {
     method: "DELETE", headers: ghHeaders(),
     body: JSON.stringify({ message: message, sha: sha })
   }).then(function (r) {
-    if (!r.ok) throw new Error("GitHub se file delete nahi ho saki (" + r.status + ")");
+    if (!r.ok) throw new Error("The file could not be deleted from GitHub (" + r.status + ")");
     return true;
   });
 }
@@ -5221,12 +5459,12 @@ function ghFetchBook(id) {
     return r.json();
   }).catch(function () {
     return ghGetFile("books/" + id + ".json").then(function (f) {
-      if (!f) throw new Error("GitHub par book nahi mili");
+      if (!f) throw new Error("The book was not found on GitHub");
       return JSON.parse(f.text);
     });
   }).then(function (rec) {
     var book = normalizeBook(rec);
-    if (!book) throw new Error("GitHub wali book ka data theek nahi");
+    if (!book) throw new Error("The GitHub book data is not correct");
     return book;
   });
 }
@@ -5248,18 +5486,18 @@ function ghDeleteBookFromGithub(id) {
 }
 function ghTestConnection() {
   if (!ghRepoValid(ghRepo())) {
-    bookMsg("ghStatus", "⚠ Repo ka naam theek nahi — is shakal mein likhein: username/repo (masalan keps-science-academy/keps-books).");
+    bookMsg("ghStatus", "⚠ The repo name is not right — write it in this form: username/repo (for example keps-science-academy/keps-books).");
     return Promise.resolve(false);
   }
-  bookMsg("ghStatus", "🔗 GitHub repo check ho raha hai…");
+  bookMsg("ghStatus", "🔗 Checking the GitHub repo…");
   return fetch("https://api.github.com/repos/" + ghRepo(), { headers: ghHeaders() }).then(function (r) {
     if (!r.ok) throw new Error("status " + r.status);
     return r.json();
   }).then(function (j) {
-    bookMsg("ghStatus", "✔ GitHub repo mil gaya: " + (j && j.full_name ? j.full_name : ghRepo()) + " — connection theek hai.");
+    bookMsg("ghStatus", "✔ GitHub repo found: " + (j && j.full_name ? j.full_name : ghRepo()) + " — the connection is fine.");
     return true;
   }).catch(function () {
-    bookMsg("ghStatus", "⚠ Repo nahi mila — repo ka naam check karein (PUBLIC repo ho) aur token sahi ho, phir dobara Test karein.");
+    bookMsg("ghStatus", "⚠ The repo was not found — check the repo name (it must be a PUBLIC repo) and that the token is correct, then Test again.");
     return false;
   });
 }
@@ -5292,16 +5530,16 @@ function renderBookList() {
   var box = document.getElementById("bookList");
   if (!box) return;
   if (!bookListCache.length) {
-    box.innerHTML = '<div class="hint">Abhi koi book save nahi hai.</div>';
+    box.innerHTML = '<div class="hint">No book is saved yet.</div>';
     return;
   }
   box.innerHTML = bookListCache.map(function (e) {
     var m = e.meta;
-    var badge = e.source === "github" ? "☁ GitHub" : "📱 Is device par";
+    var badge = e.source === "github" ? "☁ GitHub" : "📱 On this device";
     return '<div style="border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:6px 0">' +
       "<b>" + esc(m.name || "") + "</b>" +
       '<div class="hint" style="margin:2px 0 6px">' + esc(m["class"] || "") + " • " + esc(m.subject || "") + " • " + (m.totalPages || 0) + " pages • " + badge + "</div>" +
-      '<button type="button" class="btn" data-book-open="' + esc(m.id) + '">📖 Kholein</button> ' +
+      '<button type="button" class="btn" data-book-open="' + esc(m.id) + '">📖 Open</button> ' +
       '<button type="button" class="btn danger" data-book-del="' + esc(m.id) + '">🗑 Delete</button>' +
       "</div>";
   }).join("");
@@ -5326,7 +5564,7 @@ function renderBookOpen() {
   var box = document.getElementById("bookOpenBox");
   if (!box || !currentBook) return;
   box.style.display = "";
-  var badge = currentBookSource === "github" ? "☁ GitHub" : "📱 Is device par";
+  var badge = currentBookSource === "github" ? "☁ GitHub" : "📱 On this device";
   bookMsg("bookOpenTitle", "📖 " + currentBook.name + " — " + (currentBook["class"] || "") + " • " + (currentBook.subject || "") + " • " + currentBook.totalPages + " pages • " + badge);
   var chBox = document.getElementById("bookChapters");
   if (chBox) {
@@ -5349,8 +5587,8 @@ function updateBookPreview() {
   if (tEl) tEl.value = String(sel.to);
   var prev = document.getElementById("bookPreview");
   if (prev) prev.value = sel.fullText.slice(0, 600);
-  var info = "Page " + sel.from + " – " + sel.to + " • kul " + sel.totalChars + " characters select hue";
-  if (sel.emptyPages) info += " • ⚠ in mein se " + sel.emptyPages + " pages par text nahi (scanned)";
+  var info = "Page " + sel.from + " – " + sel.to + " • total " + sel.totalChars + " characters selected";
+  if (sel.emptyPages) info += " • ⚠ " + sel.emptyPages + " of these pages have no text (scanned)";
   bookMsg("bookSelInfo", info);
   return sel;
 }
@@ -5367,13 +5605,13 @@ function selectBookChapter(ix) {
 function openBookById(id) {
   var entry = null;
   bookListCache.forEach(function (e) { if (e.meta.id === id) entry = e; });
-  if (!entry) { bookMsg("bookListStatus", "⚠ Book list mein nahi mili — list refresh karke dobara koshish karein."); return Promise.resolve(null); }
-  bookMsg("bookListStatus", "📖 Book khul rahi hai…");
+  if (!entry) { bookMsg("bookListStatus", "⚠ The book was not found in the list — refresh the list and try again."); return Promise.resolve(null); }
+  bookMsg("bookListStatus", "📖 Opening the book…");
   var p = entry.source === "github"
     ? ghFetchBook(id)
     : bookStore().get(id).then(function (rec) { return normalizeBook(rec); });
   return p.then(function (book) {
-    if (!book) { bookMsg("bookListStatus", "⚠ Book nahi khuli — data nahi mila."); return null; }
+    if (!book) { bookMsg("bookListStatus", "⚠ The book did not open — no data was found."); return null; }
     currentBook = book;
     currentBookSource = entry.source;
     currentBookPdf = bookPdfCache[id] || null;
@@ -5381,7 +5619,7 @@ function openBookById(id) {
     renderBookOpen();
     return book;
   }).catch(function (e) {
-    bookMsg("bookListStatus", "⚠ Book nahi khuli: " + (e && e.message ? e.message : e));
+    bookMsg("bookListStatus", "⚠ The book did not open: " + (e && e.message ? e.message : e));
     return null;
   });
 }
@@ -5390,10 +5628,10 @@ function deleteBookById(id) {
   var inLocal = bookLocalMetas.some(function (m) { return m.id === id; });
   if (!inRemote && !inLocal) return Promise.resolve(false);
   if (inRemote && !ghToken()) {
-    bookMsg("bookListStatus", "GitHub se delete karne ke liye token lagayein");
+    bookMsg("bookListStatus", "Add the token to delete from GitHub");
     return Promise.resolve(false);
   }
-  if (!window.confirm("Kya aap waqai ye book delete karna chahte hain?")) return Promise.resolve(false);
+  if (!window.confirm("Do you really want to delete this book?")) return Promise.resolve(false);
   var chain = Promise.resolve(true);
   if (inRemote) chain = chain.then(function () { return ghDeleteBookFromGithub(id); });
   if (inLocal) chain = chain.then(function () { return bookStore().del(id); });
@@ -5404,10 +5642,10 @@ function deleteBookById(id) {
       var box = document.getElementById("bookOpenBox");
       if (box) box.style.display = "none";
     }
-    bookMsg("bookListStatus", "🗑 Book delete ho gayi.");
+    bookMsg("bookListStatus", "🗑 The book has been deleted.");
     return refreshBookList().then(function () { return true; });
   }).catch(function (e) {
-    bookMsg("bookListStatus", "⚠ Book delete nahi ho saki: " + (e && e.message ? e.message : e));
+    bookMsg("bookListStatus", "⚠ The book could not be deleted: " + (e && e.message ? e.message : e));
     return false;
   });
 }
@@ -5418,10 +5656,10 @@ function deleteBookById(id) {
 function saveBookFromUpload() {
   var fileEl = document.getElementById("bookFile");
   var file = fileEl && fileEl.files && fileEl.files[0];
-  if (!file) { bookMsg("bookSaveStatus", "⚠ Pehle book ki PDF chunein."); return Promise.resolve(null); }
-  bookMsg("bookSaveStatus", "📖 PDF parha ja raha hai…");
+  if (!file) { bookMsg("bookSaveStatus", "⚠ Choose the book PDF first."); return Promise.resolve(null); }
+  bookMsg("bookSaveStatus", "📖 Reading the PDF…");
   return extractBookFromPdf(file, function (pn, total) {
-    bookMsg("bookSaveStatus", "Page " + pn + " / " + total + " parha ja raha hai…");
+    bookMsg("bookSaveStatus", "Reading page " + pn + " / " + total + "…");
   }).then(function (ex) {
     var nameEl = document.getElementById("bookName");
     var name = (nameEl && String(nameEl.value || "").trim()) || bookDefaultName(file.name, ex.metaTitle);
@@ -5436,23 +5674,23 @@ function saveBookFromUpload() {
       name: name, "class": clsEl ? clsEl.value : "", subject: subjVal,
       pages: ex.pages, chapters: ex.chapters
     });
-    if (!rec) { bookMsg("bookSaveStatus", "⚠ PDF se koi page nahi parha ja saka — file check karein."); return null; }
+    if (!rec) { bookMsg("bookSaveStatus", "⚠ No page could be read from the PDF — check the file."); return null; }
     if (ex.pdf) bookPdfCache[rec.id] = ex.pdf;
     var empty = countEmptyPages(rec.pages);
     var localSaved = false;
     return bookStore().put(rec).then(function () { localSaved = true; }).catch(function () { localSaved = false; }).then(function () {
       var lines = [];
-      if (localSaved) lines.push("✔ Book save ho gayi: " + rec.name + " (" + rec.totalPages + " pages)");
-      else lines.push("⚠ Book is device par save nahi ho saki (browser storage band/masla hai)");
-      if (empty > 0) lines.push("⚠ " + empty + " pages scanned hain (text nahi) — un se sawal page ki tasveer ke zariye banenge (ek dafa mein 4 pages).");
+      if (localSaved) lines.push("✔ Book saved: " + rec.name + " (" + rec.totalPages + " pages)");
+      else lines.push("⚠ The book could not be saved on this device (browser storage is disabled/has a problem)");
+      if (empty > 0) lines.push("⚠ " + empty + " pages are scanned (no text) — questions from them will be created through page images (4 pages at a time).");
       if (ghConfigured()) {
-        bookMsg("bookSaveStatus", lines.join(" ") + " ☁ GitHub par save ho raha hai…");
+        bookMsg("bookSaveStatus", lines.join(" ") + " ☁ Saving to GitHub…");
         return ghSaveBookToGithub(rec).then(function () {
-          lines.push("☁ GitHub par bhi save ho gayi — ab ye book har device par milegi.");
+          lines.push("☁ Also saved on GitHub — this book will now be available on every device.");
           bookMsg("bookSaveStatus", lines.join(" "));
           return refreshBookList().then(function () { return rec; });
         }).catch(function (e) {
-          lines.push("⚠ GitHub par save nahi ho saka (" + (e && e.message ? e.message : e) + ") — fikar na karein, book is device par save hai.");
+          lines.push("⚠ Could not save on GitHub (" + (e && e.message ? e.message : e) + ") — do not worry, the book is saved on this device.");
           bookMsg("bookSaveStatus", lines.join(" "));
           return refreshBookList().then(function () { return rec; });
         });
@@ -5461,7 +5699,7 @@ function saveBookFromUpload() {
       return refreshBookList().then(function () { return rec; });
     });
   }).catch(function (e) {
-    bookMsg("bookSaveStatus", "⚠ Book save nahi ho saki: " + (e && e.message ? e.message : e));
+    bookMsg("bookSaveStatus", "⚠ The book could not be saved: " + (e && e.message ? e.message : e));
     return null;
   });
 }
@@ -5475,7 +5713,7 @@ function saveBookFromUpload() {
    mein zyada se zyada BOOK_IMAGE_MAX_PAGES (4) pages. */
 var BOOK_TEXT_ROUTE_MIN = 200;
 var BOOK_IMAGE_MAX_PAGES = 4;
-var BOOK_PDF_MISSING_MSG = "⚠ Ye book scanned hai lekin is ki PDF is waqt loaded nahi — page ki tasveer se sawal banane ke liye book isi session mein dobara upload karein, ya 📷 Photo wala tareeqa use karein.";
+var BOOK_PDF_MISSING_MSG = "⚠ This book is scanned but its PDF is not loaded right now — to create questions from page images, upload the book again in this session, or use the 📷 Photo method.";
 function bookGenPlan(book, from, to) {
   var sel = bookAssembleSelection(book, from, to);
   var pages = (book && Array.isArray(book.pages)) ? book.pages : [];
@@ -5494,8 +5732,8 @@ function bookGenPlan(book, from, to) {
   };
 }
 function bookScanCapMsg(plan) {
-  return "⚠ Scanned book hai — ek dafa mein 4 pages parhe jayenge. Pehle 4 pages (" +
-    plan.pages[0] + "–" + plan.pages[plan.pages.length - 1] + ") bheje gaye hain.";
+  return "⚠ This is a scanned book — 4 pages will be read at a time. The first 4 pages (" +
+    plan.pages[0] + "–" + plan.pages[plan.pages.length - 1] + ") have been sent.";
 }
 /* Scanned page ki tasveer: pdf.js se page ko ~1100px chorai par
    render karke JPEG data URL. Tests setBookPageRenderer se apna
@@ -5504,7 +5742,7 @@ var bookPageRendererOverride = null;
 function setBookPageRenderer(fn) { bookPageRendererOverride = fn || null; }
 function renderBookPageImage(pdfDoc, pageNum) {
   if (bookPageRendererOverride) return bookPageRendererOverride(pdfDoc, pageNum);
-  if (!pdfDoc) return Promise.reject(new Error("Book ki PDF loaded nahi"));
+  if (!pdfDoc) return Promise.reject(new Error("The book PDF is not loaded"));
   return pdfDoc.getPage(pageNum).then(function (page) {
     var base = page.getViewport({ scale: 1 });
     var scale = base.width > 0 ? 1100 / base.width : 1.5;
@@ -5513,7 +5751,7 @@ function renderBookPageImage(pdfDoc, pageNum) {
     canvas.width = Math.floor(vp.width);
     canvas.height = Math.floor(vp.height);
     var ctx = canvas.getContext("2d");
-    if (!ctx) throw new Error("Page ki tasveer nahi ban saki (canvas)");
+    if (!ctx) throw new Error("The page image could not be created (canvas)");
     return page.render({ canvasContext: ctx, viewport: vp }).promise.then(function () {
       return canvas.toDataURL("image/jpeg", 0.75);
     });
@@ -5549,7 +5787,7 @@ function bookAiPhoto(prompt, dataUrl) {
 /* ---- Book ke hisse se sawal: pehle rasta chuno ---- */
 function runBookGen() {
   function say(m) { bookMsg("bookStatus", m); }
-  if (!currentBook) { say("⚠ Pehle 📚 Meri Books se koi book kholein."); return Promise.resolve(0); }
+  if (!currentBook) { say("⚠ First open a book from 📚 My Books."); return Promise.resolve(0); }
   var fEl = document.getElementById("bookPageFrom");
   var tEl = document.getElementById("bookPageTo");
   var plan = bookGenPlan(currentBook, fEl ? fEl.value : 1, tEl ? tEl.value : currentBook.totalPages);
@@ -5572,37 +5810,37 @@ function runBookGenText(plan) {
   function go() {
     var prompt = buildTextGenPrompt(counts.nMcq, counts.nShort, counts.nLong) +
       "\n\n===== BOOK TEXT (Page " + sel.from + "–" + sel.to + ") =====\n" + text + "\n===== END OF BOOK TEXT =====";
-    say("🤖 AI book ka hissa parh kar sawal bana raha hai…" + (sel.truncated ? " " + BOOK_TRUNC_MSG : ""));
+    say("🤖 The AI is reading the book part and creating questions…" + (sel.truncated ? " " + BOOK_TRUNC_MSG : ""));
     return aiChatText(prompt).then(function (txt) {
       var cands = parseAiQuestions(txt);
-      if (!cands.length) { say("⚠ AI ke jawab se koi sawal nahi bana — doosra hissa select karke dobara koshish karein."); return 0; }
+      if (!cands.length) { say("⚠ No question could be created from the AI reply — select another part and try again."); return 0; }
       setCandidates(cands);
       var nm = cands.filter(function (c) { return c.type === "mcq"; }).length;
       var ns = cands.filter(function (c) { return c.type === "short"; }).length;
       var nl = cands.filter(function (c) { return c.type === "long"; }).length;
-      say("✔ AI ne " + cands.length + " sawal banaye (" + nm + " MCQ, " + ns + " Short, " + nl + " Long) — upar 📷 wale hisse ki Review list mein sawal aur sahi jawab check karke paper mein shamil karein." + (sel.truncated ? " " + BOOK_TRUNC_MSG : ""));
+      say("✔ The AI created " + cands.length + " questions (" + nm + " MCQ, " + ns + " Short, " + nl + " Long) — check the questions and correct answers in the Review list of the 📷 section above and add them to the paper." + (sel.truncated ? " " + BOOK_TRUNC_MSG : ""));
       return cands.length;
     }).catch(function (e) {
       var um = aiUserMsg(e);
       if (um) { say(um); return 0; }
       if (isAiLimitError(e)) { say(PUTER_LIMIT_MSG); return 0; }
-      say("⚠ AI fail: " + (e && e.message ? e.message : e) + " — dobara koshish karein.");
+      say("⚠ AI failed: " + (e && e.message ? e.message : e) + " — please try again.");
       return 0;
     });
   }
   if (aiEngine() === "gemini") {
-    if (!geminiSavedKey()) { refreshEngineUI(); say("⚠ AI Engine 'Apni Gemini Key' chuna hai lekin koi key save nahi — pehle Engine ke neeche apni Gemini key lagayein (FREE milti hai), ya Engine 'Puter (FREE)' kar dein."); return Promise.resolve(0); }
+    if (!geminiSavedKey()) { refreshEngineUI(); say("⚠ The AI Engine 'Your Own Gemini Key' is selected but no key is saved — first add your Gemini key under the Engine (it is FREE), or set the Engine to 'Puter (FREE)'."); return Promise.resolve(0); }
     return go();
   }
   if (aiEngine() === "openai") {
-    if (!openaiSavedKey()) { refreshEngineUI(); say("⚠ AI Engine 'ChatGPT (OpenAI API Key)' chuna hai lekin koi key save nahi — pehle Engine ke neeche apni OpenAI key lagayein, ya Engine 'Puter (FREE)' kar dein."); return Promise.resolve(0); }
+    if (!openaiSavedKey()) { refreshEngineUI(); say("⚠ The AI Engine 'ChatGPT (OpenAI API Key)' is selected but no key is saved — first add your OpenAI key under the Engine, or set the Engine to 'Puter (FREE)'."); return Promise.resolve(0); }
     return go();
   }
-  if (!puterReady()) { say("⚠ Puter library load nahi hui — internet check karke page refresh karein."); return Promise.resolve(0); }
+  if (!puterReady()) { say("⚠ The Puter library did not load — check your internet and refresh the page."); return Promise.resolve(0); }
   if (puterSignedIn()) return go();
-  say("🔐 Pehle FREE Puter sign in chahiye — popup khul raha hai…");
+  say("🔐 A FREE Puter sign in is needed first — opening the popup…");
   return puterDoSignIn().then(function (ok) {
-    if (!ok) { say("⚠ Pehle FREE Puter account se sign in karein (upar 📷 wale hisse ka Sign In button) — baghair sign in ke AI nahi chalega."); return 0; }
+    if (!ok) { say("⚠ Sign in with a FREE Puter account first (the Sign In button in the 📷 section above) — the AI will not run without sign-in."); return 0; }
     return go();
   });
 }
@@ -5626,13 +5864,13 @@ function runBookGenImages(plan) {
     plan.pages.forEach(function (pn, i) {
       chain = chain.then(function () {
         if (limitHit || fatalMsg) return;
-        say("🤖 Scanned page " + pn + " ki tasveer ban rahi hai (" + (i + 1) + "/" + plan.pages.length + ")…");
+        say("🤖 Creating the image of scanned page " + pn + " (" + (i + 1) + "/" + plan.pages.length + ")…");
         return renderBookPageImage(currentBookPdf, pn).then(function (img) {
-          say("🤖 Page " + pn + " — AI tasveer parh kar sawal bana raha hai (" + (i + 1) + "/" + plan.pages.length + ")…");
+          say("🤖 Page " + pn + " — the AI is reading the image and creating questions (" + (i + 1) + "/" + plan.pages.length + ")…");
           return bookAiPhoto(prompt, img);
         }).then(function (txt) {
           var cands = parseAiQuestions(txt);
-          if (!cands.length) throw new Error("AI ke jawab se koi sawal nahi bana");
+          if (!cands.length) throw new Error("No question could be created from the AI reply");
           all = all.concat(cands);
         }).catch(function (e) {
           var um = aiUserMsg(e);
@@ -5645,40 +5883,40 @@ function runBookGenImages(plan) {
     return chain.then(function () {
       var tail = capNote ? " " + capNote : "";
       if (fatalMsg) {
-        if (all.length) { setCandidates(all); say("✔ " + all.length + " sawal ban gaye. " + fatalMsg + tail); return all.length; }
+        if (all.length) { setCandidates(all); say("✔ " + all.length + " questions created. " + fatalMsg + tail); return all.length; }
         say(fatalMsg);
         return 0;
       }
       if (limitHit) {
-        if (all.length) { setCandidates(all); say("✔ " + all.length + " sawal ban gaye. " + PUTER_LIMIT_MSG + tail); return all.length; }
+        if (all.length) { setCandidates(all); say("✔ " + all.length + " questions created. " + PUTER_LIMIT_MSG + tail); return all.length; }
         say(PUTER_LIMIT_MSG);
         return 0;
       }
       if (!all.length) {
-        say("⚠ AI se koi sawal nahi bana — scanned pages ki tasveeron se sawal nahi ban sake. Pages saaf hon to dobara koshish karein, warna 📷 Photo wala tareeqa azmayein." + tail);
+        say("⚠ The AI could not create any question — questions could not be created from the scanned page images. If the pages are clear, try again, otherwise try the 📷 Photo method." + tail);
         return 0;
       }
       setCandidates(all);
       var nm = all.filter(function (c) { return c.type === "mcq"; }).length;
       var ns = all.filter(function (c) { return c.type === "short"; }).length;
       var nl = all.filter(function (c) { return c.type === "long"; }).length;
-      say("✔ AI ne " + all.length + " sawal banaye (" + nm + " MCQ, " + ns + " Short, " + nl + " Long) — upar 📷 wale hisse ki Review list mein sawal aur sahi jawab check karke paper mein shamil karein." + tail);
+      say("✔ The AI created " + all.length + " questions (" + nm + " MCQ, " + ns + " Short, " + nl + " Long) — check the questions and correct answers in the Review list of the 📷 section above and add them to the paper." + tail);
       return all.length;
     });
   }
   if (aiEngine() === "gemini") {
-    if (!geminiSavedKey()) { refreshEngineUI(); say("⚠ AI Engine 'Apni Gemini Key' chuna hai lekin koi key save nahi — pehle Engine ke neeche apni Gemini key lagayein (FREE milti hai), ya Engine 'Puter (FREE)' kar dein."); return Promise.resolve(0); }
+    if (!geminiSavedKey()) { refreshEngineUI(); say("⚠ The AI Engine 'Your Own Gemini Key' is selected but no key is saved — first add your Gemini key under the Engine (it is FREE), or set the Engine to 'Puter (FREE)'."); return Promise.resolve(0); }
     return go();
   }
   if (aiEngine() === "openai") {
-    if (!openaiSavedKey()) { refreshEngineUI(); say("⚠ AI Engine 'ChatGPT (OpenAI API Key)' chuna hai lekin koi key save nahi — pehle Engine ke neeche apni OpenAI key lagayein, ya Engine 'Puter (FREE)' kar dein."); return Promise.resolve(0); }
+    if (!openaiSavedKey()) { refreshEngineUI(); say("⚠ The AI Engine 'ChatGPT (OpenAI API Key)' is selected but no key is saved — first add your OpenAI key under the Engine, or set the Engine to 'Puter (FREE)'."); return Promise.resolve(0); }
     return go();
   }
-  if (!puterReady()) { say("⚠ Puter library load nahi hui — internet check karke page refresh karein."); return Promise.resolve(0); }
+  if (!puterReady()) { say("⚠ The Puter library did not load — check your internet and refresh the page."); return Promise.resolve(0); }
   if (puterSignedIn()) return go();
-  say("🔐 Pehle FREE Puter sign in chahiye — popup khul raha hai…");
+  say("🔐 A FREE Puter sign in is needed first — opening the popup…");
   return puterDoSignIn().then(function (ok) {
-    if (!ok) { say("⚠ Pehle FREE Puter account se sign in karein (upar 📷 wale hisse ka Sign In button) — baghair sign in ke AI nahi chalega."); return 0; }
+    if (!ok) { say("⚠ Sign in with a FREE Puter account first (the Sign In button in the 📷 section above) — the AI will not run without sign-in."); return 0; }
     return go();
   });
 }
@@ -5779,9 +6017,13 @@ window.KPG = {
   biStyleChoice: biStyleChoice, isSideBySide: isSideBySide, splitBiText: splitBiText, biHalfSections: biHalfSections,
   paperHalfHeadHTML: paperHalfHeadHTML, renderBiStyleBox: renderBiStyleBox,
   PDF_A4_W_LAND: PDF_A4_W_LAND, PDF_A4_RATIO_LAND: PDF_A4_RATIO_LAND, pdfDocFromLandscapeImage: pdfDocFromLandscapeImage,
+  TWOUP_REMINDER: TWOUP_REMINDER, twoUpOn: twoUpOn, twoUpGeometry: twoUpGeometry,
+  pdfDocFromTwoUpImages: pdfDocFromTwoUpImages, twoUpPrintHTML: twoUpPrintHTML, renderTwoUpUI: renderTwoUpUI,
   SUBJECT_LIST: SUBJECT_LIST, SUBJECT_CODE_PREFIX: SUBJECT_CODE_PREFIX, SUBJECT_TEMPLATES: SUBJECT_TEMPLATES,
   canonicalSubject: canonicalSubject, subjectTemplateFor: subjectTemplateFor, templateSectionTitle: templateSectionTitle,
   templateSections: templateSections, applySubjectTemplate: applySubjectTemplate,
+  templateBuiltInfo: templateBuiltInfo, getTplChecks: getTplChecks, setTplCheck: setTplCheck,
+  ensureTplChecks: ensureTplChecks, tplSummaryText: tplSummaryText,
   renderTemplateBar: renderTemplateBar, renderSubjectField: renderSubjectField, loadPersisted: loadPersisted,
   PDF_A4_W: PDF_A4_W, PDF_MIN_BYTES: PDF_MIN_BYTES, PDF_A4_RATIO: PDF_A4_RATIO,
   AUTH_URL_LS: AUTH_URL_LS, AUTH_SESS_SS: AUTH_SESS_SS,
