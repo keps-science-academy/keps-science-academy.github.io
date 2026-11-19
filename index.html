@@ -131,14 +131,22 @@ input:focus,select:focus,textarea:focus{outline:2px solid #9ec7e8;border-color:v
    .p-sec-sub ke font-size par jeet-ta hai; .p-school.urdu-text (neeche,
    barabar specificity) school naam ko apne 19px par rakhta hai. */
 .paper .urdu-text{font-size:calc(1em * var(--ur-scale))}
-.p-head{border-top:4px double #000;border-bottom:4px double #000;padding:.52em .3em .67em;text-align:center}
+.p-head{border-top:5px double #000;border-bottom:5px double #000;padding:.52em .3em .67em;text-align:center}
 .p-school{font-size:1.556em;font-weight:700;letter-spacing:.3px}
 .p-school.urdu-text{font-size:1.407em}
-.p-band{margin-top:6px;border:1.5px solid #000;padding:.2em .4em;font-weight:700;font-size:1.111em;background:#f2f2f2}
-.p-info{width:100%;border-collapse:collapse;margin-top:8px;font-size:.963em}
-.p-info td{border:1px solid #000;padding:.23em .54em;text-align:left}
+.p-city{font-size:.96em;font-weight:600;margin-top:.06em}
+/* Paper ka asal frame: .paper ke padding ke ANDAR ek saaf kala
+   border — preview, print aur PDF teeno mein yahi frame dikhta hai
+   (.paper ka apna screen border print/PDF clone mein strip hota
+   hai, ye andar wala frame har jagah rehta hai). Board papers aur
+   paper-generator sites (PaperPoint waghera) ki aam shakal. */
+.p-frame{border:1.6px solid #000;padding:3.5mm 3.5mm 4mm}
+.p-band{margin-top:6px;border:1.5px solid #000;padding:.2em .4em;font-weight:700;font-size:1.111em;background:#e9e9e9}
+.p-info{width:100%;border-collapse:collapse;table-layout:fixed;margin-top:8px;font-size:.963em}
+.p-info td{border:1px solid #000;padding:.3em .55em;text-align:left}
 .p-sec{margin-top:1.037em}
-.p-sec-head{display:flex;justify-content:space-between;gap:8px;border-bottom:1.5px solid #000;padding-bottom:.14em;font-weight:700;font-size:1.074em}
+.p-sec-head{display:flex;justify-content:space-between;align-items:center;gap:8px;background:#e9e9e9;border:1px solid #000;padding:.3em .55em;font-weight:700;font-size:1.074em}
+.p-marks-box{border:1.5px solid #000;background:#fff;padding:.02em .5em;white-space:nowrap}
 .p-sec-sub{font-weight:600;font-size:.963em;margin-top:1px}
 /* Urdu medium (Nov 2026 — owner ki nayi hidayat, Capture-24): jab pure
    statements Urdu mein translate ho jayein to header ke NEECHE ka sara
@@ -150,7 +158,6 @@ input:focus,select:focus,textarea:focus{outline:2px solid #9ec7e8;border-color:v
    bidi-isolate rehte hain taake RTL flow mein un ki andar ki tartib
    (masalan {a, b} ya 3x + 1 = 0) na tute aur jumla un ke gird na phate. */
 .p-rtl{direction:rtl;text-align:right}
-.p-rtl .p-opts{margin-left:0;margin-right:1.54em}
 .mx{unicode-bidi:isolate;font-family:"Noto Sans","DejaVu Sans","Noto Sans Symbols 2","Noto Sans Symbols",sans-serif}
 .urdu-text .mx{font-family:"Noto Sans","DejaVu Sans","Noto Sans Symbols 2","Noto Sans Symbols",sans-serif;font-size:calc(1em / var(--ur-scale))}
 /* Bilingual Side-by-Side: EK A4 LANDSCAPE sheet — right half English,
@@ -167,10 +174,24 @@ input:focus,select:focus,textarea:focus{outline:2px solid #9ec7e8;border-color:v
 @page land{size:A4 landscape;margin:11mm}
 .bi-ur{display:block;text-align:right}
 .p-sec-sub[dir="rtl"]{text-align:right}
-.p-note{font-style:italic;font-size:.926em;margin:.32em 0 .16em}
+.p-note{font-style:italic;font-size:.926em;margin:.42em 0 .18em}
 .p-note.urdu-text{font-style:normal}
 .p-q{margin:.52em 0 .15em}
-.p-opts{display:grid;grid-template-columns:1fr 1fr;gap:.08em 1.38em;margin:.08em 0 .38em 1.54em;font-size:.963em}
+.p-q-long{margin-top:1.05em}
+.p-qmarks{float:right;font-weight:700}
+.p-rtl .p-qmarks{float:left}
+/* MCQ section ab ek bordered TABLE hai (owner ke haath ke bane
+   papers / Tarjuma board style jaisa): har sawal = stem row (poori
+   chaudi) + options row (4 barabar bordered cells A B C D). RTL
+   section mein table ki direction rtl hoti hai — A right par. */
+.p-mcqtab{width:100%;border-collapse:collapse;table-layout:fixed;margin:.35em 0 .55em}
+.p-mcqtab td{border:1px solid #000;padding:.3em .55em;vertical-align:top}
+.p-mcq-opts td{font-size:.963em}
+.p-end{text-align:center;margin-top:1.5em;font-weight:600;letter-spacing:.3px}
+/* Paper ki Photo (Same Paper) se bane diagram: saaf SVG ya placeholder */
+.p-diagram{text-align:center;margin:.4em 0}
+.p-diagram svg{max-width:260px;width:72%;height:auto}
+.p-diagram-ph{border:1.5px dashed #000;padding:.55em .8em;text-align:center;margin:.4em 0;font-size:.926em}
 .p-lines{border-bottom:1px dotted #999;height:1.48em;margin:.15em 0}
 .keytable{border-collapse:collapse;margin:8px 0}
 .keytable td{border:1px solid #000;padding:4px 10px;text-align:center;font-weight:600}
@@ -477,6 +498,7 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px">
         <button type="button" class="btn" id="btnModePhoto">📷 Photo se</button>
         <button type="button" class="btn ghost" id="btnModeText">📝 Text Paste</button>
+        <button type="button" class="btn ghost" id="btnModePaper">📄 Paper ki Photo</button>
       </div>
       <div id="photoModeBox">
         <label class="fl" for="photoFiles">Page Photos (jpg / png — ek ya zyada, har photo = ek safha)</label>
@@ -489,7 +511,13 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
         <div class="hint">Paste ek dafa mein <b>~8000 characters</b> tak; bara chapter ho to hison mein paste karein. Agar text mein pehle se sawal/mashq hai to AI wahi sawal <b>lafz-ba-lafz</b> nikalega; agar sirf chapter ka text hai to AI usi se sawal banayega. Sawal usi zuban mein aayenge jis mein text hai.</div>
         <div class="hint" id="pasteCount" style="margin-top:2px">0 characters</div>
       </div>
-      <div class="row3" style="margin-top:8px">
+      <div id="paperModeBox" style="display:none">
+        <label class="fl" for="paperFiles">Paper ki Photos (1–4, pages ki tartib mein)</label>
+        <input type="file" id="paperFiles" accept="image/*" multiple>
+        <div id="paperPreviews" style="margin-top:8px"></div>
+        <div class="hint">Poora paper — header, sections, sawal, options — <b>lafz-ba-lafz</b> parh kar bilkul <b>WAHI paper</b> dobara banta hai aur maujooda paper ki <b>jagah le leta hai</b>. Diagram wale sawalon ke liye saaf sada diagram (SVG) bhi banta hai — ye asal drawing ki hubahu copy nahi, ek saaf takhmini shakal hoti hai; jo diagram na ban sake wahan paper par nishan wali jagah ajati hai taake asal diagram haath se laga saken. Is mode mein upar wale counts (Kitne MCQ waghera) lagu nahi hote — paper ki apni tartib hi copy hoti hai.</div>
+      </div>
+      <div class="row3" id="aiCountsBox" style="margin-top:8px">
         <div><label class="fl" for="aiMcqCount">Kitne MCQ?</label>
           <input type="number" id="aiMcqCount" min="0" max="30" step="1" value="5"></div>
         <div><label class="fl" for="aiShortCount">Kitne Short?</label>
@@ -500,10 +528,6 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
       <button type="button" class="btn big" id="btnAiGen" style="margin-top:10px">🤖 AI se Sawal Banayein — Free, Bina Key</button>
       <div class="hint">Ye <b>mazboot AI</b> hai (GPT/Claude class) jo photo parh kar sawal <b>bana</b> kar deta hai — <b>koi API key nahi chahiye</b>, bas upar wala <b>ek-dafa FREE Puter sign in</b> chahiye. Jawab aam taur par <b>seconds se ek minute</b> mein aa jata hai. Behtar result ke liye: <b>ek safha = ek photo, qareeb se, saaf roshni mein</b>.</div>
       <div class="hint" id="aiGenStatus"></div>
-      <div id="photoSlowBox">
-        <button type="button" class="btn ghost" id="btnAiGenSlow" style="margin-top:6px">🐢 Bina Sign-In Wala Slow Tareeqa (free CPU server)</button>
-        <div class="hint">Slow tareeqa ek free CPU server (Qwen2.5-VL) use karta hai — sign in nahi chahiye, lekin asal test mein ye <b>10–12 minute mein bhi time out</b> ho gaya tha. Upar wala Puter wala tareeqa hi behtar hai; ye sirf backup hai.</div>
-      </div>
       <h3>📝 Review — Sawal Check Karein</h3>
       <div class="hint" style="border:1px solid var(--warn);border-radius:7px;padding:7px 9px">⚠ <b>Note:</b> Sawal aur un ke <b>sahi jawab AI ne banaye hain</b> — paper mein shamil karne se pehle har sawal aur us ka sahi jawab khud check kar lein. Jo ghalat lage, yahin theek kar dein ya unselect kar dein.</div>
       <div class="hint" id="candQuality"></div>
@@ -514,20 +538,6 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
         <button type="button" class="btn ghost" id="btnCandNone">Sab Unselect</button>
       </div>
       <div class="hint" id="candMsg"></div>
-      <details style="margin-top:12px">
-        <summary style="cursor:pointer;font-size:13px;color:var(--mut)">🔑 Advanced: apni Gemini key se sawal banayein (optional — zaroori nahi)</summary>
-        <div style="margin-top:8px">
-          <label class="fl" for="geminiKey">Gemini API Key (sirf aap ke browser mein rehta hai)</label>
-          <input type="password" id="geminiKey" placeholder="Apni Gemini API key yahan lagayein" autocomplete="off">
-          <div style="margin-top:6px">
-            <button type="button" class="btn ghost" id="btnGemini">✨ Gemini se Sawal Banayein</button>
-            <button type="button" class="btn danger" id="btnGeminiForget">Key Hatayein</button>
-          </div>
-          <div class="hint" id="geminiKeyState"></div>
-          <div class="hint">Key kahin upload nahi hoti aur code mein nahi hai — sirf is browser ke localStorage mein save hoti hai, aur photo seedha Google Gemini ko jati hai.</div>
-          <div class="hint" id="geminiStatus" style="color:var(--warn)"></div>
-        </div>
-      </details>
     </div>
 
     <div class="card">
@@ -639,7 +649,7 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
   </div>
 </div>
 
-<footer class="appfoot">© KEPS Academy — Paper Generator, free for teachers. Papers aur drafts sirf aap ke browser mein save hote hain, kahin upload nahi hote.<br>Photo se sawal: Qwen2.5-VL AI (Hugging Face par free chalta hua model) photo parh kar MCQs, Short aur Long sawal bana kar deta hai — bina kisi API key ke.</footer>
+<footer class="appfoot">© KEPS Academy — Paper Generator, free for teachers. Papers aur drafts sirf aap ke browser mein save hote hain, kahin upload nahi hote.<br>Photo ya text se sawal: AI Engine (Puter FREE, ya apni Gemini / ChatGPT key) photo parh kar MCQs, Short aur Long sawal bana kar deta hai.</footer>
 
 <div id="loginGate" style="display:none">
   <div class="lg-shell">
@@ -1576,9 +1586,11 @@ function puterChatText(prompt) {
    Photo/Text panel ke upar "⚙ AI Engine" selector hai. Default Puter
    (FREE) hai. "Apni Gemini Key" chunne par tamam AI generation —
    Photo, Text Paste, Urdu Tarjuma aur Pairing Scheme parse — Puter ki
-   bajaye owner ki apni Gemini key se hoti hai (wohi key jo neeche
-   Advanced hisse mein save hoti hai: localStorage GEMINI_LS, ek hi
-   jagah). "ChatGPT (OpenAI API Key)" chunne par wahi tamam generation
+   bajaye owner ki apni Gemini key se hoti hai (wohi key jo Engine
+   selector ke neeche wale key box mein save hoti hai: localStorage
+   GEMINI_LS, ek hi jagah — purana Advanced wala hissa hata diya gaya
+   hai, key ki storage wahi hai taake save shuda key chalti rahe).
+   "ChatGPT (OpenAI API Key)" chunne par wahi tamam generation
    owner ki apni OpenAI key (localStorage OPENAI_LS) se hoti hai —
    OpenAI key PAID hoti hai, ChatGPT Plus is se alag hai. Key wale
    engines par Puter wali free limit nahi hoti. Engine ki choice bhi
@@ -1609,11 +1621,11 @@ function isAiLimitError(e) {
   return low.indexOf("limit") >= 0 || low.indexOf("quota") >= 0 || low.indexOf("usage") >= 0 ||
     low.indexOf("insufficient") >= 0 || low.indexOf("402") >= 0 || low.indexOf("429") >= 0;
 }
-/* Save shuda Gemini key — pehle Advanced wale input ki value, phir
-   Engine wale input ki, phir localStorage (teeno ek hi key hain). */
+/* Save shuda Gemini key — pehle Engine wale input ki value, phir
+   localStorage (ek hi key: GEMINI_LS). Purana Advanced wala input
+   hata diya gaya hai; storage wahi hai, is liye pehle se save shuda
+   key bilkul waisi hi chalti hai. */
 function geminiSavedKey() {
-  var a = document.getElementById("geminiKey");
-  if (a && a.value && String(a.value).trim()) return String(a.value).trim();
   var b = document.getElementById("engineGeminiKey");
   if (b && b.value && String(b.value).trim()) return String(b.value).trim();
   try { return String(localStorage.getItem(GEMINI_LS) || "").trim(); } catch (e) { return ""; }
@@ -1667,8 +1679,6 @@ function saveEngineGeminiKey() {
   if (!key) { if (stEl) stEl.textContent = "⚠ Pehle key likhein, phir Save dabayein."; return false; }
   try { localStorage.setItem(GEMINI_LS, key); } catch (e) {}
   if (inp) inp.value = "";
-  var adv = document.getElementById("geminiKeyState");
-  if (adv) adv.textContent = "✔ Key is browser mein save hai.";
   refreshEngineUI();
   var st = document.getElementById("aiGenStatus");
   if (st) st.textContent = "✔ Gemini key save ho gayi — ab Generate dabayein, sawal Gemini se banege.";
@@ -2087,12 +2097,32 @@ function applyPaperFit(el) {
 function paperFitAttr(st) {
   return (effectiveLayout(st) === "front" && _lastFitScale < 1) ? ' style="--fit:' + _lastFitScale + '"' : "";
 }
+/* School naam wala block: owner ke haath ke bane papers ki tarah
+   naam bari line mein aur sheher (comma ke baad wala hissa) us ke
+   neeche alag chhoti line mein. Comma na ho to ek hi line — purani
+   shakal. Sirf DISPLAY ka farq hai; setup.school ki value waisi hi
+   rehti hai. small=true par continuation/half headers wala chhota
+   size. */
+function schoolBlockHTML(su, small) {
+  var raw = String(su.school || "School Name");
+  var cls = "p-school" + (small ? " p-school-sm" : "") + (hasUrdu(raw) ? " urdu-text" : "");
+  var ci = raw.indexOf(",");
+  if (ci > 0 && raw.slice(ci + 1).trim()) {
+    return '<div class="' + cls + '" dir="auto">' + esc(raw.slice(0, ci).trim()) + "</div>" +
+      '<div class="p-city' + (hasUrdu(raw.slice(ci + 1)) ? " urdu-text" : "") + '" dir="auto">' + esc(raw.slice(ci + 1).trim()) + "</div>";
+  }
+  return '<div class="' + cls + '" dir="auto">' + esc(raw) + "</div>";
+}
+/* Paper ke aakhir ki line — sirf asal paper par (key par nahi). */
+function paperEndHTML() {
+  return '<div class="p-end">— End of Paper —</div>';
+}
 /* Paper ka poora header (school + band + info table) — HAR medium mein
    English/LTR (paperLabels), bilkul pehle jaisa. */
 function paperHeadHTML(st, t) {
   var su = st.setup;
   var L = paperLabels(su.medium);
-  var h = '<div class="p-head"><div class="p-school' + (hasUrdu(su.school) ? " urdu-text" : "") + '" dir="auto">' + esc(su.school || "School Name") + "</div>";
+  var h = '<div class="p-head">' + schoolBlockHTML(su, false);
   h += '<div class="p-band">' + labSpan(L.subject, L.urdu) + " <span" + langAttrs(su.subject) + ">" + esc(su.subject || "—") + "</span>" +
     (su.clazz ? " &nbsp;|&nbsp; " + labSpan(L.clazz, L.urdu) + " <span" + langAttrs(su.clazz) + ">" + esc(su.clazz) + "</span>" : "") + "</div>";
   h += '<table class="p-info"><tr>' +
@@ -2110,7 +2140,7 @@ function paperHeadHTML(st, t) {
 function paperContHeadHTML(st) {
   var su = st.setup;
   var L = paperLabels(su.medium);
-  var h = '<div class="p-head"><div class="p-school p-school-sm' + (hasUrdu(su.school) ? " urdu-text" : "") + '" dir="auto">' + esc(su.school || "School Name") + "</div>";
+  var h = '<div class="p-head">' + schoolBlockHTML(su, true);
   h += '<div class="p-cont-line"><span>' + labSpan(L.subject, L.urdu) + " <span" + langAttrs(su.subject) + ">" + esc(su.subject || "—") + "</span>" +
     (su.clazz ? " &nbsp;|&nbsp; " + labSpan(L.clazz, L.urdu) + " <span" + langAttrs(su.clazz) + ">" + esc(su.clazz) + "</span>" : "") +
     (su.code ? " &nbsp;|&nbsp; " + labSpan(L.code, L.urdu) + " " + esc(su.code) : "") +
@@ -2124,13 +2154,22 @@ function paperContHeadHTML(st) {
 function paperHalfHeadHTML(st, t) {
   var su = st.setup;
   var L = paperLabels(su.medium);
-  var h = '<div class="p-head"><div class="p-school p-school-sm' + (hasUrdu(su.school) ? " urdu-text" : "") + '" dir="auto">' + esc(su.school || "School Name") + "</div>";
+  var h = '<div class="p-head">' + schoolBlockHTML(su, true);
   h += '<div class="p-cont-line"><span>' + labSpan(L.subject, L.urdu) + " <span" + langAttrs(su.subject) + ">" + esc(su.subject || "—") + "</span>" +
     (su.clazz ? " &nbsp;|&nbsp; " + labSpan(L.clazz, L.urdu) + " <span" + langAttrs(su.clazz) + ">" + esc(su.clazz) + "</span>" : "") +
     (su.code ? " &nbsp;|&nbsp; " + labSpan(L.code, L.urdu) + " " + esc(su.code) : "") +
     '</span><span>' + labSpan(L.total, L.urdu) + " " + t.marks +
     (su.time ? " &nbsp;|&nbsp; " + labSpan(L.time, L.urdu) + " <span" + langAttrs(su.time) + ">" + esc(su.time) + "</span>" : "") + "</span></div></div>";
   return h;
+}
+/* Short/Long sawal ki line ke aakhir (end side) par us sawal ke
+   number brackets mein — owner ke papers ki tarah. MCQ par nahi
+   lagta (wahan section band ka kul number hi kafi hai). marksEach
+   na ho ya 0 ho to kuch nahi. */
+function qmarksSpan(sec) {
+  var me = Number(sec.marksEach) || 0;
+  if (!(me > 0)) return "";
+  return '<span class="p-qmarks">(' + String(Math.round(me * 100) / 100) + ")</span> ";
 }
 /* Ek section ka paper HTML — pehle paperHTML ke andar tha, ab alag
    taake Front+Back mode mein dono pages isi se banein. idx = section
@@ -2139,7 +2178,7 @@ function paperSectionHTML(sec, idx, medium) {
   var h = "";
   var c = sectionCountedMarks(sec);
   var rtlSec = medium === "ur";
-  h += '<div class="p-sec' + (rtlSec ? " p-rtl" : "") + '"' + (rtlSec ? ' dir="rtl"' : "") + '><div class="p-sec-head"><div>' + secHeadTitle(sec, idx, medium) + "</div><span>(" + c.marks + ")</span></div>";
+  h += '<div class="p-sec' + (rtlSec ? " p-rtl" : "") + '"' + (rtlSec ? ' dir="rtl"' : "") + '><div class="p-sec-head"><div>' + secHeadTitle(sec, idx, medium) + '</div><span class="p-marks-box">(' + c.marks + ")</span></div>";
   var instr = [];
   if (sec.attempt && parseInt(sec.attempt, 10) > 0 && parseInt(sec.attempt, 10) < sec.questions.length) {
     if (medium === "ur")
@@ -2158,18 +2197,31 @@ function paperSectionHTML(sec, idx, medium) {
     var instrText = instr.join(" ");
     h += '<div class="p-note' + (hasUrdu(instrText) ? " urdu-text" : "") + '" dir="' + (rtlSec ? "rtl" : "auto") + '">' + esc(instrText) + "</div>";
   }
-  sec.questions.forEach(function (q, qi) {
-    h += '<div class="p-q"><b>' + (qi + 1) + ".</b> " + richText(q.q, medium) + "</div>";
-    if (sec.type === "mcq") {
-      h += '<div class="p-opts">';
+  if (sec.type === "mcq") {
+    /* MCQ section = ek bordered TABLE (owner ke haath ke bane papers
+       ki tarah): har sawal pehle stem row (colspan=4, poori chaudi),
+       phir options ki row — 4 barabar bordered cells (A)(B)(C)(D).
+       Section .p-rtl ho to table bhi RTL: A right se shuru hota hai.
+       Upar instruction/note line pehle hi aa chuki hoti hai. */
+    h += '<table class="p-mcqtab"><tbody>';
+    sec.questions.forEach(function (q, qi) {
+      h += '<tr class="p-mcq-stem"><td colspan="4"><b>' + (qi + 1) + ".</b> " + richText(q.q, medium) + diagramHTML(q.diagram) + "</td></tr>";
+      h += '<tr class="p-mcq-opts">';
       q.opts.forEach(function (o, oi) {
-        h += richOptText(o, LETTERS[oi], medium);
+        h += "<td>" + richOptText(o, LETTERS[oi], medium) + "</td>";
       });
-      h += "</div>";
-    } else if (sec.type === "long") {
-      h += '<div class="p-lines"></div><div class="p-lines"></div>';
-    }
-  });
+      h += "</tr>";
+    });
+    h += "</tbody></table>";
+  } else {
+    sec.questions.forEach(function (q, qi) {
+      h += '<div class="p-q' + (sec.type === "long" ? " p-q-long" : "") + '"><b>' + (qi + 1) + ".</b> " + qmarksSpan(sec) + richText(q.q, medium) + "</div>";
+      h += diagramHTML(q.diagram);
+      if (sec.type === "long") {
+        h += '<div class="p-lines"></div><div class="p-lines"></div>';
+      }
+    });
+  }
   h += "</div>";
   return h;
 }
@@ -2204,31 +2256,35 @@ function paperHTML(st) {
     enEntries.forEach(function (e, i) { e.idx = i; });
     urEntries.forEach(function (e, i) { e.idx = i; });
     var urHalf = '<div class="bi-half bi-half-ur">' + paperHalfHeadHTML(st, t) +
-      urEntries.map(function (e) { return paperSectionHTML(e.sec, e.idx, "ur"); }).join("") + "</div>";
+      urEntries.map(function (e) { return paperSectionHTML(e.sec, e.idx, "ur"); }).join("") +
+      (urEntries.length ? paperEndHTML() : "") + "</div>";
     var enHalf = '<div class="bi-half bi-half-en">' + paperHalfHeadHTML(st, t) +
-      enEntries.map(function (e) { return paperSectionHTML(e.sec, e.idx, "en"); }).join("") + "</div>";
-    return '<div class="land-scroll"><div class="paper paper-land" dir="ltr"' + paperFitAttr(st) + '><div class="bi-sheet">' +
-      urHalf + '<div class="bi-cut"></div>' + enHalf + "</div></div></div>";
+      enEntries.map(function (e) { return paperSectionHTML(e.sec, e.idx, "en"); }).join("") +
+      (enEntries.length ? paperEndHTML() : "") + "</div>";
+    return '<div class="land-scroll"><div class="paper paper-land" dir="ltr"' + paperFitAttr(st) + '><div class="p-frame"><div class="bi-sheet">' +
+      urHalf + '<div class="bi-cut"></div>' + enHalf + "</div></div></div></div>";
   }
   if (effectiveLayout(st) === "back" && shown.length > 1) {
     var entries = shown.map(function (sec, i) { return { sec: sec, idx: i }; });
     var split = splitForBack(entries);
     if (split.front.length && split.back.length) {
-      var p1 = '<div class="paper" dir="ltr">' + paperHeadHTML(st, t) +
-        split.front.map(function (e) { return paperSectionHTML(e.sec, e.idx, su.medium); }).join("") + "</div>";
-      var p2 = '<div class="paper paper-page2" dir="ltr">' + paperContHeadHTML(st) +
-        split.back.map(function (e) { return paperSectionHTML(e.sec, e.idx, su.medium); }).join("") + "</div>";
+      var p1 = '<div class="paper" dir="ltr"><div class="p-frame">' + paperHeadHTML(st, t) +
+        split.front.map(function (e) { return paperSectionHTML(e.sec, e.idx, su.medium); }).join("") + "</div></div>";
+      var p2 = '<div class="paper paper-page2" dir="ltr"><div class="p-frame">' + paperContHeadHTML(st) +
+        split.back.map(function (e) { return paperSectionHTML(e.sec, e.idx, su.medium); }).join("") + paperEndHTML() + "</div></div>";
       return '<div class="page-tag" aria-hidden="true">FRONT SIDE</div>' + p1 +
         '<div class="page-tag" aria-hidden="true">BACK SIDE</div>' + p2;
     }
   }
   var h = '<div class="paper" dir="ltr"' + paperFitAttr(st) + ">";
+  h += '<div class="p-frame">';
   h += paperHeadHTML(st, t);
   if (!shown.length) {
     h += '<div class="empty-note">Abhi koi sawal nahi — pehle sawal shamil karein, preview yahan banta jayega.</div>';
   }
   shown.forEach(function (sec, i) { h += paperSectionHTML(sec, i, su.medium); });
-  h += "</div>";
+  if (shown.length) h += paperEndHTML();
+  h += "</div></div>";
   return h;
 }
 function keyHTML(st) {
@@ -2239,8 +2295,8 @@ function keyHTML(st) {
      LTR rehta hai; letter wali table bhi LTR. Urdu medium mein section
      headings aur jawab wali text list RTL ho jati hai (paper ki tarah),
      taake Urdu jawab sahi tartib mein parha jaye. */
-  var h = '<div class="paper" dir="ltr">';
-  h += '<div class="p-head"><div class="p-school' + (hasUrdu(su.school) ? " urdu-text" : "") + '" dir="auto">' + esc(su.school || "School Name") + "</div>";
+  var h = '<div class="paper" dir="ltr"><div class="p-frame">';
+  h += '<div class="p-head">' + schoolBlockHTML(su, false);
   h += '<div class="p-band">' + (L.urdu ? '<span class="urdu-text" dir="auto">' + L.keyWord + "</span>" : L.keyWord) +
     " — <span" + langAttrs(su.subject) + ">" + esc(su.subject || "—") + "</span>" +
     (su.code ? " &nbsp;|&nbsp; " + labSpan(L.codeWord, L.urdu) + " " + esc(su.code) : "") + "</div></div>";
@@ -2263,7 +2319,7 @@ function keyHTML(st) {
       return "<div>" + it.n + ". (" + it.letter + ") " + richText(it.text || "— teacher mark karein", su.medium) + "</div>";
     }).join("") + "</div></div>";
   });
-  h += "</div>";
+  h += "</div></div>";
   return h;
 }
 
@@ -2311,6 +2367,7 @@ function renderSections() {
     sec.questions.forEach(function (q, qi) {
       html += '<div class="qrow"><span class="qn">' + (qi + 1) + '.</span><span class="qt" dir="auto">' + esc(q.q);
       if (q.chapter) html += '<span class="chbadge">📐 ' + esc(q.chapter) + "</span>";
+      if (q.diagram) html += '<span class="chbadge">🖼 Diagram</span>';
       if (sec.type === "mcq") {
         html += '<span class="ansbadge">Key: ' + (q.ans >= 0 ? LETTERS[q.ans] : "?") + "</span><br><small>" +
           q.opts.map(function (o, oi) { return "(" + LETTERS[oi] + ") " + esc(o); }).join(" &nbsp; ") + "</small>";
@@ -2319,6 +2376,7 @@ function renderSections() {
         '<button type="button" class="mini" data-act="q-up" data-q="' + qi + '">↑</button>' +
         '<button type="button" class="mini" data-act="q-down" data-q="' + qi + '">↓</button>' +
         '<button type="button" class="mini" data-act="q-edit" data-q="' + qi + '">✎</button>' +
+        (q.diagram ? '<button type="button" class="mini" data-act="q-diagram-del" data-q="' + qi + '" title="Diagram hatayein">🖼✕</button>' : "") +
         '<button type="button" class="mini" data-act="q-del" data-q="' + qi + '">🗑</button></span></div>';
     });
     if (!sec.questions.length) html += '<div class="hint">Is section mein abhi koi sawal nahi.</div>';
@@ -2526,6 +2584,7 @@ function bindSections() {
     else if (act === "sec-up" && si > 0) { swap(state.sections, si, si - 1); renderSections(); refreshLight(); }
     else if (act === "sec-down" && si < state.sections.length - 1) { swap(state.sections, si, si + 1); renderSections(); refreshLight(); }
     else if (act === "q-del") { sec.questions.splice(qi, 1); if (editCtx && editCtx.secId === sec.id && editCtx.idx === qi) editCtx = null; renderSections(); refreshLight(); }
+    else if (act === "q-diagram-del") { if (sec.questions[qi]) delete sec.questions[qi].diagram; renderSections(); refreshLight(); }
     else if (act === "q-up" && qi > 0) { swap(sec.questions, qi, qi - 1); renderSections(); refreshLight(); }
     else if (act === "q-down" && qi < sec.questions.length - 1) { swap(sec.questions, qi, qi + 1); renderSections(); refreshLight(); }
     else if (act === "q-edit") {
@@ -2982,23 +3041,16 @@ function downloadPDF(kind) {
 }
 
 /* ================= PHOTO -> QUESTIONS ================= */
-/* Naya tareeqa (Nov 2026): purane OCR/transcription walay routes user ke
-   tests mein garbled text dete rahe — wo sab hata diye gaye hain.
-   Ab EK hi main route hai: asli vision AI (Qwen2.5-VL-7B-Instruct) jo safha
-   parh kar usi ki content se MCQs (options + sahi jawab), Short aur Long
-   sawal BANA kar deta hai, strict JSON mein. Server: Hugging Face par
-   chalta hua free space (Tapas1991/qwen-vl-api, cpu-basic — ZeroGPU nahi,
-   koi API key nahi). Space ke app.py se verified signature:
-   predict inputs = [image base64 (data URL bhi chalega), prompt/context],
-   outputs = [text]. Space apni taraf se prompt ko ek jumle mein lapetata
-   hai ("You are a professional medical AI... Context: {prompt}") — is liye
-   hamara prompt pehli line mein wazeh override deta hai ke ye medical scan
-   NAHI, textbook page hai. max_new_tokens wahan 768 hai, is liye JSON
-   compact rakha hai aur parser truncated JSON se bhi mukammal sawal
-   bacha leta hai (salvage). */
+/* Tamam photo generation ab AI Engine dispatch (aiChatPhoto) se hoti
+   hai: Puter (gpt-4o-mini pehle) / Gemini / OpenAI — teeno asli vision
+   models hain jo safha parh kar usi ki content se MCQs (options +
+   sahi jawab), Short aur Long sawal BANA kar dete hain, strict JSON
+   mein. (Purane OCR routes aur Qwen slow route hata diye gaye hain —
+   wo garbled text dete thay aur slow route asal test mein time out
+   ho gaya tha.) Parser truncated JSON se bhi mukammal sawal bacha
+   leta hai (salvage). */
 var photoCandidates = [];
 var GEMINI_LS = "kpg_gemini_key";
-var QWEN_API_BASE = "https://tapas1991-qwen-vl-api.hf.space";
 
 /* Candidate ke text ki quality ka andaza (sirf purane Gemini route ke
    transcription candidates ke liye; AI-generated candidates par gen flag
@@ -3091,49 +3143,6 @@ function addSelectedCandidates() {
   return chosen.length;
 }
 
-/* ---- Gradio helper (HF Spaces, bina key) ---- */
-function gradioCall(base, apiName, data, onStatus, timeoutMs) {
-  timeoutMs = timeoutMs || 420000;
-  var started = Date.now();
-  return fetch(base + "/gradio_api/call/" + apiName, {
-    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ data: data })
-  }).then(function (r) { if (!r.ok) throw new Error("server join fail " + r.status); return r.json(); })
-    .then(function (j) {
-      var ev = j.event_id;
-      if (!ev) throw new Error("server ne event id nahi di");
-      return fetch(base + "/gradio_api/call/" + apiName + "/" + ev).then(function (resp) {
-        if (!resp.ok || !resp.body || !resp.body.getReader) throw new Error("server stream nahi mili");
-        var reader = resp.body.getReader();
-        var dec = new TextDecoder();
-        var buf = "";
-        function pump() {
-          if (Date.now() - started > timeoutMs) throw new Error("server timeout — zyada waqt lag gaya");
-          return reader.read().then(function (res) {
-            if (res.done) throw new Error("server ne jawab diye baghair stream band kar di");
-            buf += dec.decode(res.value, { stream: true });
-            var lines = buf.split("\n");
-            buf = lines.pop();
-            for (var i = 0; i < lines.length; i++) {
-              var ln = lines[i].trim();
-              if (ln.indexOf("data:") !== 0) continue;
-              var payload = ln.slice(5).trim();
-              if (!payload || payload === "null") continue;
-              var msg;
-              try { msg = JSON.parse(payload); } catch (e) { continue; }
-              if (msg.msg === "process_generating" && onStatus) onStatus("generating");
-              if (msg.msg === "process_completed") {
-                if (msg.success === false) throw new Error(msg.error || "server par ghalti hui");
-                return (msg.output && msg.output.data) || [];
-              }
-              if (msg.msg === "process_failed" || msg.msg === "error") throw new Error(msg.error || "server fail ho gaya");
-            }
-            return pump();
-          });
-        }
-        return pump();
-      });
-    });
-}
 
 function selectedPhotoFiles() {
   var inp = document.getElementById("photoFiles");
@@ -3153,14 +3162,9 @@ function showPreviews(files) {
   });
 }
 
-/* ---- SLOW FALLBACK ROUTE: AI Generation (Qwen2.5-VL, free CPU server) ----
-   Live test (16 Nov) mein ye route 10–12 minute mein time out ho gaya
-   tha — is liye ab ye sirf "bina sign-in wala slow tareeqa" backup hai.
-   Main route upar wala Puter hai. */
-/* Prompt: pehli line space ke apne medical jumle ka override hai (wo
-   prompt ko "You are a professional medical AI... Context: {prompt}"
-   mein lapetata hai). Phir sakht hidayat: sirf is safhe ki content se
-   sawal banao, ginati exact, JSON compact (server ki 768-token hadd). */
+/* ---- AI Generation: counts, prompts, candidate quality ----
+   (Purana Qwen slow route hata diya gaya hai — tamam generation ab
+   AI Engine dispatch se hoti hai: Puter / Gemini / OpenAI.) */
 /* AI counts — panel ke teen number inputs (Photo + Text dono modes
    ke liye mushtarka). Har qisam ki had: MCQ 0–30, Short 0–20,
    Long 0–10; khaali/ghalat value par default (5/5/1). 0 ka matlab
@@ -3327,89 +3331,6 @@ function parseAiQuestions(text) {
   return out.filter(Boolean);
 }
 
-/* Photo ko halka karke data URL banao (server khud bhi 600px par
-   thumbnail karta hai; 1000px cap upload fast rakhta hai). Canvas na
-   chale to seedha FileReader wala data URL. */
-function fileToDataUrlRaw(file) {
-  return new Promise(function (resolve) {
-    try {
-      var r = new FileReader();
-      r.onload = function () { resolve(String(r.result || "")); };
-      r.onerror = function () { resolve(""); };
-      r.readAsDataURL(file);
-    } catch (e) { resolve(""); }
-  });
-}
-function photoToDataUrl(file) {
-  return new Promise(function (resolve) {
-    var url;
-    try { url = URL.createObjectURL(file); } catch (e) { fileToDataUrlRaw(file).then(resolve); return; }
-    var img = new Image();
-    img.onload = function () {
-      try {
-        var w = img.naturalWidth, h = img.naturalHeight;
-        if (!w || !h) throw new Error("bad image");
-        var scale = Math.min(1, 1000 / Math.max(w, h));
-        var cw = Math.max(1, Math.round(w * scale)), ch = Math.max(1, Math.round(h * scale));
-        var cv = document.createElement("canvas");
-        cv.width = cw; cv.height = ch;
-        var ctx = cv.getContext("2d");
-        ctx.drawImage(img, 0, 0, cw, ch);
-        try { URL.revokeObjectURL(url); } catch (e) {}
-        var du = cv.toDataURL ? cv.toDataURL("image/jpeg", 0.85) : "";
-        if (du && du.indexOf("data:image") === 0) { resolve(du); return; }
-        throw new Error("bad canvas");
-      } catch (e2) { fileToDataUrlRaw(file).then(resolve); }
-    };
-    img.onerror = function () { try { URL.revokeObjectURL(url); } catch (e) {} fileToDataUrlRaw(file).then(resolve); };
-    img.src = url;
-  });
-}
-
-function runAiGen(files) {
-  var st = document.getElementById("aiGenStatus");
-  if (!files.length) { st.textContent = "⚠ Pehle page ki photo select karein."; return Promise.resolve(0); }
-  var counts = aiCounts();
-  if (aiCountsAllZero(counts)) { st.textContent = AI_ZERO_MSG; return Promise.resolve(0); }
-  var use = files.slice(0, 3);
-  if (files.length > 3) st.textContent = "ℹ Ek dafa mein zyada se zyada 3 photos — pehli 3 li ja rahi hain.";
-  var prompt = buildGenPrompt(counts.nMcq, counts.nShort, counts.nLong);
-  st.textContent = "🤖 AI ko photo bhej rahe hain… (free CPU server hai — 1 photo par chand minute lag sakte hain, page band na karein)";
-  var all = [], failed = 0;
-  var chain = Promise.resolve();
-  use.forEach(function (f, i) {
-    chain = chain.then(function () {
-      st.textContent = "🤖 Photo " + (i + 1) + "/" + use.length + " — AI safha parh kar sawal bana raha hai… (intezar karein)";
-      return photoToDataUrl(f).then(function (dataUrl) {
-        if (!dataUrl) throw new Error("photo parhi nahi gayi — dusri photo azmayein");
-        return gradioCall(QWEN_API_BASE, "predict", [dataUrl, prompt], function () {
-          st.textContent = "🤖 Photo " + (i + 1) + "/" + use.length + " — AI sawal bana raha hai…";
-        }, 600000);
-      }).then(function (data) {
-        var txt = (data && data[0]) ? String(data[0]) : "";
-        if (/^\s*(Analysis Error|No image provided)/i.test(txt)) throw new Error("AI server ne jawab nahi diya (" + txt.slice(0, 80) + ") — thodi dair baad dobara koshish karein");
-        var cands = parseAiQuestions(txt);
-        if (!cands.length) throw new Error("AI ke jawab se koi sawal nahi bana — photo saaf aur qareeb se le kar dobara koshish karein");
-        all = all.concat(cands);
-      }).catch(function (e) {
-        failed++;
-        st.textContent = "⚠ Photo " + (i + 1) + " fail: " + (e && e.message ? e.message : e) + (use.length > 1 ? " — baqi photos jari hain…" : "");
-      });
-    });
-  });
-  return chain.then(function () {
-    if (!all.length) {
-      if (!failed) st.textContent = "⚠ AI se koi sawal nahi bana. Photo saaf, seedhi aur qareeb se ho to dobara koshish karein.";
-      return 0;
-    }
-    setCandidates(all);
-    var nm = all.filter(function (c) { return c.type === "mcq"; }).length;
-    var ns = all.filter(function (c) { return c.type === "short"; }).length;
-    var nl = all.filter(function (c) { return c.type === "long"; }).length;
-    st.textContent = "✔ AI ne " + all.length + " sawal banaye (" + nm + " MCQ, " + ns + " Short, " + nl + " Long) — neeche Review mein sawal aur sahi jawab check karke paper mein shamil karein.";
-    return all.length;
-  });
-}
 
 /* ---- MAIN ROUTE: Puter (mazboot AI — visitor ke FREE Puter account se) ----
    Puter.js (https://js.puter.com/v2/) — site ke code mein koi API key
@@ -3437,7 +3358,7 @@ function refreshPuterAuthUI() {
   var outBtn = document.getElementById("btnPuterSignOut");
   if (!stEl || !inBtn || !outBtn) return;
   if (!puterReady()) {
-    stEl.textContent = "⚠ Puter library load nahi hui — internet check karke page refresh karein. Tab tak neeche wala slow tareeqa ya Gemini (Advanced) use ho sakta hai.";
+    stEl.textContent = "⚠ Puter library load nahi hui — internet check karke page refresh karein. Tab tak AI Engine se apni Gemini ya ChatGPT key wala tareeqa use ho sakta hai.";
     inBtn.style.display = "none"; outBtn.style.display = "none";
     return;
   }
@@ -3559,7 +3480,7 @@ function runPuterGen(files) {
       }
       if (!all.length) {
         if (!failed) st.textContent = "⚠ AI se koi sawal nahi bana. Photo saaf, seedhi aur qareeb se ho to dobara koshish karein.";
-        else if (use.length === 1) st.textContent += " Agar ye ghalti baar baar aaye to ho sakta hai is month ki free allowance khatam ho — kuch dair baad dobara koshish karein, ya neeche wala slow tareeqa azmayein.";
+        else if (use.length === 1) st.textContent += " Agar ye ghalti baar baar aaye to ho sakta hai is month ki free allowance khatam ho — kuch dair baad dobara koshish karein, ya AI Engine se apni Gemini/ChatGPT key wala tareeqa azmayein.";
         return 0;
       }
       setCandidates(all);
@@ -3578,7 +3499,7 @@ function runPuterGen(files) {
     if (!openaiSavedKey()) { refreshEngineUI(); st.textContent = "⚠ AI Engine 'ChatGPT (OpenAI API Key)' chuna hai lekin koi key save nahi — pehle Engine ke neeche apni OpenAI key lagayein, ya Engine 'Puter (FREE)' kar dein."; return Promise.resolve(0); }
     return go();
   }
-  if (!puterReady()) { st.textContent = "⚠ Puter library load nahi hui — internet check karke page refresh karein, ya neeche wala slow tareeqa azmayein."; return Promise.resolve(0); }
+  if (!puterReady()) { st.textContent = "⚠ Puter library load nahi hui — internet check karke page refresh karein."; return Promise.resolve(0); }
   if (puterSignedIn()) return go();
   st.textContent = "🔐 Pehle FREE Puter sign in chahiye — popup khul raha hai…";
   return puterDoSignIn().then(function (ok) {
@@ -3587,25 +3508,298 @@ function runPuterGen(files) {
   });
 }
 
-/* ---- TEXT PASTE mode: photo ki jagah book ka text paste karein ----
-   Panel ke upar do tabs hain: "📷 Photo se" (purana flow, bilkul
-   waisa hi) aur "📝 Text Paste" (naya). Counts (MCQ/Short/Long),
-   Generate button, Review list, Paper-mein-jodein aur Answer Key —
-   sab DONO modes ke liye ek hi hain; sirf input badalta hai. */
+/* ================= DIAGRAMS (Paper ki Photo se) =================
+   Sawal ke sath ek optional diagram rehta hai: {desc, kind, labels,
+   values} — state/drafts mein sawal ke object par hi save hota hai,
+   is liye har jagah (paper, key ke baghair editor, drafts) rehta
+   hai. Render: जाने pehchane saada diagrams (triangle, circle,
+   number line, bar graph, circuit, axes) ke liye saaf kala-safaid
+   SVG banta hai; baqi (kind "other" ya data adhoora) ke liye ek
+   bordered placeholder — teacher asal diagram wahan laga sakta hai.
+   YE HUBAHU COPY NAHI hoti: SVG asal drawing ki saaf TAKHMINI
+   shakal hai, labels/values AI ke diye hue hint se bante hain. */
+var DIAGRAM_KINDS = ["triangle", "circle", "number_line", "bar_graph", "circuit", "axes", "other"];
+function normalizeDiagram(d) {
+  if (!d || typeof d !== "object") return null;
+  var hint = (d.svg_hint && typeof d.svg_hint === "object") ? d.svg_hint : {};
+  var kind = String(hint.kind || d.kind || "other");
+  if (DIAGRAM_KINDS.indexOf(kind) < 0) kind = "other";
+  function strArr(a) {
+    return (Array.isArray(a) ? a : []).slice(0, 8).map(function (x) { return String(x == null ? "" : x); });
+  }
+  var rawVals = Array.isArray(hint.values) ? hint.values : (Array.isArray(d.values) ? d.values : []);
+  return {
+    desc: String(d.desc || ""),
+    kind: kind,
+    labels: strArr(hint.labels || d.labels),
+    values: rawVals.slice(0, 8).map(function (x) { var n = Number(x); return isNaN(n) ? String(x) : n; })
+  };
+}
+function diagramSVG(d) {
+  if (!d) return "";
+  var L = d.labels || [], V = d.values || [];
+  function lab(i, def) { var s = String(L[i] || "").trim(); return esc(s || def || ""); }
+  function txt(x, y, s, anchor) {
+    return '<text x="' + x + '" y="' + y + '" font-size="11" fill="#000" text-anchor="' + (anchor || "middle") + '">' + s + "</text>";
+  }
+  var SH = 'fill="none" stroke="#000" stroke-width="1.5"';
+  if (d.kind === "triangle") {
+    return '<svg viewBox="0 0 140 112" role="img"><polygon points="70,14 16,96 124,96" ' + SH + "/>" +
+      txt(70, 10, lab(0, "A")) + txt(16, 110, lab(1, "B")) + txt(124, 110, lab(2, "C")) +
+      (String(L[3] || "").trim() ? txt(70, 84, lab(3)) : "") + "</svg>";
+  }
+  if (d.kind === "circle") {
+    return '<svg viewBox="0 0 140 112" role="img"><circle cx="70" cy="56" r="40" ' + SH + '/>' +
+      '<line x1="70" y1="56" x2="110" y2="56" stroke="#000" stroke-width="1.5"/>' +
+      '<circle cx="70" cy="56" r="2.2" fill="#000"/>' +
+      txt(70, 74, lab(0, "O")) + (String(L[1] || "").trim() ? txt(90, 50, lab(1)) : "") + "</svg>";
+  }
+  if (d.kind === "number_line") {
+    var items = [];
+    var nums = V.filter(function (v) { return typeof v === "number" && isFinite(v); });
+    if (nums.length >= 2) items = nums.map(function (v) { return { t: String(v), v: v }; });
+    else if (L.length) items = L.map(function (s) { return { t: s, v: null }; });
+    else for (var k = -3; k <= 3; k++) items.push({ t: String(k), v: k });
+    var allNum = items.every(function (it) { return it.v != null; });
+    var mn = allNum ? Math.min.apply(null, items.map(function (it) { return it.v; })) : 0;
+    var mx = allNum ? Math.max.apply(null, items.map(function (it) { return it.v; })) : 1;
+    var s = '<svg viewBox="0 0 240 58" role="img"><line x1="10" y1="32" x2="226" y2="32" stroke="#000" stroke-width="1.5"/>' +
+      '<polygon points="226,32 216,27 216,37" fill="#000"/>';
+    items.forEach(function (it, i) {
+      var x = allNum && mx > mn ? 18 + (it.v - mn) / (mx - mn) * 196 : 18 + (items.length > 1 ? i * (196 / (items.length - 1)) : 98);
+      x = Math.round(x);
+      s += '<line x1="' + x + '" y1="27" x2="' + x + '" y2="37" stroke="#000" stroke-width="1.5"/>' + txt(x, 52, esc(it.t));
+    });
+    return s + "</svg>";
+  }
+  if (d.kind === "bar_graph") {
+    var vals = V.filter(function (v) { return typeof v === "number" && isFinite(v); }).slice(0, 6);
+    if (!vals.length) return "";
+    var vmax = Math.max.apply(null, vals);
+    if (!(vmax > 0)) return "";
+    var n = vals.length, slot = 196 / n, bw = Math.min(34, slot * 0.55);
+    var g = '<svg viewBox="0 0 240 134" role="img"><line x1="34" y1="10" x2="34" y2="112" stroke="#000" stroke-width="1.5"/>' +
+      '<line x1="34" y1="112" x2="234" y2="112" stroke="#000" stroke-width="1.5"/>';
+    vals.forEach(function (v, i) {
+      var h = Math.round(v / vmax * 94), x = Math.round(40 + i * slot + (slot - bw) / 2), cx = Math.round(x + bw / 2);
+      g += '<rect x="' + x + '" y="' + (112 - h) + '" width="' + Math.round(bw) + '" height="' + h + '" fill="#fff" stroke="#000" stroke-width="1.5"/>';
+      g += txt(cx, 106 - h, esc(String(v)));
+      if (String(L[i] || "").trim()) g += txt(cx, 127, lab(i));
+    });
+    return g + "</svg>";
+  }
+  if (d.kind === "circuit") {
+    var W = 'stroke="#000" stroke-width="1.5" fill="none"';
+    return '<svg viewBox="0 0 240 122" role="img">' +
+      '<path d="M30 30 H95 M145 30 H210 V49 M210 71 V90 H134 M106 90 H30 V30" ' + W + "/>" +
+      '<polyline points="95,30 101,19 109,41 117,19 125,41 133,19 141,30 145,30" ' + W + "/>" +
+      '<circle cx="210" cy="60" r="11" fill="#fff" stroke="#000" stroke-width="1.5"/>' + txt(210, 64, "A") +
+      '<line x1="112" y1="77" x2="112" y2="103" stroke="#000" stroke-width="1.5"/>' +
+      '<line x1="128" y1="83" x2="128" y2="97" stroke="#000" stroke-width="4"/>' +
+      (String(L[1] || "").trim() ? txt(120, 12, lab(1)) : "") +
+      (String(L[0] || "").trim() ? txt(120, 118, lab(0)) : "") + "</svg>";
+  }
+  if (d.kind === "axes") {
+    return '<svg viewBox="0 0 240 122" role="img">' +
+      '<line x1="34" y1="100" x2="226" y2="100" stroke="#000" stroke-width="1.5"/>' +
+      '<polygon points="226,100 216,95 216,105" fill="#000"/>' +
+      '<line x1="34" y1="100" x2="34" y2="16" stroke="#000" stroke-width="1.5"/>' +
+      '<polygon points="34,16 29,26 39,26" fill="#000"/>' +
+      '<polyline points="34,100 84,74 134,50 184,32 222,20" fill="none" stroke="#000" stroke-width="1.5"/>' +
+      txt(233, 104, lab(0, "x")) + txt(34, 12, lab(1, "y")) + "</svg>";
+  }
+  return "";
+}
+function diagramHTML(d) {
+  var nd = normalizeDiagram(d);
+  if (!nd) return "";
+  var svg = diagramSVG(nd);
+  if (svg) return '<div class="p-diagram">' + svg + "</div>";
+  return '<div class="p-diagram-ph">🖼 Diagram: ' + esc(nd.desc || "diagram") + " — yahan asal diagram lagayein</div>";
+}
+
+/* ================= PAPER KI PHOTO — SAME PAPER =================
+   Teacher kisi maujooda paper ki 1–4 photos deta hai; vision AI
+   poora paper LAFZ-BA-LAFZ transcribe karta hai (wohi sawal, wohi
+   tartib, wohi sections) aur applyPaperPhoto usi se bilkul waisa
+   hi paper bana kar MAUJOODA paper ki jagah laga deta hai (pehle
+   confirm). Diagram wale sawalon ke diagram bhi hint se dobara
+   bante hain (upar wala diagram system). */
+function buildPaperPhotoPrompt(pageNo, totalPages) {
+  return "You are given a photo of page " + pageNo + " of " + totalPages + " of an EXISTING printed exam question paper. " +
+    "Transcribe the ENTIRE paper EXACTLY as printed, word for word, in the SAME order and the SAME section structure. " +
+    "Do NOT create new questions, do NOT improve, translate or rephrase anything, and do NOT drop any question.\n" +
+    "Return ONLY strict JSON (no markdown fences, no commentary):\n" +
+    '{"setup":{"school":string|null,"class":string|null,"subject":string|null,"totalMarks":number|null,"time":string|null},' +
+    '"sections":[{"title":string,"type":"mcq"|"short"|"long","attempt":string|null,' +
+    '"questions":[{"q":string,"options":[string,string,string,string],"answer":0-3 or -1,"marks":number|null,' +
+    '"diagram":null|{"desc":string,"svg_hint":{"kind":"triangle"|"circle"|"number_line"|"bar_graph"|"circuit"|"axes"|"other","labels":[string],"values":[number]}}}]}]}\n' +
+    "Rules:\n" +
+    "- setup: only the fields actually printed on the paper; anything not visible = null. On page 2+ the setup fields will usually be null — that is fine.\n" +
+    "- Copy every question word-for-word, including punctuation. Keep the paper's own section titles and order. \"options\" only for MCQ questions (exactly the printed options, in order); for other types use null.\n" +
+    "- answer: for an MCQ, the index (0-3) of the correct option ONLY if it is marked on the paper or certain from it; otherwise -1.\n" +
+    "- marks: the marks printed for that question, else null. attempt: the section's attempt instruction exactly as printed (e.g. \"Attempt any 5\"), else null.\n" +
+    "- Diagrams: if a question has a diagram/figure, set \"diagram\" with a short \"desc\" and an \"svg_hint\": the closest kind, its labels (point names, axis names, bar names) and numeric values (bar heights, number-line values) as seen. If there is no diagram, \"diagram\": null.\n" +
+    "- If any part of the photo is unreadable, STILL include that question and put the marker [naqabil-e-parhai] inside its text where it could not be read — never skip it.\n" +
+    "- Write math in plain text with Unicode symbols (∈ ≤ ≥ √ π θ × ÷ ² ³), never LaTeX.";
+}
+function parsePaperPhotoJson(txt) {
+  var s = String(txt || "").replace(/```(?:json)?/gi, "");
+  var a = s.indexOf("{"), b = s.lastIndexOf("}");
+  if (a < 0 || b <= a) return null;
+  try {
+    var obj = JSON.parse(s.slice(a, b + 1));
+    if (obj && Array.isArray(obj.sections)) return obj;
+  } catch (e) {}
+  return null;
+}
+function attemptFromString(s, count) {
+  if (!s) return "";
+  var t = String(s).replace(/[\u0660-\u0669\u06F0-\u06F9]/g, function (c) {
+    var code = c.charCodeAt(0);
+    return String(code <= 0x0669 ? code - 0x0660 : code - 0x06F0);
+  });
+  var m = t.match(/any[^0-9]{0,12}(\d+)/i) || t.match(/(\d+)\s*(?:of|\/)/i) || t.match(/\d+/);
+  if (!m) return "";
+  var n = parseInt(m[1] || m[0], 10);
+  if (isNaN(n) || n <= 0 || n >= count) return "";
+  return n;
+}
+function applyPaperPhoto(parsed) {
+  var st = document.getElementById("aiGenStatus");
+  function say(m) { if (st) st.textContent = m; }
+  if (!parsed || !Array.isArray(parsed.sections)) { say("⚠ Paper samajh nahi aya — photo saaf aur seedhi ho, phir dobara koshish karein."); return 0; }
+  var newSections = [], counts = { mcq: 0, short: 0, long: 0 }, diagrams = 0, unreadable = 0;
+  parsed.sections.forEach(function (ps) {
+    var type = (ps && ["mcq", "short", "long"].indexOf(ps.type) >= 0) ? ps.type : "short";
+    var sec = makeSection(type);
+    if (ps && ps.title && String(ps.title).trim()) sec.title = String(ps.title).trim();
+    var marksList = [];
+    (ps && Array.isArray(ps.questions) ? ps.questions : []).forEach(function (pq) {
+      if (!pq || pq.q == null || !String(pq.q).trim()) return;
+      var q = { q: fixLatexSymbols(String(pq.q).trim()) };
+      if (q.q.indexOf("[naqabil-e-parhai]") >= 0) unreadable++;
+      if (type === "mcq") {
+        var opts = (Array.isArray(pq.options) ? pq.options : []).map(function (o) { return fixLatexSymbols(String(o == null ? "" : o).trim()); });
+        while (opts.length < 4) opts.push("");
+        q.opts = opts.slice(0, 4);
+        var a = Number(pq.answer);
+        q.ans = (a >= 0 && a <= 3 && Math.floor(a) === a) ? a : -1;
+      }
+      var dg = normalizeDiagram(pq.diagram);
+      if (dg) { q.diagram = dg; diagrams++; }
+      var mk = Number(pq.marks);
+      if (mk > 0) marksList.push(mk);
+      sec.questions.push(q);
+    });
+    if (!sec.questions.length) return;
+    if (marksList.length) sec.marksEach = marksList[0];
+    sec.attempt = attemptFromString(ps && ps.attempt, sec.questions.length);
+    counts[type] += sec.questions.length;
+    newSections.push(sec);
+  });
+  var total = counts.mcq + counts.short + counts.long;
+  if (!total) { say("⚠ Photo se koi sawal nahi mila — photo saaf aur seedhi ho, phir dobara koshish karein."); return 0; }
+  var hasQ = state.sections.some(function (sx) { return sx.questions.length; });
+  if (hasQ && !window.confirm("Maujooda paper mein pehle se sawal hain. Paper ki Photo wala paper un ki jagah le lega (purane sawal hat jayenge). Kya aap waqai ye paper lagana chahte hain?")) {
+    say("Paper nahi badla — maujooda paper mehfooz hai.");
+    return 0;
+  }
+  var ns = defaultState();
+  ns.setup = JSON.parse(JSON.stringify(state.setup));
+  var su = (parsed.setup && typeof parsed.setup === "object") ? parsed.setup : {};
+  if (su.school) ns.setup.school = String(su.school);
+  if (su["class"]) ns.setup.clazz = String(su["class"]);
+  if (su.subject) ns.setup.subject = String(su.subject);
+  if (su.time) ns.setup.time = String(su.time);
+  ns.sections = newSections;
+  ns.scheme = null;
+  state = ns;
+  persist();
+  renderAll();
+  say("✔ Paper tayyar: " + total + " sawal (" + counts.mcq + " MCQ, " + counts.short + " Short, " + counts.long + " Long), " + diagrams + " diagrams" +
+    (unreadable ? " — " + unreadable + " sawal mein [naqabil-e-parhai] nishan hai, editor mein woh hissa theek kar lein" : ""));
+  return total;
+}
+function selectedPaperFiles() {
+  var inp = document.getElementById("paperFiles");
+  if (!inp || !inp.files) return [];
+  return Array.prototype.slice.call(inp.files).slice(0, 4);
+}
+function showPaperPreviews(files) {
+  var box = document.getElementById("paperPreviews");
+  if (!box) return;
+  box.innerHTML = "";
+  (files || []).forEach(function (f) {
+    try {
+      var img = new Image();
+      img.src = URL.createObjectURL(f);
+      img.style.cssText = "max-width:130px;max-height:170px;border:1px solid var(--line);border-radius:7px;margin:0 6px 6px 0;object-fit:cover";
+      box.appendChild(img);
+    } catch (e) {}
+  });
+}
+function runPaperPhoto(files) {
+  var st = document.getElementById("aiGenStatus");
+  function say(m) { if (st) st.textContent = m; }
+  files = (files || []).slice(0, 4);
+  if (!files.length) { say("⚠ Pehle paper ki kam az kam 1 photo chunein."); return Promise.resolve(0); }
+  var eng = aiEngine();
+  if (eng === "gemini" && !geminiSavedKey()) { say("⚠ AI Engine 'Apni Gemini Key' chuna hai lekin koi key save nahi — upar Engine ke neeche apni Gemini key lagayein, ya Engine 'Puter (FREE)' kar dein."); return Promise.resolve(0); }
+  if (eng === "openai" && !openaiSavedKey()) { say("⚠ AI Engine 'ChatGPT (OpenAI API Key)' chuna hai lekin koi key save nahi — upar Engine ke neeche apni OpenAI key lagayein, ya Engine 'Puter (FREE)' kar dein."); return Promise.resolve(0); }
+  if (eng === "puter" && !puterReady()) { say("⚠ Puter library load nahi hui — internet check karke page refresh karein."); return Promise.resolve(0); }
+  var merged = { setup: {}, sections: [] };
+  var chain = Promise.resolve();
+  files.forEach(function (f, i) {
+    chain = chain.then(function () {
+      say("🤖 AI paper parh raha hai (page " + (i + 1) + "/" + files.length + ")… is mein kuch waqt lag sakta hai.");
+      return aiChatPhoto(buildPaperPhotoPrompt(i + 1, files.length), f);
+    }).then(function (txt) {
+      var part = parsePaperPhotoJson(txt);
+      if (part) {
+        ["school", "class", "subject", "totalMarks", "time"].forEach(function (k) {
+          if ((merged.setup[k] == null || merged.setup[k] === "") && part.setup && part.setup[k] != null && part.setup[k] !== "") merged.setup[k] = part.setup[k];
+        });
+        merged.sections = merged.sections.concat(part.sections);
+      }
+    });
+  });
+  return chain.then(function () {
+    if (!merged.sections.length) { say("⚠ AI se paper samajh nahi aya — photo saaf aur seedhi ho, phir dobara koshish karein."); return 0; }
+    return applyPaperPhoto(merged);
+  }).catch(function (e) {
+    if (isAiLimitError(e)) { say(PUTER_LIMIT_MSG); return 0; }
+    say("⚠ Paper nahi ban saka: " + (e && e.message ? e.message : e));
+    return 0;
+  });
+}
+
+/* ---- AI INPUT MODES: Photo / Text Paste / Paper ki Photo ----
+   Panel ke upar teen tabs hain: "📷 Photo se" (book page se sawal
+   banao), "📝 Text Paste" (pasted text se sawal banao) aur
+   "📄 Paper ki Photo" (maujooda paper ki photo se WAHI paper dobara
+   banao — paper replace hota hai). Pehle do modes mein Counts,
+   Generate button, Review list, Paper-mein-jodein aur Answer Key
+   mushtarka hain; Paper mode ka apna flow hai (counts lagu nahi,
+   Review list bhi nahi — paper seedha replace hota hai). */
 var aiInputMode = "photo";
 function setAiInputMode(m) {
-  aiInputMode = (m === "text") ? "text" : "photo";
-  var isText = aiInputMode === "text";
+  aiInputMode = (m === "text" || m === "paper") ? m : "photo";
+  var isText = aiInputMode === "text", isPaper = aiInputMode === "paper";
   var pb = document.getElementById("photoModeBox");
   var tb = document.getElementById("textModeBox");
-  var sb = document.getElementById("photoSlowBox");
-  if (pb) pb.style.display = isText ? "none" : "";
+  var ppb = document.getElementById("paperModeBox");
+  var cb = document.getElementById("aiCountsBox");
+  if (pb) pb.style.display = (isText || isPaper) ? "none" : "";
   if (tb) tb.style.display = isText ? "" : "none";
-  if (sb) sb.style.display = isText ? "none" : "";
+  if (ppb) ppb.style.display = isPaper ? "" : "none";
+  if (cb) cb.style.display = isPaper ? "none" : "";
   var bp = document.getElementById("btnModePhoto");
   var bt = document.getElementById("btnModeText");
-  if (bp) bp.className = isText ? "btn ghost" : "btn";
+  var bpp = document.getElementById("btnModePaper");
+  if (bp) bp.className = (isText || isPaper) ? "btn ghost" : "btn";
   if (bt) bt.className = isText ? "btn" : "btn ghost";
+  if (bpp) bpp.className = isPaper ? "btn" : "btn ghost";
   return aiInputMode;
 }
 function updatePasteCount() {
@@ -3620,8 +3814,8 @@ function updatePasteCount() {
    Unicode alamat se badalta hai; na-maloom command (\foo waghera)
    bilkul nahi chherta, aur baghair backslash/$/^ wala Urdu/English
    text byte-identical rehta hai. Yahi conversion AI ke jawab ki
-   sawal-strings par bhi lagti hai (normAiMcq / normAiPlain /
-   parseGeminiJson), kyun ke AI bhi LaTeX echo kar sakta hai. */
+   sawal-strings par bhi lagti hai (normAiMcq / normAiPlain),
+   kyun ke AI bhi LaTeX echo kar sakta hai. */
 var LATEX_SYMBOLS = {
   varnothing: "∅", emptyset: "∅", subseteq: "⊆", Rightarrow: "⇒", rightarrow: "→",
   approx: "≈", infty: "∞", theta: "θ", alpha: "α", beta: "β", gamma: "γ",
@@ -3731,8 +3925,8 @@ function runPuterTextGen(textOverride) {
   });
 }
 
-/* ---- Advanced route: Gemini (user ki apni key, optional — <details>
-   mein band hai, main flow se koi lena dena nahi) ---- */
+/* ---- Engine photo helpers: file ko base64 banana (Gemini/OpenAI
+   photo routes ke liye mushtarka) ---- */
 function fileToBase64(file) {
   return new Promise(function (resolve, reject) {
     var r = new FileReader();
@@ -3741,27 +3935,11 @@ function fileToBase64(file) {
     r.readAsDataURL(file);
   });
 }
-function parseGeminiJson(txt) {
-  var s = String(txt || "").replace(/```json|```/g, "").trim();
-  var a = s.indexOf("["), b = s.lastIndexOf("]");
-  if (a < 0 || b < a) return [];
-  try {
-    var arr = JSON.parse(s.slice(a, b + 1));
-    if (!Array.isArray(arr)) return [];
-    return arr.map(function (it) {
-      var opts = Array.isArray(it.opts) ? it.opts.slice(0, 4).map(function (x) { return fixLatexSymbols(String(x)); }) : [];
-      while (opts.length < 4) opts.push("");
-      var ans = -1;
-      if (typeof it.ans === "number") ans = it.ans;
-      else if (typeof it.ans === "string" && /^[A-D]$/i.test(it.ans.trim())) ans = LETTERS.indexOf(it.ans.trim().toUpperCase());
-      return { type: (it.type === "mcq" || opts.filter(Boolean).length >= 3) ? "mcq" : "short", q: fixLatexSymbols(String(it.q || "")), opts: opts, ans: ans };
-    }).filter(function (c) { return c.q; });
-  } catch (e) { return []; }
-}
-/* Gemini ka EK mushtarak call helper — Advanced wala purana route
-   (geminiExtract) aur naya Engine route (geminiText/geminiPhotoText)
-   dono isi se jate hain: wahi endpoint, wahi model, wahi key. Jawab
-   ka raw text return hota hai; parsing caller ka kaam hai. */
+
+/* Gemini ka EK mushtarak call helper — Engine route
+   (geminiText/geminiPhotoText) isi se jata hai: wahi endpoint, wahi
+   model, wahi key. Jawab ka raw text return hota hai; parsing caller
+   ka kaam hai. */
 var GEMINI_MODEL = "gemini-2.0-flash";
 function geminiCall(parts, key) {
   return fetch("https://generativelanguage.googleapis.com/v1beta/models/" + GEMINI_MODEL + ":generateContent?key=" + encodeURIComponent(key), {
@@ -3773,13 +3951,7 @@ function geminiCall(parts, key) {
       return parts.map(function (p) { return p.text || ""; }).join("");
     });
 }
-function geminiExtract(file, key) {
-  return fileToBase64(file).then(function (b64) {
-    var prompt = "Transcribe ALL questions from this textbook page image EXACTLY as printed - word by word, do NOT translate, rewrite or invent anything, and do NOT mix scripts: copy every word in the same script it is printed in (Urdu words stay in Urdu script, English stays English). Keep math in plain text exactly as printed, e.g. {x | x < 12}. Preserve every math/science symbol EXACTLY as printed (∈, ≤, ≥, ≠, ≈, √, x², H₂O, °C) — never spell a symbol out in words and never drop one. Return ONLY a JSON array. Each item: {\"type\":\"mcq\" or \"short\", \"q\":\"question text exactly as written\", \"opts\":[\"A\",\"B\",\"C\",\"D\"] (only for mcq, else []), \"ans\": correct option index 0-3 if printed or -1}. No extra text outside the JSON array.";
-    return geminiCall([{ text: prompt }, { inline_data: { mime_type: file.type || "image/jpeg", data: b64 } }], key)
-      .then(function (txt) { return parseGeminiJson(txt); });
-  });
-}
+
 /* Engine route (text): Puter wale generation prompts (buildGenPrompt /
    buildTextGenPrompt / translate / scheme) Gemini ko — jawab ka text
    waisa hi wapas, parsing Puter wala hi (parseAiQuestions waghera). */
@@ -3855,47 +4027,24 @@ function openaiPhotoText(prompt, file, key) {
     return t;
   });
 }
-function runGemini(files) {
-  var st = document.getElementById("geminiStatus");
-  var keyInput = document.getElementById("geminiKey");
-  var key = (keyInput.value || "").trim();
-  if (!key) { try { key = localStorage.getItem(GEMINI_LS) || ""; } catch (e) { key = ""; } }
-  if (!key) { st.textContent = "⚠ Pehle apni Gemini API key lagayein — ya bina key wala upar ka AI tareeqa use karein (key dena zaroori nahi)."; return Promise.resolve(0); }
-  if (!files.length) { st.textContent = "⚠ Pehle page ki photo select karein."; return Promise.resolve(0); }
-  try { localStorage.setItem(GEMINI_LS, key); } catch (e) {}
-  keyInput.value = "";
-  document.getElementById("geminiKeyState").textContent = "✔ Key is browser mein save hai.";
-  st.textContent = "✨ Gemini photo parh raha hai…";
-  var all = [];
-  var chain = Promise.resolve();
-  files.forEach(function (f) {
-    chain = chain.then(function () {
-      return geminiExtract(f, key).then(function (c) { all = all.concat(c); })
-        .catch(function (e) { st.textContent = "⚠ " + (e && e.message ? e.message : e); });
-    });
-  });
-  return chain.then(function () {
-    if (!all.length) { if (!st.textContent) st.textContent = "⚠ Gemini se koi sawal nahi mila."; return 0; }
-    setCandidates(all);
-    st.textContent = "";
-    document.getElementById("candMsg").textContent = "✔ Gemini ne " + all.length + " sawal nikale — Review karke shamil karein.";
-    return all.length;
-  });
-}
 
 function bindPhoto() {
   var inp = document.getElementById("photoFiles");
   inp.addEventListener("change", function () { showPreviews(selectedPhotoFiles()); });
   document.getElementById("btnModePhoto").addEventListener("click", function () { setAiInputMode("photo"); });
   document.getElementById("btnModeText").addEventListener("click", function () { setAiInputMode("text"); });
+  var btnPaper = document.getElementById("btnModePaper");
+  if (btnPaper) btnPaper.addEventListener("click", function () { setAiInputMode("paper"); });
+  var paperInp = document.getElementById("paperFiles");
+  if (paperInp) paperInp.addEventListener("change", function () { showPaperPreviews(selectedPaperFiles()); });
   var ptEl = document.getElementById("pasteText");
   if (ptEl) ptEl.addEventListener("input", updatePasteCount);
   updatePasteCount();
   document.getElementById("btnAiGen").addEventListener("click", function () {
-    if (aiInputMode === "text") runPuterTextGen();
+    if (aiInputMode === "paper") runPaperPhoto(selectedPaperFiles());
+    else if (aiInputMode === "text") runPuterTextGen();
     else runPuterGen(selectedPhotoFiles());
   });
-  document.getElementById("btnAiGenSlow").addEventListener("click", function () { runAiGen(selectedPhotoFiles()); });
   document.getElementById("btnPuterSignIn").addEventListener("click", function () { puterDoSignIn(); });
   document.getElementById("btnPuterSignOut").addEventListener("click", function () { puterDoSignOut(); });
   refreshPuterAuthUI();
@@ -3906,15 +4055,6 @@ function bindPhoto() {
   var engSaveO = document.getElementById("btnEngineOpenaiSave");
   if (engSaveO) engSaveO.addEventListener("click", function () { saveEngineOpenaiKey(); });
   refreshEngineUI();
-  document.getElementById("btnGemini").addEventListener("click", function () { runGemini(selectedPhotoFiles()); });
-  document.getElementById("btnGeminiForget").addEventListener("click", function () {
-    try { localStorage.removeItem(GEMINI_LS); } catch (e) {}
-    document.getElementById("geminiKey").value = "";
-    document.getElementById("geminiKeyState").textContent = "Key hata di gayi hai.";
-  });
-  var saved = "";
-  try { saved = localStorage.getItem(GEMINI_LS) || ""; } catch (e) {}
-  if (saved) document.getElementById("geminiKeyState").textContent = "✔ Key is browser mein save hai (dobara likhne ki zaroorat nahi).";
   var list = document.getElementById("candList");
   list.addEventListener("input", function (e) {
     var row = e.target.closest("[data-cand]"); if (!row) return;
@@ -4672,15 +4812,16 @@ window.KPG = {
   sampleState: sampleState, defaultState: defaultState,
   saveDraft: saveDraft, loadDraft: loadDraft, deleteDraft: deleteDraft, getDrafts: getDrafts,
   parseAiQuestions: parseAiQuestions, buildGenPrompt: buildGenPrompt,
-  parseGeminiJson: parseGeminiJson,
   getCandidates: function () { return photoCandidates; },
   setCandidates: setCandidates,
   addSelectedCandidates: addSelectedCandidates,
-  runAiGen: runAiGen, runGemini: runGemini,
   runPuterGen: runPuterGen, puterChatOnce: puterChatOnce, puterRespText: puterRespText,
   buildTextGenPrompt: buildTextGenPrompt, runPuterTextGen: runPuterTextGen,
   normalizePasteText: normalizePasteText, fixLatexSymbols: fixLatexSymbols, SYMBOL_RULES: SYMBOL_RULES,
   setAiInputMode: setAiInputMode, getAiInputMode: function () { return aiInputMode; },
+  buildPaperPhotoPrompt: buildPaperPhotoPrompt, parsePaperPhotoJson: parsePaperPhotoJson,
+  applyPaperPhoto: applyPaperPhoto, runPaperPhoto: runPaperPhoto, selectedPaperFiles: selectedPaperFiles,
+  normalizeDiagram: normalizeDiagram, diagramSVG: diagramSVG, diagramHTML: diagramHTML, attemptFromString: attemptFromString,
   updatePasteCount: updatePasteCount,
   aiCounts: aiCounts, aiCountsAllZero: aiCountsAllZero, AI_ZERO_MSG: AI_ZERO_MSG,
   AI_COUNT_LIMITS: AI_COUNT_LIMITS,
