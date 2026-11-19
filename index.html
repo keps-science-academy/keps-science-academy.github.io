@@ -105,7 +105,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid #9ec7e8;border-color:v
 .sticky{position:sticky;top:86px}
 @media(max-width:900px){.sticky{position:static}}
 /* ===== A4 PAPER PREVIEW ===== */
-.paper{background:#fff;color:#000;border:1px solid #bbb;box-shadow:0 2px 10px rgba(0,0,0,.12);padding:16mm 13mm;font-family:"Noto Sans","Times New Roman",Times,Arial,"Noto Nastaliq Urdu",sans-serif;font-size:calc(13.5px * var(--fit,1));line-height:1.5;min-height:200px}
+.paper{background:#fff;color:#000;border:1px solid #bbb;box-shadow:0 2px 10px rgba(0,0,0,.12);padding:16mm 13mm;font-family:"Noto Sans","Times New Roman",Times,Arial,"Noto Nastaliq Urdu","DejaVu Sans","Noto Sans Symbols 2","Noto Sans Symbols",sans-serif;font-size:calc(13.5px * var(--fit,1));line-height:1.5;min-height:200px}
 /* Page Layout (Front-only fit): paper ke andar ke font-size aur spacing
    em mein hain taake --fit scale (applyPaperFit, 1 se 0.72 tak) lagte hi
    poora paper mutanاسب (proportional) chhota ho kar ek A4 par aa jaye.
@@ -151,8 +151,8 @@ input:focus,select:focus,textarea:focus{outline:2px solid #9ec7e8;border-color:v
    (masalan {a, b} ya 3x + 1 = 0) na tute aur jumla un ke gird na phate. */
 .p-rtl{direction:rtl;text-align:right}
 .p-rtl .p-opts{margin-left:0;margin-right:1.54em}
-.mx{unicode-bidi:isolate}
-.urdu-text .mx{font-family:"Noto Sans","Times New Roman",Times,Arial,sans-serif;font-size:calc(1em / var(--ur-scale))}
+.mx{unicode-bidi:isolate;font-family:"Noto Sans","DejaVu Sans","Noto Sans Symbols 2","Noto Sans Symbols",sans-serif}
+.urdu-text .mx{font-family:"Noto Sans","DejaVu Sans","Noto Sans Symbols 2","Noto Sans Symbols",sans-serif;font-size:calc(1em / var(--ur-scale))}
 .bi-ur{display:block;text-align:right}
 .p-sec-sub[dir="rtl"]{text-align:right}
 .p-note{font-style:italic;font-size:.926em;margin:.32em 0 .16em}
@@ -753,7 +753,7 @@ function langAttrs(s) { return ' dir="auto"' + (hasUrdu(s) ? ' class="urdu-text"
 /* Ek char Latin/math run ka hissa hai? (ASCII harf/number, math alamat,
    aam punctuation aur space — Urdu/Arabic block ke harf is mein NAHI.) */
 function isMxChar(ch) {
-  return /[A-Za-z0-9{}()\[\]|=+\-−^<>≤≥∈∉∧∨∩∪⊂⊃⊆⊇∅√πθλμ°%*\/\\.,:;!?'"&~_#@×÷±∞→∠²³¹⁰⁴⁵⁶⁷⁸⁹₀₁₂₃₄ ]/.test(ch);
+  return /[A-Za-z0-9{}()\[\]|=+\-−^<>≤≥≠≈∈∉∧∨∩∪⊂⊃⊆⊇∅√πθλμ αβΔ°%*\/\\.,:;!?'"&~_#@×÷±∞→⇒∠∝²³¹⁰⁴⁵⁶⁷⁸⁹₀₁₂₃₄₅₆₇₈₉ ]/.test(ch);
 }
 /* RTL line ke andar ke Latin/math tukron ko bidi-ISOLATE karke HTML banao:
    har woh run jo asal Latin/math hai (masalan "{a, b}", "{x | x = n^2}",
@@ -761,7 +761,10 @@ function isMxChar(ch) {
    jata hai — andar ki tartib bilkul waisi rehti hai aur RTL jumla us ke
    gird sahi jagah par baithta hai (jumla run ke gird phatta nahi).
    Kinare ki spaces run se bahar rehti hain; sirf number/harf/math alamat
-   wala run hi isolate hota hai, khaali punctuation nahi. */
+   wala run hi isolate hota hai, khaali punctuation nahi. AKELI alamat
+   (Urdu lafzon ke darmiyan sirf "∈", "≤" ya "π") bhi isolate hoti hai —
+   warna wo Jameel font ke andar gir jati hai (us font mein ye alamat
+   hain hi nahi) aur paper par khaali/tofu dikhti hai. */
 function isolateRunsHtml(raw) {
   var s = String(raw == null ? "" : raw), out = "", i = 0, n = s.length;
   while (i < n) {
@@ -770,7 +773,7 @@ function isolateRunsHtml(raw) {
       var run = s.slice(i, j);
       var lead = run.match(/^ */)[0], trail = run.match(/ *$/)[0];
       var core = run.slice(lead.length, run.length - trail.length);
-      if (core && /[A-Za-z0-9{}()\[\]|=+^<>%]/.test(core)) {
+      if (core && /[A-Za-z0-9{}()\[\]|=+^<>%∈∉⊆⊂⊃⊇∪∩∅≤≥≠≈√πθλμ αβΔ×÷±∞→⇒°∠∧∨−∝²³¹⁰⁴⁵⁶⁷⁸⁹₀₁₂₃₄₅₆₇₈₉]/.test(core)) {
         out += esc(lead) + '<span class="mx" dir="ltr">' + esc(core) + "</span>" + esc(trail);
       } else out += esc(run);
       i = j;
@@ -1505,6 +1508,15 @@ function collectTranslateItems() {
   });
   return items;
 }
+/* SYMBOL RULES — har AI prompt (photo / text / translate) mein ek hi
+   sakht hidayat: alamat (∈ ≤ √ x² H₂O waghera) source se character-
+   by-character copy hon — na lafzon mein badlein ("belongs to"),
+   na girein, na nayi alamat banein. */
+var SYMBOL_RULES =
+  "SYMBOL RULES (strict): Preserve EVERY symbol EXACTLY as written in the source, copied character-for-character — including ∈ ∉ ⊆ ⊂ ∪ ∩ ∅ ≤ ≥ ≠ ≈ < > = + − × ÷ √ π θ λ α β Δ ° % → ⇒ ± ∞, and all digits and exponents. " +
+  "NEVER replace a symbol with words (do NOT write 'belongs to' for ∈, do NOT write 'less than or equal to' for ≤), NEVER drop a symbol, and NEVER invent a symbol that is not in the source. " +
+  "Keep superscripts and subscripts in the source's own notation: if the source writes x² keep x², if it writes x^2 keep x^2; chemical formulas keep their written form (H₂O stays H₂O, H2O stays H2O). " +
+  "Symbols inside JSON strings must be copied character-for-character.";
 function buildTranslatePrompt(texts) {
   return "You are an expert translator for Pakistani board-exam papers (BISE style). Translate each English exam question statement / MCQ option below into Urdu (Urdu script).\n" +
     "STRICT RULES:\n" +
@@ -1512,7 +1524,8 @@ function buildTranslatePrompt(texts) {
     "2. Keep numbers, digits, mathematical expressions, formulas, chemical formulas, units and symbols EXACTLY as they are in the original — do not translate, reformat or drop them. Examples that must stay unchanged inside the translation: (a + b)^2, log_2 32, H2O, 25 cm, x = {1, 2, 3}.\n" +
     "3. Scientific and technical English terms must be written as Urdu-script TRANSLITERATIONS of the English word — for example gas -> گیس, evaporation -> اویپوریشن, rational number -> ریشنل نمبر. Do NOT invent coined Urdu meanings for them and do NOT leave them in Latin/English letters. EXCEPTION: the exact phrases \"contact force\" and \"non-contact force\" stay in Latin letters as they are.\n" +
     "4. Use simple, natural board-exam Urdu for the rest of the sentence. Translate ONLY — do not add answers, hints or extra questions.\n" +
-    "5. If an item is already in Urdu, return it unchanged.\n\n" +
+    "5. If an item is already in Urdu, return it unchanged.\n" +
+    "6. " + SYMBOL_RULES + "\n\n" +
     "ITEMS_JSON:\n" + JSON.stringify(texts);
 }
 /* AI jawab ko tolerant tareeqe se parho: fences/prose mein lipta JSON bhi
@@ -2751,6 +2764,7 @@ function buildGenPrompt(nMcq, nShort, nLong, clean) {
     "Create exactly " + nMcq + " MCQs, " + nShort + " short questions and " + nLong + " long questions. If a count is 0, create NO questions of that type at all.\n" +
     "For each MCQ give exactly 4 options and the correct answer index (0, 1, 2 or 3). Exactly ONE option must be correct. Keep every option short (a few words).\n" +
     "Keep the language of the page: if the page is in English, write in English; if it is in Urdu, write in Urdu script; if mixed, keep the same mix.\n" +
+    SYMBOL_RULES + "\n" +
     "Return ONLY valid JSON. No explanation, no markdown, no extra text. Format exactly like this:\n" +
     '{"mcqs":[{"q":"question text","options":["opt1","opt2","opt3","opt4"],"answer":0}],"shorts":["short question 1"],"longs":["long question 1"]}';
 }
@@ -2780,19 +2794,20 @@ function normAiAns(ans, opts) {
 }
 function normAiMcq(it) {
   if (!it || typeof it !== "object") return null;
-  var q = String(it.q || it.question || it.text || "").trim();
+  var q = fixLatexSymbols(String(it.q || it.question || it.text || "")).trim();
   var raw = it.options || it.opts || it.choices || [];
   if (!Array.isArray(raw)) raw = [];
-  var opts = raw.slice(0, 4).map(function (x) { return String(x == null ? "" : x).trim(); });
+  var opts = raw.slice(0, 4).map(function (x) { return fixLatexSymbols(String(x == null ? "" : x)).trim(); });
   while (opts.length < 4) opts.push("");
   if (!q || opts.filter(Boolean).length < 2) return null;
   var a = (it.answer !== undefined) ? it.answer : ((it.ans !== undefined) ? it.ans : it.correct);
-  return { type: "mcq", q: q, opts: opts, ans: normAiAns(a, opts), gen: true };
+  return { type: "mcq", q: q, opts: opts, ans: normAiAns(typeof a === "string" ? fixLatexSymbols(a) : a, opts), gen: true };
 }
 function normAiPlain(it, type) {
   var q = "";
   if (typeof it === "string") q = it.trim();
   else if (it && typeof it === "object") q = String(it.q || it.question || it.text || "").trim();
+  q = fixLatexSymbols(q);
   if (!q) return null;
   return { type: type, q: q, opts: ["", "", "", ""], ans: -1, gen: true };
 }
@@ -3156,6 +3171,60 @@ function updatePasteCount() {
   var el = document.getElementById("pasteCount");
   if (ta && el) el.textContent = String(ta.value || "").length + " characters";
 }
+/* LaTeX → Unicode: owner ka pasted text aksar GEMINI se copy hota hai,
+   jahan alamat sahi hoti hain lekin LaTeX shakal mein ($x \in N$,
+   \leq, x^2, \sqrt{2}) — paper mein wo backslash wali shakal ghalat
+   lagti hai. Ye function SIRF wazeh, ghair-mubham commands ko asal
+   Unicode alamat se badalta hai; na-maloom command (\foo waghera)
+   bilkul nahi chherta, aur baghair backslash/$/^ wala Urdu/English
+   text byte-identical rehta hai. Yahi conversion AI ke jawab ki
+   sawal-strings par bhi lagti hai (normAiMcq / normAiPlain /
+   parseGeminiJson), kyun ke AI bhi LaTeX echo kar sakta hai. */
+var LATEX_SYMBOLS = {
+  varnothing: "∅", emptyset: "∅", subseteq: "⊆", Rightarrow: "⇒", rightarrow: "→",
+  approx: "≈", infty: "∞", theta: "θ", alpha: "α", beta: "β", gamma: "γ",
+  Delta: "Δ", lambda: "λ", notin: "∉", subset: "⊂", degree: "°", cdot: "·",
+  leq: "≤", geq: "≥", neq: "≠", times: "×", div: "÷", pm: "±", pi: "π",
+  "in": "∈", cup: "∪", cap: "∩"
+};
+var LATEX_CMD_RE = new RegExp("\\\\(" + Object.keys(LATEX_SYMBOLS).sort(function (a, b) { return b.length - a.length; }).join("|") + ")(?![A-Za-z])", "g");
+var SUPERSCRIPT_MAP = { "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹", "-": "⁻", "−": "⁻" };
+function fixLatexSymbols(s) {
+  var t = String(s == null ? "" : s);
+  if (t.indexOf("\\") < 0 && t.indexOf("$") < 0 && t.indexOf("^") < 0) return t;
+  /* math delimiters hatao — andar ka content waisa hi rehta hai */
+  t = t.replace(/\\\[|\\\]|\\\(|\\\)/g, "");
+  t = t.replace(/\$\$([^$]+)\$\$/g, "$1");
+  /* $...$ sirf tab hatao jab andar math ka koi nishan ho — currency
+     wala $ (masalan "$5 aur $10") bilkul salamat rehta hai */
+  t = t.replace(/\$([^$\n]+)\$/g, function (m, inner) {
+    return /\\[A-Za-z]|[=<>^_{}]|[∈∉⊆⊂∪∩∅≤≥≠≈×÷√πθΔ±∞→⇒°]/.test(inner) ? inner : m;
+  });
+  /* \sqrt{...} → √... (braces content ke sath khul jati hain) */
+  t = t.replace(/\\sqrt\{([^{}]*)\}/g, "√$1");
+  /* ^\circ / ^{\circ} → ° */
+  t = t.replace(/\^\{\\circ\}|\^\\circ/g, "°");
+  /* commands → Unicode alamat (na-maloom command salamat) */
+  t = t.replace(LATEX_CMD_RE, function (m, name) { return LATEX_SYMBOLS[name]; });
+  t = t.replace(/\\sqrt(?![A-Za-z])/g, "√");
+  /* superscript: ^n ya ^{n} — SIRF ek digit/minus, aur SIRF jab peeche
+     harf/number/")" ho; warna text waisa hi rehta hai */
+  t = t.replace(/([A-Za-z0-9)])\^\{([0-9−-])\}/g, function (m, pre, e) { return pre + SUPERSCRIPT_MAP[e]; });
+  t = t.replace(/([A-Za-z0-9)])\^([0-9−-])/g, function (m, pre, e) { return pre + SUPERSCRIPT_MAP[e]; });
+  return t;
+}
+/* Paste saaf karna (text mode, AI call se pehle): whitespace artifacts
+   (NBSP → aam space, zero-width harf hataye, CRLF/CR → LF) + LaTeX
+   alamat (fixLatexSymbols). Koi ASAL symbol, harf ya number kabhi
+   nahi badalta; private-use range (PDF copy mein jo alamat ki jagah
+   aa jata hai) waisa hi rehta hai — wo baramad nahi ho sakta. */
+function normalizePasteText(s) {
+  var t = String(s == null ? "" : s)
+    .replace(/\r\n?/g, "\n")
+    .replace(/[\u00A0\u202F]/g, " ")
+    .replace(/[\u200B\u200C\u200D\uFEFF]/g, "");
+  return fixLatexSymbols(t);
+}
 /* Text mode ka prompt — jawab ki shape photo wale buildGenPrompt
    jaisi hi (parseAiQuestions dono ko parhta hai). Farq sirf itna:
    text pehle se sawal/mashq ho to EXTRACT lafz-ba-lafz; warna
@@ -3168,14 +3237,16 @@ function buildTextGenPrompt(nMcq, nShort, nLong) {
     "When extracting, return as many real questions of each type as the text actually contains, up to " + nMcq + " MCQs, " + nShort + " short questions and " + nLong + " long questions. If a count is 0, return NO questions of that type at all.\n" +
     "For each MCQ give exactly 4 options and the correct answer index (0, 1, 2 or 3), or -1 when it cannot be determined from the text. Keep every option short (a few words).\n" +
     "Keep the language of the text: if the text is in Urdu, write the questions in Urdu script; if it is in English, write in English; if mixed, keep the same mix. Copy math, formulas, units and numbers EXACTLY as written.\n" +
+    SYMBOL_RULES + "\n" +
     "Return ONLY valid JSON. No explanation, no markdown, no extra text. Format exactly like this:\n" +
     '{"mcqs":[{"q":"question text","options":["opt1","opt2","opt3","opt4"],"answer":0}],"shorts":["short question 1"],"longs":["long question 1"]}';
 }
 function runPuterTextGen(textOverride) {
   var st = document.getElementById("aiGenStatus");
   var text = "";
-  if (typeof textOverride === "string") text = textOverride.trim();
-  else { var ta = document.getElementById("pasteText"); text = ta ? String(ta.value || "").trim() : ""; }
+  if (typeof textOverride === "string") text = textOverride;
+  else { var ta = document.getElementById("pasteText"); text = ta ? String(ta.value || "") : ""; }
+  text = normalizePasteText(text).trim();
   if (!text) { st.textContent = "⚠ Pehle upar wale box mein book ka text paste karein."; return Promise.resolve(0); }
   var counts = aiCounts();
   if (aiCountsAllZero(counts)) { st.textContent = AI_ZERO_MSG; return Promise.resolve(0); }
@@ -3230,12 +3301,12 @@ function parseGeminiJson(txt) {
     var arr = JSON.parse(s.slice(a, b + 1));
     if (!Array.isArray(arr)) return [];
     return arr.map(function (it) {
-      var opts = Array.isArray(it.opts) ? it.opts.slice(0, 4).map(function (x) { return String(x); }) : [];
+      var opts = Array.isArray(it.opts) ? it.opts.slice(0, 4).map(function (x) { return fixLatexSymbols(String(x)); }) : [];
       while (opts.length < 4) opts.push("");
       var ans = -1;
       if (typeof it.ans === "number") ans = it.ans;
       else if (typeof it.ans === "string" && /^[A-D]$/i.test(it.ans.trim())) ans = LETTERS.indexOf(it.ans.trim().toUpperCase());
-      return { type: (it.type === "mcq" || opts.filter(Boolean).length >= 3) ? "mcq" : "short", q: String(it.q || ""), opts: opts, ans: ans };
+      return { type: (it.type === "mcq" || opts.filter(Boolean).length >= 3) ? "mcq" : "short", q: fixLatexSymbols(String(it.q || "")), opts: opts, ans: ans };
     }).filter(function (c) { return c.q; });
   } catch (e) { return []; }
 }
@@ -3256,7 +3327,7 @@ function geminiCall(parts, key) {
 }
 function geminiExtract(file, key) {
   return fileToBase64(file).then(function (b64) {
-    var prompt = "Transcribe ALL questions from this textbook page image EXACTLY as printed - word by word, do NOT translate, rewrite or invent anything, and do NOT mix scripts: copy every word in the same script it is printed in (Urdu words stay in Urdu script, English stays English). Keep math in plain text exactly as printed, e.g. {x | x < 12}. Return ONLY a JSON array. Each item: {\"type\":\"mcq\" or \"short\", \"q\":\"question text exactly as written\", \"opts\":[\"A\",\"B\",\"C\",\"D\"] (only for mcq, else []), \"ans\": correct option index 0-3 if printed or -1}. No extra text outside the JSON array.";
+    var prompt = "Transcribe ALL questions from this textbook page image EXACTLY as printed - word by word, do NOT translate, rewrite or invent anything, and do NOT mix scripts: copy every word in the same script it is printed in (Urdu words stay in Urdu script, English stays English). Keep math in plain text exactly as printed, e.g. {x | x < 12}. Preserve every math/science symbol EXACTLY as printed (∈, ≤, ≥, ≠, ≈, √, x², H₂O, °C) — never spell a symbol out in words and never drop one. Return ONLY a JSON array. Each item: {\"type\":\"mcq\" or \"short\", \"q\":\"question text exactly as written\", \"opts\":[\"A\",\"B\",\"C\",\"D\"] (only for mcq, else []), \"ans\": correct option index 0-3 if printed or -1}. No extra text outside the JSON array.";
     return geminiCall([{ text: prompt }, { inline_data: { mime_type: file.type || "image/jpeg", data: b64 } }], key)
       .then(function (txt) { return parseGeminiJson(txt); });
   });
@@ -4101,6 +4172,7 @@ window.KPG = {
   runAiGen: runAiGen, runGemini: runGemini,
   runPuterGen: runPuterGen, puterChatOnce: puterChatOnce, puterRespText: puterRespText,
   buildTextGenPrompt: buildTextGenPrompt, runPuterTextGen: runPuterTextGen,
+  normalizePasteText: normalizePasteText, fixLatexSymbols: fixLatexSymbols, SYMBOL_RULES: SYMBOL_RULES,
   setAiInputMode: setAiInputMode, getAiInputMode: function () { return aiInputMode; },
   updatePasteCount: updatePasteCount,
   aiCounts: aiCounts, aiCountsAllZero: aiCountsAllZero, AI_ZERO_MSG: AI_ZERO_MSG,
