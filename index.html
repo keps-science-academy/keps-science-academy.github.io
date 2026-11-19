@@ -540,6 +540,82 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
       <div class="hint" id="candMsg"></div>
     </div>
 
+    <div class="card" id="booksCard">
+      <h2>📚 Books — Book Upload Karein</h2>
+      <p class="hint" style="margin-top:0">Apni book ki <b>PDF</b> yahan upload karein — book save ho jayegi. Phir book khol kar <b>pages ya topic (chapter) select</b> karein aur usi hisse se sawal banayein — sawal upar 📷 wale hisse ki <b>Review</b> list mein aayenge.</p>
+      <label class="fl" for="bookFile">Book ki PDF</label>
+      <input type="file" id="bookFile" accept="application/pdf,.pdf">
+      <label class="fl" for="bookName">Book ka Naam</label>
+      <input type="text" id="bookName" placeholder="e.g. Mathematics 9th (PCTB)">
+      <div class="row2">
+        <div><label class="fl" for="bookClassSel">Class</label>
+          <select id="bookClassSel">
+            <option value="9th">9th</option>
+            <option value="10th">10th</option>
+            <option value="Other">Other</option>
+          </select></div>
+        <div><label class="fl" for="bookSubjectSel">Subject</label>
+          <select id="bookSubjectSel">
+            <option value="Mathematics">Mathematics</option>
+            <option value="Physics">Physics</option>
+            <option value="Chemistry">Chemistry</option>
+            <option value="Biology">Biology</option>
+            <option value="Computer Science">Computer Science</option>
+            <option value="English">English</option>
+            <option value="Urdu">Urdu</option>
+            <option value="Islamiat">Islamiat</option>
+            <option value="Tarjuma-tul-Quran">Tarjuma-tul-Quran</option>
+            <option value="Pakistan Studies">Pakistan Studies</option>
+            <option value="Other">Other (khud likhein)</option>
+          </select></div>
+      </div>
+      <input type="text" id="bookSubjectOther" placeholder="Subject likhein" style="display:none;margin-top:6px">
+      <div style="margin-top:10px">
+        <button type="button" class="btn big" id="btnBookSave">⬆ Book Save Karein</button>
+      </div>
+      <div class="hint" id="bookSaveStatus"></div>
+      <div class="hint">Books sirf isi device/browser mein save rehti hain — neeche wala <b>☁ GitHub</b> setup kar dein to books har device par mil jayengi.</div>
+      <div id="ghBox" style="border:1px dashed var(--line);border-radius:8px;padding:9px 10px;margin:12px 0">
+        <div class="fl" style="margin-top:0">☁ GitHub par Save (har device ke liye)</div>
+        <label class="fl" for="ghRepo">GitHub Repo</label>
+        <input type="text" id="ghRepo" value="keps-science-academy/keps-books" autocomplete="off">
+        <label class="fl" for="ghToken">GitHub Token</label>
+        <input type="password" id="ghToken" placeholder="Fine-grained token yahan lagayein" autocomplete="off">
+        <div class="hint">Ek dafa setup: GitHub par 'keps-books' naam ka PUBLIC repo banayein, phir Settings → Developer settings → Fine-grained tokens se sirf usi repo ke liye Contents (Read and write) token bana kar yahan lagayein. Token sirf aap ke browser mein rehta hai.</div>
+        <div style="margin-top:6px">
+          <button type="button" class="btn" id="btnGhSave">💾 GitHub Settings Save Karein</button>
+          <button type="button" class="btn ghost" id="btnGhTest">🔗 Test</button>
+        </div>
+        <div class="hint" id="ghStatus"></div>
+      </div>
+      <h3>📚 Meri Books</h3>
+      <div id="bookList"><div class="hint">Abhi koi book save nahi hai.</div></div>
+      <div class="hint" id="bookListStatus"></div>
+      <div id="bookOpenBox" style="display:none;border:1px solid var(--line);border-radius:8px;padding:10px;margin-top:12px">
+        <div class="fl" id="bookOpenTitle" style="margin-top:0"></div>
+        <div id="bookChapters" style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0"></div>
+        <div class="row2">
+          <div><label class="fl" for="bookPageFrom">Page se</label>
+            <input type="number" id="bookPageFrom" min="1" step="1" value="1"></div>
+          <div><label class="fl" for="bookPageTo">Page tak</label>
+            <input type="number" id="bookPageTo" min="1" step="1" value="1"></div>
+        </div>
+        <label class="fl" for="bookPreview">Select kiye hue hisse ka text (preview)</label>
+        <textarea id="bookPreview" rows="5" readonly></textarea>
+        <div class="hint" id="bookSelInfo"></div>
+        <div class="row3" style="margin-top:8px">
+          <div><label class="fl" for="bookMcqCount">Kitne MCQ?</label>
+            <input type="number" id="bookMcqCount" min="0" max="30" step="1" value="5"></div>
+          <div><label class="fl" for="bookShortCount">Kitne Short?</label>
+            <input type="number" id="bookShortCount" min="0" max="20" step="1" value="5"></div>
+          <div><label class="fl" for="bookLongCount">Kitne Long?</label>
+            <input type="number" id="bookLongCount" min="0" max="10" step="1" value="1"></div>
+        </div>
+        <button type="button" class="btn big" id="btnBookGen" style="margin-top:10px">✨ Is hisse se sawal banayein</button>
+        <div class="hint" id="bookStatus"></div>
+      </div>
+    </div>
+
     <div class="card">
       <h2>4️⃣ Finish</h2>
       <button type="button" class="btn big" id="btnDownloadPdf">⬇ Download Paper PDF</button>
@@ -4799,6 +4875,863 @@ function bindScheme() {
   });
 }
 
+/* ================= BOOKS — Book Upload (IndexedDB + GitHub) =================
+   Owner ki books PDF ki shakal mein us ke paas hain — 📚 Books wala
+   hisa PDF upload karke us ka text page-by-page nikal kar save karta
+   hai. Do jagah save hoti hai:
+   1) Isi device ke browser ki IndexedDB ("kpg-books" DB, "books"
+      store) — baghair kisi setup ke, lekin sirf isi device par.
+   2) GitHub (owner ka PUBLIC repo, default keps-books) — ☁ GitHub
+      wala setup (repo + fine-grained token) ho to har book wahan bhi
+      commit ho jati hai aur har device se milti hai. Token SIRF
+      localStorage (kpg_github_token) mein rehta hai aur SIRF
+      api.github.com ko jata hai.
+   Book khol kar pages ya chapter (PDF outline ho to) select karke
+   usi hisse ka text Text Paste wale generation raste (buildTextGen-
+   Prompt + aiChatText + Review list) ko jata hai. */
+var BOOKS_DB_NAME = "kpg-books";
+var BOOK_TEXT_CAP = 24000;
+var BOOK_TRUNC_MSG = "⚠ Selection bohat lamba tha — pehle 24,000 characters bheje gaye hain. Kam pages select karein.";
+var BOOK_EMPTY_MSG = "⚠ Select kiye hue pages par koi text nahi mila — ye pages scanned lagte hain. 📷 Photo wala tareeqa use karein ya doosre pages select karein.";
+var GH_REPO_LS = "kpg_github_repo";
+var GH_TOKEN_LS = "kpg_github_token";
+var GH_DEFAULT_REPO = "keps-science-academy/keps-books";
+
+function bookMsg(id, t) { var el = document.getElementById(id); if (el) el.textContent = t; }
+
+/* ---- Book record: shape + validation ----
+   {id, name, class, subject, totalPages, pages:[strings], chapters:
+   [{title, page}], addedAt} — pages hi asal data hai; totalPages
+   hamesha pages ki tadaad se banta hai. */
+function makeBookId() {
+  return "book-" + Date.now().toString(36) + "-" + Math.floor(Math.random() * 1679616).toString(36);
+}
+function normalizeBookChapters(chs, totalPages) {
+  if (!Array.isArray(chs)) return [];
+  var out = [];
+  chs.forEach(function (c) {
+    if (!c || typeof c !== "object") return;
+    var title = String(c.title || "").trim();
+    var page = parseInt(c.page, 10);
+    if (!title || isNaN(page) || page < 1 || page > totalPages) return;
+    out.push({ title: title, page: page });
+  });
+  out.sort(function (a, b) { return a.page - b.page; });
+  return out;
+}
+function normalizeBook(rec) {
+  if (!rec || typeof rec !== "object") return null;
+  if (!Array.isArray(rec.pages) || !rec.pages.length) return null;
+  var pages = rec.pages.map(function (p) { return String(p == null ? "" : p); });
+  return {
+    id: String(rec.id || "").trim() || makeBookId(),
+    name: String(rec.name || "").trim() || "Untitled Book",
+    "class": String(rec["class"] || "").trim(),
+    subject: String(rec.subject || "").trim(),
+    totalPages: pages.length,
+    pages: pages,
+    chapters: normalizeBookChapters(rec.chapters, pages.length),
+    addedAt: Number(rec.addedAt) || Date.now()
+  };
+}
+/* List/index ke liye halki meta copy — pages nahi jate. */
+function bookMeta(rec) {
+  if (!rec) return null;
+  return {
+    id: rec.id, name: rec.name, "class": rec["class"] || "", subject: rec.subject || "",
+    totalPages: rec.totalPages || (rec.pages ? rec.pages.length : 0),
+    chapters: Array.isArray(rec.chapters) ? rec.chapters : [],
+    addedAt: rec.addedAt || 0
+  };
+}
+function countEmptyPages(pages) {
+  return (pages || []).filter(function (p) { return !String(p == null ? "" : p).trim(); }).length;
+}
+function bookDefaultName(fileName, metaTitle) {
+  var t = String(metaTitle || "").trim();
+  if (t) return t;
+  var f = String(fileName || "").replace(/\.pdf$/i, "").trim();
+  return f || "Untitled Book";
+}
+
+/* ---- Storage: IndexedDB wrapper (put/getAll/get/del) ----
+   Asal implementation IndexedDB par hai; tests setBookStore se
+   in-memory fake laga sakte hain. IndexedDB na ho to har call saaf
+   reject hoti hai — UI friendly paigham dikhati hai, crash nahi. */
+function booksIdbAvailable() {
+  try { return typeof indexedDB !== "undefined" && !!indexedDB; } catch (e) { return false; }
+}
+function idbOpenBooks() {
+  return new Promise(function (resolve, reject) {
+    if (!booksIdbAvailable()) { reject(new Error("Is browser mein IndexedDB band hai — book is device par save nahi ho sakti.")); return; }
+    var req;
+    try { req = indexedDB.open(BOOKS_DB_NAME, 1); } catch (e) { reject(e); return; }
+    req.onupgradeneeded = function () {
+      var db = req.result;
+      if (!db.objectStoreNames.contains("books")) db.createObjectStore("books", { keyPath: "id" });
+    };
+    req.onsuccess = function () { resolve(req.result); };
+    req.onerror = function () { reject(req.error || new Error("IndexedDB nahi khuli")); };
+  });
+}
+function idbBooksDo(mode, fn) {
+  return idbOpenBooks().then(function (db) {
+    return new Promise(function (resolve, reject) {
+      var req;
+      try { req = fn(db.transaction("books", mode).objectStore("books")); }
+      catch (e) { reject(e); return; }
+      req.onsuccess = function () { resolve(req.result); };
+      req.onerror = function () { reject(req.error || new Error("IndexedDB operation fail")); };
+    });
+  });
+}
+var idbBookStore = {
+  put: function (book) { return idbBooksDo("readwrite", function (s) { return s.put(book); }).then(function () { return book; }); },
+  getAll: function () { return idbBooksDo("readonly", function (s) { return s.getAll(); }).then(function (r) { return Array.isArray(r) ? r : []; }); },
+  get: function (id) { return idbBooksDo("readonly", function (s) { return s.get(id); }).then(function (r) { return r || null; }); },
+  del: function (id) { return idbBooksDo("readwrite", function (s) { return s.delete(id); }).then(function () { return true; }); }
+};
+var bookStoreOverride = null;
+function bookStore() { return bookStoreOverride || idbBookStore; }
+function setBookStore(impl) { bookStoreOverride = impl || null; return bookStore(); }
+
+/* ---- PDF se book: page-by-page text + outline (chapters) ----
+   pdf.js ka wahi loader pattern jo scheme PDF (pdfFileToText) ka
+   hai. Outline ho to har entry ki destination se page number nikalta
+   hai; destination resolve na ho to wo entry chhor di jati hai —
+   outline bilkul na ho ya fail ho to chapters khaali rehte hain. */
+function loadPdfJsDoc(file) {
+  if (!window.pdfjsLib || typeof window.pdfjsLib.getDocument !== "function") {
+    return Promise.reject(new Error("PDF library (pdf.js) load nahi hui — internet check karke page refresh karein"));
+  }
+  try {
+    if (window.pdfjsLib.GlobalWorkerOptions && !window.pdfjsLib.GlobalWorkerOptions.workerSrc) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+    }
+  } catch (e) {}
+  return file.arrayBuffer().then(function (buf) {
+    return window.pdfjsLib.getDocument({ data: buf }).promise;
+  });
+}
+function outlineToChapters(pdf, outline) {
+  var chapters = [];
+  function resolveDestPage(dest) {
+    var p = (typeof dest === "string")
+      ? pdf.getDestination(dest)
+      : Promise.resolve(dest);
+    return Promise.resolve(p).then(function (d) {
+      if (!d || d[0] == null) return null;
+      if (typeof d[0] === "number") return d[0] + 1;
+      return pdf.getPageIndex(d[0]).then(function (ix) { return ix + 1; });
+    }).catch(function () { return null; });
+  }
+  function walk(items) {
+    var chain = Promise.resolve();
+    (items || []).forEach(function (it) {
+      chain = chain.then(function () {
+        return resolveDestPage(it && it.dest).then(function (page) {
+          if (page && it && it.title) chapters.push({ title: String(it.title), page: page });
+          if (it && Array.isArray(it.items) && it.items.length) return walk(it.items);
+          return null;
+        });
+      });
+    });
+    return chain;
+  }
+  return walk(outline).then(function () {
+    chapters.sort(function (a, b) { return a.page - b.page; });
+    return chapters;
+  });
+}
+function extractBookFromPdf(file, onProgress) {
+  return loadPdfJsDoc(file).then(function (pdf) {
+    var metaTitle = "";
+    var pages = [];
+    var chain = pdf.getMetadata().then(function (md) {
+      metaTitle = (md && md.info && md.info.Title) || "";
+    }).catch(function () {});
+    chain = chain.then(function () {
+      var seq = Promise.resolve();
+      for (var i = 1; i <= pdf.numPages; i++) {
+        (function (pn) {
+          seq = seq.then(function () {
+            if (typeof onProgress === "function") onProgress(pn, pdf.numPages);
+            return pdf.getPage(pn).then(function (page) { return page.getTextContent(); }).then(function (tc) {
+              pages[pn - 1] = tc.items.map(function (it) { return it.str; }).join(" ");
+            }).catch(function () { pages[pn - 1] = ""; });
+          });
+        })(i);
+      }
+      return seq;
+    });
+    return chain.then(function () {
+      return pdf.getOutline().then(function (ol) {
+        if (!ol || !ol.length) return [];
+        return outlineToChapters(pdf, ol);
+      }).catch(function () { return []; }).then(function (chapters) {
+        return { pages: pages, chapters: chapters, metaTitle: metaTitle, totalPages: pdf.numPages, pdf: pdf };
+      });
+    });
+  });
+}
+
+/* ---- Selection: pages ki range se text banana ----
+   Har page apne number ke separator ke sath judta hai; poora
+   selection BOOK_TEXT_CAP (24,000) characters par kat jata hai aur
+   truncated flag batata hai. Range hamesha book ke andar clamp. */
+function bookAssembleSelection(book, from, to) {
+  var pages = (book && Array.isArray(book.pages)) ? book.pages : [];
+  var total = pages.length;
+  var f = parseInt(from, 10); if (isNaN(f)) f = 1;
+  var t = parseInt(to, 10); if (isNaN(t)) t = total;
+  f = Math.max(1, Math.min(Math.max(total, 1), f));
+  t = Math.max(f, Math.min(Math.max(total, f), t));
+  var parts = [], empty = 0;
+  for (var pn = f; pn <= t; pn++) {
+    var txt = String(pages[pn - 1] == null ? "" : pages[pn - 1]);
+    if (!txt.trim()) empty++;
+    parts.push("--- Page " + pn + " ---\n" + txt);
+  }
+  var full = parts.join("\n\n");
+  var truncated = full.length > BOOK_TEXT_CAP;
+  return {
+    text: truncated ? full.slice(0, BOOK_TEXT_CAP) : full,
+    fullText: full, totalChars: full.length, truncated: truncated,
+    from: f, to: t, emptyPages: empty
+  };
+}
+
+/* ---- Book counts: Photo card wale counts jaisi hi hadood ---- */
+var BOOK_COUNT_LIMITS = { bookMcqCount: [0, 30, 5], bookShortCount: [0, 20, 5], bookLongCount: [0, 10, 1] };
+function bookCountVal(id) {
+  var lim = BOOK_COUNT_LIMITS[id];
+  var el = document.getElementById(id);
+  var v = el ? parseInt(el.value, 10) : NaN;
+  if (isNaN(v)) v = lim[2];
+  return Math.max(lim[0], Math.min(lim[1], v));
+}
+function bookCounts() {
+  return { nMcq: bookCountVal("bookMcqCount"), nShort: bookCountVal("bookShortCount"), nLong: bookCountVal("bookLongCount") };
+}
+
+/* ================= GITHUB — books ki cloud copy =================
+   Book JSON repo mein books/{id}.json par commit hota hai aur
+   books/index.json mein sirf meta (bina pages ke) rehta hai — list
+   har device se public raw URL par baghair token ke parhi jati hai.
+   Likhnay (PUT/DELETE) ke liye token chahiye. */
+function ghRepo() {
+  var el = document.getElementById("ghRepo");
+  var v = el && el.value ? String(el.value).trim() : "";
+  if (!v) { try { v = String(localStorage.getItem(GH_REPO_LS) || "").trim(); } catch (e) {} }
+  return v || GH_DEFAULT_REPO;
+}
+function ghToken() {
+  var el = document.getElementById("ghToken");
+  var v = el && el.value ? String(el.value).trim() : "";
+  if (!v) { try { v = String(localStorage.getItem(GH_TOKEN_LS) || "").trim(); } catch (e) {} }
+  return v;
+}
+function ghRepoValid(r) { return /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(String(r || "")); }
+function ghConfigured() { return ghRepoValid(ghRepo()) && !!ghToken(); }
+function ghSaveSettings() {
+  var repo = ghRepo(), tok = ghToken();
+  try {
+    if (repo) localStorage.setItem(GH_REPO_LS, repo);
+    if (tok) localStorage.setItem(GH_TOKEN_LS, tok);
+  } catch (e) {}
+  if (!ghRepoValid(repo)) { bookMsg("ghStatus", "⚠ Repo ka naam theek nahi — is shakal mein likhein: username/repo (masalan keps-science-academy/keps-books)."); return false; }
+  if (!tok) { bookMsg("ghStatus", "⚠ Token khaali hai — token lagayein taake books GitHub par save ho saken."); return false; }
+  bookMsg("ghStatus", "✔ GitHub settings save ho gayi (" + repo + "). Ab har nayi book GitHub par bhi save hogi.");
+  refreshBookList();
+  return true;
+}
+function ghHeaders() {
+  var h = { "Accept": "application/vnd.github+json" };
+  var t = ghToken();
+  if (t) h["Authorization"] = "Bearer " + t;
+  return h;
+}
+function ghContentsUrl(path) { return "https://api.github.com/repos/" + ghRepo() + "/contents/" + path; }
+function ghRawUrl(path) { return "https://raw.githubusercontent.com/" + ghRepo() + "/main/" + path; }
+/* UTF-8 safe base64: pehle encodeURIComponent se har ghair-ASCII
+   harf %-escapes mein, phir unescape se Latin-1 string — btoa usay
+   mehfooz encode karta hai. Urdu text is ke baghair kharab hota. */
+function ghB64Encode(s) { return btoa(unescape(encodeURIComponent(String(s == null ? "" : s)))); }
+function ghB64Decode(s) { return decodeURIComponent(escape(atob(String(s || "").replace(/\s+/g, "")))); }
+function ghGetFile(path) {
+  return fetch(ghContentsUrl(path), { headers: ghHeaders() }).then(function (r) {
+    if (r.status === 404) return null;
+    if (!r.ok) throw new Error("GitHub ne jawab nahi diya (" + r.status + ")");
+    return r.json();
+  }).then(function (j) {
+    if (!j) return null;
+    return { sha: j.sha || "", text: ghB64Decode(j.content || "") };
+  });
+}
+function ghPutFile(path, text, message, sha) {
+  var body = { message: message, content: ghB64Encode(text) };
+  if (sha) body.sha = sha;
+  return fetch(ghContentsUrl(path), {
+    method: "PUT", headers: ghHeaders(), body: JSON.stringify(body)
+  }).then(function (r) {
+    if (!r.ok) throw new Error("GitHub par file save nahi ho saki (" + r.status + ")");
+    return r.json();
+  });
+}
+function ghDeleteFile(path, sha, message) {
+  return fetch(ghContentsUrl(path), {
+    method: "DELETE", headers: ghHeaders(),
+    body: JSON.stringify({ message: message, sha: sha })
+  }).then(function (r) {
+    if (!r.ok) throw new Error("GitHub se file delete nahi ho saki (" + r.status + ")");
+    return true;
+  });
+}
+function ghSaveBookToGithub(book) {
+  var bookPath = "books/" + book.id + ".json";
+  return ghGetFile(bookPath).then(function (existing) {
+    return ghPutFile(bookPath, JSON.stringify(book), "Book: " + book.name, existing ? existing.sha : null);
+  }).then(function () {
+    return ghGetFile("books/index.json");
+  }).then(function (idxFile) {
+    var idx = [];
+    if (idxFile) {
+      try { idx = JSON.parse(idxFile.text); if (!Array.isArray(idx)) idx = []; } catch (e) { idx = []; }
+    }
+    idx = idx.filter(function (m) { return !(m && m.id === book.id); });
+    idx.push(bookMeta(book));
+    return ghPutFile("books/index.json", JSON.stringify(idx, null, 2), "Book index: " + book.name, idxFile ? idxFile.sha : null);
+  }).then(function () { return true; });
+}
+function ghFetchIndex() {
+  if (!ghRepoValid(ghRepo())) return Promise.resolve([]);
+  return fetch(ghRawUrl("books/index.json")).then(function (r) {
+    if (!r.ok) throw new Error("raw index " + r.status);
+    return r.json();
+  }).then(function (j) { return Array.isArray(j) ? j : []; }).catch(function () {
+    return ghGetFile("books/index.json").then(function (f) {
+      if (!f) return [];
+      try { var j = JSON.parse(f.text); return Array.isArray(j) ? j : []; } catch (e) { return []; }
+    }).catch(function () { return []; });
+  });
+}
+function ghFetchBook(id) {
+  return fetch(ghRawUrl("books/" + id + ".json")).then(function (r) {
+    if (!r.ok) throw new Error("raw book " + r.status);
+    return r.json();
+  }).catch(function () {
+    return ghGetFile("books/" + id + ".json").then(function (f) {
+      if (!f) throw new Error("GitHub par book nahi mili");
+      return JSON.parse(f.text);
+    });
+  }).then(function (rec) {
+    var book = normalizeBook(rec);
+    if (!book) throw new Error("GitHub wali book ka data theek nahi");
+    return book;
+  });
+}
+function ghDeleteBookFromGithub(id) {
+  var bookPath = "books/" + id + ".json";
+  return ghGetFile(bookPath).then(function (f) {
+    if (f && f.sha) return ghDeleteFile(bookPath, f.sha, "Delete book: " + id);
+    return true;
+  }).then(function () {
+    return ghGetFile("books/index.json");
+  }).then(function (idxFile) {
+    if (!idxFile) return true;
+    var idx = [];
+    try { idx = JSON.parse(idxFile.text); if (!Array.isArray(idx)) idx = []; } catch (e) { idx = []; }
+    var next = idx.filter(function (m) { return !(m && m.id === id); });
+    if (next.length === idx.length) return true;
+    return ghPutFile("books/index.json", JSON.stringify(next, null, 2), "Book index: delete " + id, idxFile.sha).then(function () { return true; });
+  });
+}
+function ghTestConnection() {
+  if (!ghRepoValid(ghRepo())) {
+    bookMsg("ghStatus", "⚠ Repo ka naam theek nahi — is shakal mein likhein: username/repo (masalan keps-science-academy/keps-books).");
+    return Promise.resolve(false);
+  }
+  bookMsg("ghStatus", "🔗 GitHub repo check ho raha hai…");
+  return fetch("https://api.github.com/repos/" + ghRepo(), { headers: ghHeaders() }).then(function (r) {
+    if (!r.ok) throw new Error("status " + r.status);
+    return r.json();
+  }).then(function (j) {
+    bookMsg("ghStatus", "✔ GitHub repo mil gaya: " + (j && j.full_name ? j.full_name : ghRepo()) + " — connection theek hai.");
+    return true;
+  }).catch(function () {
+    bookMsg("ghStatus", "⚠ Repo nahi mila — repo ka naam check karein (PUBLIC repo ho) aur token sahi ho, phir dobara Test karein.");
+    return false;
+  });
+}
+
+/* ---- Book list: local + GitHub mila kar ----
+   Ek hi id dono jagah ho to ek dafa dikhta hai aur GitHub wala
+   version jeet-ta hai (☁ nishan). */
+var bookLocalMetas = [];
+var bookRemoteMetas = [];
+var bookListCache = [];
+var currentBook = null;
+var currentBookSource = "";
+/* Khuli book ki asal PDF (pdf.js document) — scanned pages ko
+   tasveer bana kar parhne ke liye chahiye. Upload ke waqt jo PDF
+   parhi jati hai wahi bookPdfCache mein id ke sath rehti hai; book
+   kholne par currentBookPdf usi se lagta hai aur doosri book khulte
+   hi purani reference chhor di jati hai. Pichhle session ki save
+   shuda book ke paas PDF nahi hoti (sirf text save hota hai). */
+var currentBookPdf = null;
+var bookPdfCache = {};
+function mergeBookLists(local, remote) {
+  var byId = {};
+  (local || []).forEach(function (m) { if (m && m.id) byId[m.id] = { meta: m, source: "local" }; });
+  (remote || []).forEach(function (m) { if (m && m.id) byId[m.id] = { meta: m, source: "github" }; });
+  return Object.keys(byId).map(function (k) { return byId[k]; }).sort(function (a, b) {
+    return String(a.meta.name || "").localeCompare(String(b.meta.name || ""));
+  });
+}
+function renderBookList() {
+  var box = document.getElementById("bookList");
+  if (!box) return;
+  if (!bookListCache.length) {
+    box.innerHTML = '<div class="hint">Abhi koi book save nahi hai.</div>';
+    return;
+  }
+  box.innerHTML = bookListCache.map(function (e) {
+    var m = e.meta;
+    var badge = e.source === "github" ? "☁ GitHub" : "📱 Is device par";
+    return '<div style="border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:6px 0">' +
+      "<b>" + esc(m.name || "") + "</b>" +
+      '<div class="hint" style="margin:2px 0 6px">' + esc(m["class"] || "") + " • " + esc(m.subject || "") + " • " + (m.totalPages || 0) + " pages • " + badge + "</div>" +
+      '<button type="button" class="btn" data-book-open="' + esc(m.id) + '">📖 Kholein</button> ' +
+      '<button type="button" class="btn danger" data-book-del="' + esc(m.id) + '">🗑 Delete</button>' +
+      "</div>";
+  }).join("");
+}
+function refreshBookList() {
+  var localP = bookStore().getAll().then(function (recs) {
+    return (recs || []).map(function (r) { var n = normalizeBook(r); return n ? bookMeta(n) : null; }).filter(Boolean);
+  }).catch(function () { return []; });
+  return Promise.all([localP, ghFetchIndex()]).then(function (res) {
+    bookLocalMetas = res[0];
+    bookRemoteMetas = res[1].map(function (m) {
+      return m && m.id ? { id: String(m.id), name: String(m.name || ""), "class": String(m["class"] || ""), subject: String(m.subject || ""), totalPages: Number(m.totalPages) || 0, chapters: Array.isArray(m.chapters) ? m.chapters : [], addedAt: Number(m.addedAt) || 0 } : null;
+    }).filter(Boolean);
+    bookListCache = mergeBookLists(bookLocalMetas, bookRemoteMetas);
+    renderBookList();
+    return bookListCache;
+  });
+}
+
+/* ---- Book kholna + selection preview ---- */
+function renderBookOpen() {
+  var box = document.getElementById("bookOpenBox");
+  if (!box || !currentBook) return;
+  box.style.display = "";
+  var badge = currentBookSource === "github" ? "☁ GitHub" : "📱 Is device par";
+  bookMsg("bookOpenTitle", "📖 " + currentBook.name + " — " + (currentBook["class"] || "") + " • " + (currentBook.subject || "") + " • " + currentBook.totalPages + " pages • " + badge);
+  var chBox = document.getElementById("bookChapters");
+  if (chBox) {
+    chBox.innerHTML = (currentBook.chapters || []).map(function (c, i) {
+      return '<button type="button" class="btn ghost" data-chapter="' + i + '">' + esc(c.title) + " (p. " + c.page + ")</button>";
+    }).join("");
+  }
+  var fEl = document.getElementById("bookPageFrom");
+  var tEl = document.getElementById("bookPageTo");
+  if (fEl) fEl.value = "1";
+  if (tEl) tEl.value = String(currentBook.totalPages);
+  updateBookPreview();
+}
+function updateBookPreview() {
+  if (!currentBook) return;
+  var fEl = document.getElementById("bookPageFrom");
+  var tEl = document.getElementById("bookPageTo");
+  var sel = bookAssembleSelection(currentBook, fEl ? fEl.value : 1, tEl ? tEl.value : currentBook.totalPages);
+  if (fEl) fEl.value = String(sel.from);
+  if (tEl) tEl.value = String(sel.to);
+  var prev = document.getElementById("bookPreview");
+  if (prev) prev.value = sel.fullText.slice(0, 600);
+  var info = "Page " + sel.from + " – " + sel.to + " • kul " + sel.totalChars + " characters select hue";
+  if (sel.emptyPages) info += " • ⚠ in mein se " + sel.emptyPages + " pages par text nahi (scanned)";
+  bookMsg("bookSelInfo", info);
+  return sel;
+}
+function selectBookChapter(ix) {
+  if (!currentBook || !currentBook.chapters || !currentBook.chapters[ix]) return;
+  var ch = currentBook.chapters[ix];
+  var next = currentBook.chapters[ix + 1];
+  var fEl = document.getElementById("bookPageFrom");
+  var tEl = document.getElementById("bookPageTo");
+  if (fEl) fEl.value = String(ch.page);
+  if (tEl) tEl.value = String(next ? next.page - 1 : currentBook.totalPages);
+  updateBookPreview();
+}
+function openBookById(id) {
+  var entry = null;
+  bookListCache.forEach(function (e) { if (e.meta.id === id) entry = e; });
+  if (!entry) { bookMsg("bookListStatus", "⚠ Book list mein nahi mili — list refresh karke dobara koshish karein."); return Promise.resolve(null); }
+  bookMsg("bookListStatus", "📖 Book khul rahi hai…");
+  var p = entry.source === "github"
+    ? ghFetchBook(id)
+    : bookStore().get(id).then(function (rec) { return normalizeBook(rec); });
+  return p.then(function (book) {
+    if (!book) { bookMsg("bookListStatus", "⚠ Book nahi khuli — data nahi mila."); return null; }
+    currentBook = book;
+    currentBookSource = entry.source;
+    currentBookPdf = bookPdfCache[id] || null;
+    bookMsg("bookListStatus", "");
+    renderBookOpen();
+    return book;
+  }).catch(function (e) {
+    bookMsg("bookListStatus", "⚠ Book nahi khuli: " + (e && e.message ? e.message : e));
+    return null;
+  });
+}
+function deleteBookById(id) {
+  var inRemote = bookRemoteMetas.some(function (m) { return m.id === id; });
+  var inLocal = bookLocalMetas.some(function (m) { return m.id === id; });
+  if (!inRemote && !inLocal) return Promise.resolve(false);
+  if (inRemote && !ghToken()) {
+    bookMsg("bookListStatus", "GitHub se delete karne ke liye token lagayein");
+    return Promise.resolve(false);
+  }
+  if (!window.confirm("Kya aap waqai ye book delete karna chahte hain?")) return Promise.resolve(false);
+  var chain = Promise.resolve(true);
+  if (inRemote) chain = chain.then(function () { return ghDeleteBookFromGithub(id); });
+  if (inLocal) chain = chain.then(function () { return bookStore().del(id); });
+  return chain.then(function () {
+    delete bookPdfCache[id];
+    if (currentBook && currentBook.id === id) {
+      currentBook = null; currentBookSource = ""; currentBookPdf = null;
+      var box = document.getElementById("bookOpenBox");
+      if (box) box.style.display = "none";
+    }
+    bookMsg("bookListStatus", "🗑 Book delete ho gayi.");
+    return refreshBookList().then(function () { return true; });
+  }).catch(function (e) {
+    bookMsg("bookListStatus", "⚠ Book delete nahi ho saki: " + (e && e.message ? e.message : e));
+    return false;
+  });
+}
+
+/* ---- Upload: PDF parho, local save, phir GitHub (setup ho to) ----
+   GitHub fail ho jaye to local book phir bhi mehfooz rehti hai —
+   paigham saaf kehta hai ke book is device par save hai. */
+function saveBookFromUpload() {
+  var fileEl = document.getElementById("bookFile");
+  var file = fileEl && fileEl.files && fileEl.files[0];
+  if (!file) { bookMsg("bookSaveStatus", "⚠ Pehle book ki PDF chunein."); return Promise.resolve(null); }
+  bookMsg("bookSaveStatus", "📖 PDF parha ja raha hai…");
+  return extractBookFromPdf(file, function (pn, total) {
+    bookMsg("bookSaveStatus", "Page " + pn + " / " + total + " parha ja raha hai…");
+  }).then(function (ex) {
+    var nameEl = document.getElementById("bookName");
+    var name = (nameEl && String(nameEl.value || "").trim()) || bookDefaultName(file.name, ex.metaTitle);
+    var clsEl = document.getElementById("bookClassSel");
+    var subjEl = document.getElementById("bookSubjectSel");
+    var subjVal = subjEl ? subjEl.value : "";
+    if (subjVal === "Other") {
+      var otherEl = document.getElementById("bookSubjectOther");
+      subjVal = otherEl ? String(otherEl.value || "").trim() : "";
+    }
+    var rec = normalizeBook({
+      name: name, "class": clsEl ? clsEl.value : "", subject: subjVal,
+      pages: ex.pages, chapters: ex.chapters
+    });
+    if (!rec) { bookMsg("bookSaveStatus", "⚠ PDF se koi page nahi parha ja saka — file check karein."); return null; }
+    if (ex.pdf) bookPdfCache[rec.id] = ex.pdf;
+    var empty = countEmptyPages(rec.pages);
+    var localSaved = false;
+    return bookStore().put(rec).then(function () { localSaved = true; }).catch(function () { localSaved = false; }).then(function () {
+      var lines = [];
+      if (localSaved) lines.push("✔ Book save ho gayi: " + rec.name + " (" + rec.totalPages + " pages)");
+      else lines.push("⚠ Book is device par save nahi ho saki (browser storage band/masla hai)");
+      if (empty > 0) lines.push("⚠ " + empty + " pages scanned hain (text nahi) — un se sawal page ki tasveer ke zariye banenge (ek dafa mein 4 pages).");
+      if (ghConfigured()) {
+        bookMsg("bookSaveStatus", lines.join(" ") + " ☁ GitHub par save ho raha hai…");
+        return ghSaveBookToGithub(rec).then(function () {
+          lines.push("☁ GitHub par bhi save ho gayi — ab ye book har device par milegi.");
+          bookMsg("bookSaveStatus", lines.join(" "));
+          return refreshBookList().then(function () { return rec; });
+        }).catch(function (e) {
+          lines.push("⚠ GitHub par save nahi ho saka (" + (e && e.message ? e.message : e) + ") — fikar na karein, book is device par save hai.");
+          bookMsg("bookSaveStatus", lines.join(" "));
+          return refreshBookList().then(function () { return rec; });
+        });
+      }
+      bookMsg("bookSaveStatus", lines.join(" "));
+      return refreshBookList().then(function () { return rec; });
+    });
+  }).catch(function (e) {
+    bookMsg("bookSaveStatus", "⚠ Book save nahi ho saki: " + (e && e.message ? e.message : e));
+    return null;
+  });
+}
+
+/* ---- Generation ka rasta chunna: TEXT ya PAGE-IMAGE ----
+   Select kiye hue pages ka kul extracted text BOOK_TEXT_ROUTE_MIN
+   (200 characters) ya zyada ho to TEXT wala rasta (neeche
+   runBookGenText). Us se kam ho to book scanned hai — text hai hi
+   nahi — phir PAGE-IMAGE wala rasta (runBookGenImages): pages ki
+   tasveerein bana kar photo wale pipeline ko di jati hain, ek dafa
+   mein zyada se zyada BOOK_IMAGE_MAX_PAGES (4) pages. */
+var BOOK_TEXT_ROUTE_MIN = 200;
+var BOOK_IMAGE_MAX_PAGES = 4;
+var BOOK_PDF_MISSING_MSG = "⚠ Ye book scanned hai lekin is ki PDF is waqt loaded nahi — page ki tasveer se sawal banane ke liye book isi session mein dobara upload karein, ya 📷 Photo wala tareeqa use karein.";
+function bookGenPlan(book, from, to) {
+  var sel = bookAssembleSelection(book, from, to);
+  var pages = (book && Array.isArray(book.pages)) ? book.pages : [];
+  var chars = 0, rangePages = [], pn;
+  for (pn = sel.from; pn <= sel.to; pn++) {
+    rangePages.push(pn);
+    chars += String(pages[pn - 1] == null ? "" : pages[pn - 1]).trim().length;
+  }
+  if (chars >= BOOK_TEXT_ROUTE_MIN) {
+    return { route: "text", from: sel.from, to: sel.to, pages: rangePages, textChars: chars, capped: false };
+  }
+  return {
+    route: "images", from: sel.from, to: sel.to,
+    pages: rangePages.slice(0, BOOK_IMAGE_MAX_PAGES),
+    textChars: chars, capped: rangePages.length > BOOK_IMAGE_MAX_PAGES
+  };
+}
+function bookScanCapMsg(plan) {
+  return "⚠ Scanned book hai — ek dafa mein 4 pages parhe jayenge. Pehle 4 pages (" +
+    plan.pages[0] + "–" + plan.pages[plan.pages.length - 1] + ") bheje gaye hain.";
+}
+/* Scanned page ki tasveer: pdf.js se page ko ~1100px chorai par
+   render karke JPEG data URL. Tests setBookPageRenderer se apna
+   renderer laga sakte hain. */
+var bookPageRendererOverride = null;
+function setBookPageRenderer(fn) { bookPageRendererOverride = fn || null; }
+function renderBookPageImage(pdfDoc, pageNum) {
+  if (bookPageRendererOverride) return bookPageRendererOverride(pdfDoc, pageNum);
+  if (!pdfDoc) return Promise.reject(new Error("Book ki PDF loaded nahi"));
+  return pdfDoc.getPage(pageNum).then(function (page) {
+    var base = page.getViewport({ scale: 1 });
+    var scale = base.width > 0 ? 1100 / base.width : 1.5;
+    var vp = page.getViewport({ scale: scale });
+    var canvas = document.createElement("canvas");
+    canvas.width = Math.floor(vp.width);
+    canvas.height = Math.floor(vp.height);
+    var ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Page ki tasveer nahi ban saki (canvas)");
+    return page.render({ canvasContext: ctx, viewport: vp }).promise.then(function () {
+      return canvas.toDataURL("image/jpeg", 0.75);
+    });
+  });
+}
+/* Photo pipeline ko tasveer bhejna: asal rasta aiChatPhoto hai —
+   data URL ko File/Blob bana kar diya jata hai taake teeno engines
+   (Puter/Gemini/OpenAI) usay photo ki tarah lein. Tests
+   setBookAiPhoto se dispatch badal sakte hain. */
+function dataUrlToBlob(dataUrl) {
+  var s = String(dataUrl || "");
+  var comma = s.indexOf(",");
+  if (comma < 0) return null;
+  var mime = "image/jpeg";
+  var mm = s.slice(0, comma).match(/data:([^;,]+)/);
+  if (mm) mime = mm[1];
+  var bin = atob(s.slice(comma + 1));
+  var arr = new Uint8Array(bin.length);
+  for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  if (typeof File !== "undefined") return new File([arr], "book-page.jpg", { type: mime });
+  if (typeof Blob !== "undefined") return new Blob([arr], { type: mime });
+  return null;
+}
+var bookAiPhotoOverride = null;
+function setBookAiPhoto(fn) { bookAiPhotoOverride = fn || null; }
+function bookAiPhoto(prompt, dataUrl) {
+  if (bookAiPhotoOverride) return bookAiPhotoOverride(prompt, dataUrl);
+  var blob = null;
+  try { blob = dataUrlToBlob(dataUrl); } catch (e) { blob = null; }
+  return aiChatPhoto(prompt, blob || dataUrl);
+}
+
+/* ---- Book ke hisse se sawal: pehle rasta chuno ---- */
+function runBookGen() {
+  function say(m) { bookMsg("bookStatus", m); }
+  if (!currentBook) { say("⚠ Pehle 📚 Meri Books se koi book kholein."); return Promise.resolve(0); }
+  var fEl = document.getElementById("bookPageFrom");
+  var tEl = document.getElementById("bookPageTo");
+  var plan = bookGenPlan(currentBook, fEl ? fEl.value : 1, tEl ? tEl.value : currentBook.totalPages);
+  if (plan.route === "images") return runBookGenImages(plan);
+  return runBookGenText(plan);
+}
+
+/* ---- TEXT rasta: Text Paste wala hi prompt/dispatch ----
+   Wahi prompt (buildTextGenPrompt — extraction/generation + alamat
+   ke usool), wahi engine dispatch (aiChatText), wahi Review list.
+   Farq: text book ke select kiye hue pages se banta hai aur hadd
+   24,000 characters hai (paste wali 8,000 se zyada). */
+function runBookGenText(plan) {
+  function say(m) { bookMsg("bookStatus", m); }
+  var sel = bookAssembleSelection(currentBook, plan.from, plan.to);
+  var text = normalizePasteText(sel.text).trim();
+  if (!text || !normalizePasteText(text.replace(/--- Page \d+ ---/g, "")).trim()) { say(BOOK_EMPTY_MSG); return Promise.resolve(0); }
+  var counts = bookCounts();
+  if (aiCountsAllZero(counts)) { say(AI_ZERO_MSG); return Promise.resolve(0); }
+  function go() {
+    var prompt = buildTextGenPrompt(counts.nMcq, counts.nShort, counts.nLong) +
+      "\n\n===== BOOK TEXT (Page " + sel.from + "–" + sel.to + ") =====\n" + text + "\n===== END OF BOOK TEXT =====";
+    say("🤖 AI book ka hissa parh kar sawal bana raha hai…" + (sel.truncated ? " " + BOOK_TRUNC_MSG : ""));
+    return aiChatText(prompt).then(function (txt) {
+      var cands = parseAiQuestions(txt);
+      if (!cands.length) { say("⚠ AI ke jawab se koi sawal nahi bana — doosra hissa select karke dobara koshish karein."); return 0; }
+      setCandidates(cands);
+      var nm = cands.filter(function (c) { return c.type === "mcq"; }).length;
+      var ns = cands.filter(function (c) { return c.type === "short"; }).length;
+      var nl = cands.filter(function (c) { return c.type === "long"; }).length;
+      say("✔ AI ne " + cands.length + " sawal banaye (" + nm + " MCQ, " + ns + " Short, " + nl + " Long) — upar 📷 wale hisse ki Review list mein sawal aur sahi jawab check karke paper mein shamil karein." + (sel.truncated ? " " + BOOK_TRUNC_MSG : ""));
+      return cands.length;
+    }).catch(function (e) {
+      var um = aiUserMsg(e);
+      if (um) { say(um); return 0; }
+      if (isAiLimitError(e)) { say(PUTER_LIMIT_MSG); return 0; }
+      say("⚠ AI fail: " + (e && e.message ? e.message : e) + " — dobara koshish karein.");
+      return 0;
+    });
+  }
+  if (aiEngine() === "gemini") {
+    if (!geminiSavedKey()) { refreshEngineUI(); say("⚠ AI Engine 'Apni Gemini Key' chuna hai lekin koi key save nahi — pehle Engine ke neeche apni Gemini key lagayein (FREE milti hai), ya Engine 'Puter (FREE)' kar dein."); return Promise.resolve(0); }
+    return go();
+  }
+  if (aiEngine() === "openai") {
+    if (!openaiSavedKey()) { refreshEngineUI(); say("⚠ AI Engine 'ChatGPT (OpenAI API Key)' chuna hai lekin koi key save nahi — pehle Engine ke neeche apni OpenAI key lagayein, ya Engine 'Puter (FREE)' kar dein."); return Promise.resolve(0); }
+    return go();
+  }
+  if (!puterReady()) { say("⚠ Puter library load nahi hui — internet check karke page refresh karein."); return Promise.resolve(0); }
+  if (puterSignedIn()) return go();
+  say("🔐 Pehle FREE Puter sign in chahiye — popup khul raha hai…");
+  return puterDoSignIn().then(function (ok) {
+    if (!ok) { say("⚠ Pehle FREE Puter account se sign in karein (upar 📷 wale hisse ka Sign In button) — baghair sign in ke AI nahi chalega."); return 0; }
+    return go();
+  });
+}
+
+/* ---- PAGE-IMAGE rasta: scanned book ke pages ki tasveerein ----
+   Har select kiye hue page (zyada se zyada 4) ki tasveer bana kar
+   PHOTO wala prompt (buildGenPrompt — counts + alamat ke usool) aur
+   wahi photo dispatch (aiChatPhoto) istemal hota hai; sawal usi
+   Review list mein jate hain. Ghalti/limit ka bartao runPuterGen
+   jaisa hai: ek page fail ho to baqi jari, limit par ruk jata hai. */
+function runBookGenImages(plan) {
+  function say(m) { bookMsg("bookStatus", m); }
+  var counts = bookCounts();
+  if (aiCountsAllZero(counts)) { say(AI_ZERO_MSG); return Promise.resolve(0); }
+  if (!currentBookPdf && !bookPageRendererOverride) { say(BOOK_PDF_MISSING_MSG); return Promise.resolve(0); }
+  var capNote = plan.capped ? bookScanCapMsg(plan) : "";
+  function go() {
+    var prompt = buildGenPrompt(counts.nMcq, counts.nShort, counts.nLong, true);
+    var all = [], failed = 0, limitHit = false, fatalMsg = "";
+    var chain = Promise.resolve();
+    plan.pages.forEach(function (pn, i) {
+      chain = chain.then(function () {
+        if (limitHit || fatalMsg) return;
+        say("🤖 Scanned page " + pn + " ki tasveer ban rahi hai (" + (i + 1) + "/" + plan.pages.length + ")…");
+        return renderBookPageImage(currentBookPdf, pn).then(function (img) {
+          say("🤖 Page " + pn + " — AI tasveer parh kar sawal bana raha hai (" + (i + 1) + "/" + plan.pages.length + ")…");
+          return bookAiPhoto(prompt, img);
+        }).then(function (txt) {
+          var cands = parseAiQuestions(txt);
+          if (!cands.length) throw new Error("AI ke jawab se koi sawal nahi bana");
+          all = all.concat(cands);
+        }).catch(function (e) {
+          var um = aiUserMsg(e);
+          if (um) { fatalMsg = um; return; }
+          if (isAiLimitError(e)) { limitHit = true; return; }
+          failed++;
+        });
+      });
+    });
+    return chain.then(function () {
+      var tail = capNote ? " " + capNote : "";
+      if (fatalMsg) {
+        if (all.length) { setCandidates(all); say("✔ " + all.length + " sawal ban gaye. " + fatalMsg + tail); return all.length; }
+        say(fatalMsg);
+        return 0;
+      }
+      if (limitHit) {
+        if (all.length) { setCandidates(all); say("✔ " + all.length + " sawal ban gaye. " + PUTER_LIMIT_MSG + tail); return all.length; }
+        say(PUTER_LIMIT_MSG);
+        return 0;
+      }
+      if (!all.length) {
+        say("⚠ AI se koi sawal nahi bana — scanned pages ki tasveeron se sawal nahi ban sake. Pages saaf hon to dobara koshish karein, warna 📷 Photo wala tareeqa azmayein." + tail);
+        return 0;
+      }
+      setCandidates(all);
+      var nm = all.filter(function (c) { return c.type === "mcq"; }).length;
+      var ns = all.filter(function (c) { return c.type === "short"; }).length;
+      var nl = all.filter(function (c) { return c.type === "long"; }).length;
+      say("✔ AI ne " + all.length + " sawal banaye (" + nm + " MCQ, " + ns + " Short, " + nl + " Long) — upar 📷 wale hisse ki Review list mein sawal aur sahi jawab check karke paper mein shamil karein." + tail);
+      return all.length;
+    });
+  }
+  if (aiEngine() === "gemini") {
+    if (!geminiSavedKey()) { refreshEngineUI(); say("⚠ AI Engine 'Apni Gemini Key' chuna hai lekin koi key save nahi — pehle Engine ke neeche apni Gemini key lagayein (FREE milti hai), ya Engine 'Puter (FREE)' kar dein."); return Promise.resolve(0); }
+    return go();
+  }
+  if (aiEngine() === "openai") {
+    if (!openaiSavedKey()) { refreshEngineUI(); say("⚠ AI Engine 'ChatGPT (OpenAI API Key)' chuna hai lekin koi key save nahi — pehle Engine ke neeche apni OpenAI key lagayein, ya Engine 'Puter (FREE)' kar dein."); return Promise.resolve(0); }
+    return go();
+  }
+  if (!puterReady()) { say("⚠ Puter library load nahi hui — internet check karke page refresh karein."); return Promise.resolve(0); }
+  if (puterSignedIn()) return go();
+  say("🔐 Pehle FREE Puter sign in chahiye — popup khul raha hai…");
+  return puterDoSignIn().then(function (ok) {
+    if (!ok) { say("⚠ Pehle FREE Puter account se sign in karein (upar 📷 wale hisse ka Sign In button) — baghair sign in ke AI nahi chalega."); return 0; }
+    return go();
+  });
+}
+
+function bindBooks() {
+  try {
+    var sr = localStorage.getItem(GH_REPO_LS);
+    var repoEl = document.getElementById("ghRepo");
+    if (sr && repoEl) repoEl.value = sr;
+    var stk = localStorage.getItem(GH_TOKEN_LS);
+    var tokEl = document.getElementById("ghToken");
+    if (stk && tokEl) tokEl.value = stk;
+  } catch (e) {}
+  var fileEl = document.getElementById("bookFile");
+  if (fileEl) fileEl.addEventListener("change", function () {
+    var f = fileEl.files && fileEl.files[0];
+    var nameEl = document.getElementById("bookName");
+    if (f && nameEl && !String(nameEl.value || "").trim()) nameEl.value = bookDefaultName(f.name, "");
+  });
+  var subjSel = document.getElementById("bookSubjectSel");
+  if (subjSel) subjSel.addEventListener("change", function () {
+    var o = document.getElementById("bookSubjectOther");
+    if (o) o.style.display = subjSel.value === "Other" ? "" : "none";
+  });
+  var saveBtn = document.getElementById("btnBookSave");
+  if (saveBtn) saveBtn.addEventListener("click", function () { saveBookFromUpload(); });
+  var ghSaveBtn = document.getElementById("btnGhSave");
+  if (ghSaveBtn) ghSaveBtn.addEventListener("click", function () { ghSaveSettings(); });
+  var ghTestBtn = document.getElementById("btnGhTest");
+  if (ghTestBtn) ghTestBtn.addEventListener("click", function () { ghTestConnection(); });
+  var listEl = document.getElementById("bookList");
+  if (listEl) listEl.addEventListener("click", function (e) {
+    var t = e.target || {};
+    var openId = typeof t.getAttribute === "function" ? t.getAttribute("data-book-open") : null;
+    var delId = typeof t.getAttribute === "function" ? t.getAttribute("data-book-del") : null;
+    if (openId) openBookById(openId);
+    else if (delId) deleteBookById(delId);
+  });
+  ["bookPageFrom", "bookPageTo"].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) { el.addEventListener("input", updateBookPreview); el.addEventListener("change", updateBookPreview); }
+  });
+  var chBox = document.getElementById("bookChapters");
+  if (chBox) chBox.addEventListener("click", function (e) {
+    var t = e.target || {};
+    var ix = typeof t.getAttribute === "function" ? t.getAttribute("data-chapter") : null;
+    if (ix !== null && ix !== undefined && ix !== "") selectBookChapter(parseInt(ix, 10));
+  });
+  var genBtn = document.getElementById("btnBookGen");
+  if (genBtn) genBtn.addEventListener("click", function () { runBookGen(); });
+  refreshBookList();
+}
+
 /* ================= TEST HOOKS ================= */
 window.KPG = {
   getState: function () { return state; },
@@ -4879,14 +5812,43 @@ window.KPG = {
   renderTranslateBox: renderTranslateBox, hasTranslateSnapshot: hasTranslateSnapshot,
   richText: richText, richOptText: richOptText, isolateRunsHtml: isolateRunsHtml,
   getSchemeEditRows: function () { return schemeEditRows; },
-  setSchemeEditRows: function (r) { schemeEditRows = r || []; renderSchemeRows(); }
+  setSchemeEditRows: function (r) { schemeEditRows = r || []; renderSchemeRows(); },
+  BOOKS_DB_NAME: BOOKS_DB_NAME, BOOK_TEXT_CAP: BOOK_TEXT_CAP, BOOK_TRUNC_MSG: BOOK_TRUNC_MSG, BOOK_EMPTY_MSG: BOOK_EMPTY_MSG,
+  makeBookId: makeBookId, normalizeBook: normalizeBook, normalizeBookChapters: normalizeBookChapters,
+  bookMeta: bookMeta, countEmptyPages: countEmptyPages, bookDefaultName: bookDefaultName,
+  booksIdbAvailable: booksIdbAvailable, bookStore: bookStore, setBookStore: setBookStore,
+  loadPdfJsDoc: loadPdfJsDoc, outlineToChapters: outlineToChapters, extractBookFromPdf: extractBookFromPdf,
+  bookAssembleSelection: bookAssembleSelection, bookCounts: bookCounts, BOOK_COUNT_LIMITS: BOOK_COUNT_LIMITS,
+  mergeBookLists: mergeBookLists, refreshBookList: refreshBookList, renderBookList: renderBookList,
+  getBookListCache: function () { return bookListCache; },
+  getBookLocalMetas: function () { return bookLocalMetas; },
+  getBookRemoteMetas: function () { return bookRemoteMetas; },
+  openBookById: openBookById, deleteBookById: deleteBookById, renderBookOpen: renderBookOpen,
+  updateBookPreview: updateBookPreview, selectBookChapter: selectBookChapter,
+  getCurrentBook: function () { return currentBook; },
+  setCurrentBook: function (b, src) { currentBook = b || null; currentBookSource = src || ""; currentBookPdf = null; },
+  getCurrentBookPdf: function () { return currentBookPdf; },
+  setCurrentBookPdf: function (doc) { currentBookPdf = doc || null; },
+  BOOK_TEXT_ROUTE_MIN: BOOK_TEXT_ROUTE_MIN, BOOK_IMAGE_MAX_PAGES: BOOK_IMAGE_MAX_PAGES,
+  BOOK_PDF_MISSING_MSG: BOOK_PDF_MISSING_MSG, bookGenPlan: bookGenPlan, bookScanCapMsg: bookScanCapMsg,
+  renderBookPageImage: renderBookPageImage, setBookPageRenderer: setBookPageRenderer,
+  dataUrlToBlob: dataUrlToBlob, bookAiPhoto: bookAiPhoto, setBookAiPhoto: setBookAiPhoto,
+  runBookGenText: runBookGenText, runBookGenImages: runBookGenImages,
+  saveBookFromUpload: saveBookFromUpload, runBookGen: runBookGen, bindBooks: bindBooks,
+  GH_REPO_LS: GH_REPO_LS, GH_TOKEN_LS: GH_TOKEN_LS, GH_DEFAULT_REPO: GH_DEFAULT_REPO,
+  ghRepo: ghRepo, ghToken: ghToken, ghRepoValid: ghRepoValid, ghConfigured: ghConfigured,
+  ghSaveSettings: ghSaveSettings, ghTestConnection: ghTestConnection,
+  ghB64Encode: ghB64Encode, ghB64Decode: ghB64Decode,
+  ghGetFile: ghGetFile, ghPutFile: ghPutFile, ghDeleteFile: ghDeleteFile,
+  ghSaveBookToGithub: ghSaveBookToGithub, ghFetchIndex: ghFetchIndex, ghFetchBook: ghFetchBook,
+  ghDeleteBookFromGithub: ghDeleteBookFromGithub
 };
 
 /* ================= INIT ================= */
 function init() {
   if (!loadPersisted()) { state = defaultState(); persist(); }
   renderAll();
-  bindSetup(); bindSections(); bindActions(); bindPhoto(); bindScheme();
+  bindSetup(); bindSections(); bindActions(); bindPhoto(); bindScheme(); bindBooks();
   bindAuth(); applyAuthUI(); authVerifySessionOnce();
   if (authSession && authSession.role === "admin") loadAdminUsers();
 }
