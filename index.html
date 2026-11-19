@@ -153,6 +153,18 @@ input:focus,select:focus,textarea:focus{outline:2px solid #9ec7e8;border-color:v
 .p-rtl .p-opts{margin-left:0;margin-right:1.54em}
 .mx{unicode-bidi:isolate;font-family:"Noto Sans","DejaVu Sans","Noto Sans Symbols 2","Noto Sans Symbols",sans-serif}
 .urdu-text .mx{font-family:"Noto Sans","DejaVu Sans","Noto Sans Symbols 2","Noto Sans Symbols",sans-serif;font-size:calc(1em / var(--ur-scale))}
+/* Bilingual Side-by-Side: EK A4 LANDSCAPE sheet — right half English,
+   left half Urdu, darmiyan mein dashed cut line (owner ke combined
+   sheets jaisi presentation). .paper-land ki asal chaudi 297mm
+   (1123px @96dpi) hai; preview mein wrapper horizontal scroll deta
+   hai taake app ki layout na tute. Print mein named page "land" se
+   sheet A4 landscape hi print hoti hai. */
+.land-scroll{overflow-x:auto;overflow-y:hidden;padding-bottom:6px}
+.paper-land{width:1123px;flex:none;padding:10mm 8mm;page:land}
+.bi-sheet{display:flex;align-items:stretch}
+.bi-half{flex:1 1 0;min-width:0;padding:0 4mm}
+.bi-cut{flex:0 0 0;border-left:1.5px dashed #999}
+@page land{size:A4 landscape;margin:11mm}
 .bi-ur{display:block;text-align:right}
 .p-sec-sub[dir="rtl"]{text-align:right}
 .p-note{font-style:italic;font-size:.926em;margin:.32em 0 .16em}
@@ -251,6 +263,7 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
   body>*:not(#printRoot){display:none !important}
   #printRoot{display:block !important}
   #printRoot .paper{border:none;box-shadow:none;padding:0;min-height:0}
+  #printRoot .land-scroll{overflow:visible;padding:0}
   .p-sec{page-break-inside:avoid}
   .page-tag{display:none !important}
   #printRoot .paper-page2{break-before:page;page-break-before:always}
@@ -294,7 +307,23 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
       <input type="text" id="inSchool" placeholder="e.g. KEPS Science Academy, Ahmad Pur Sial, Jhang">
       <div class="row2">
         <div><label class="fl" for="inClass">Class</label><input type="text" id="inClass" placeholder="e.g. 9th"></div>
-        <div><label class="fl" for="inSubject">Subject</label><input type="text" id="inSubject" placeholder="e.g. Mathematics"></div>
+        <div><label class="fl" for="inSubjectSel">Subject</label>
+          <select id="inSubjectSel">
+            <option value="">— Subject chunein —</option>
+            <option value="Mathematics">Mathematics</option>
+            <option value="Physics">Physics</option>
+            <option value="Chemistry">Chemistry</option>
+            <option value="Biology">Biology</option>
+            <option value="Computer Science">Computer Science</option>
+            <option value="English">English</option>
+            <option value="Urdu">Urdu</option>
+            <option value="Islamiat">Islamiat</option>
+            <option value="Tarjuma-tul-Quran">Tarjuma-tul-Quran</option>
+            <option value="Pakistan Studies">Pakistan Studies</option>
+            <option value="__other">Other (khud likhein)</option>
+          </select>
+          <input type="text" id="inSubject" placeholder="e.g. Mathematics" style="display:none;margin-top:6px">
+        </div>
       </div>
       <div class="row3">
         <div><label class="fl" for="inCode">Paper Code *</label><input type="text" id="inCode" placeholder="M9-01"></div>
@@ -321,9 +350,22 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
         <option value="back">Front + Back (2 pages)</option>
       </select>
       <div class="hint" id="layoutStatus"></div>
+      <div id="biStyleBox" style="display:none">
+        <label class="fl" for="inBiStyle">↔ Bilingual Presentation</label>
+        <select id="inBiStyle">
+          <option value="line">Line by line (upar English, neeche Urdu)</option>
+          <option value="side">Side by Side (Right English | Left Urdu)</option>
+        </select>
+        <div class="hint">Side by Side sirf ek sheet (Front) par lagega — agar Page Layout Front + Back ho jaye to paper line-by-line hi ayega.</div>
+      </div>
       <div class="chips">
         <span class="chip">Questions: <span id="sumQuestions">0</span></span>
         <span class="chip">Total Marks: <span id="sumMarks">0</span></span>
+      </div>
+      <div id="subjTplBar" style="display:none;border:1px dashed var(--line);border-radius:8px;padding:9px 10px;margin-top:10px">
+        <div class="hint" id="subjTplText" style="margin:0 0 7px"></div>
+        <button type="button" class="btn" id="btnApplyTemplate">📐 Ye Layout Lagayein</button>
+        <div class="hint" style="margin-top:6px">Layout lagane se us subject ka board dhacha (khaali sawal, attempt aur number) ban jayega — phir aap sawal bhar dein ya Photo/Text se banayein. Paper mein pehle se sawal hon to pehle poocha jayega.</div>
       </div>
     </div>
 
@@ -412,6 +454,7 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
         <select id="aiEngineSel">
           <option value="puter">Puter (FREE)</option>
           <option value="gemini">Apni Gemini Key</option>
+          <option value="openai">ChatGPT (OpenAI API Key)</option>
         </select>
         <div class="hint" id="engineState" style="margin-top:4px"></div>
         <div id="engineKeyBox" style="display:none;border:1px dashed var(--line);border-radius:8px;padding:9px 10px;margin-top:8px">
@@ -421,6 +464,14 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
             <button type="button" class="btn" id="btnEngineKeySave">💾 Key Save Karein</button>
           </div>
           <div class="hint" id="engineKeyState"></div>
+        </div>
+        <div id="engineOpenaiBox" style="display:none;border:1px dashed var(--line);border-radius:8px;padding:9px 10px;margin-top:8px">
+          <div class="hint" style="margin:0 0 7px">OpenAI ki API key platform.openai.com se milti hai — ye PAID hoti hai (balance dalna parta hai), ChatGPT Plus is se alag hai. Key sirf aap ke browser mein rehti hai.</div>
+          <div class="row2">
+            <input type="password" id="engineOpenaiKey" placeholder="Apni OpenAI API key yahan lagayein" autocomplete="off">
+            <button type="button" class="btn" id="btnEngineOpenaiSave">💾 Key Save Karein</button>
+          </div>
+          <div class="hint" id="engineOpenaiKeyState"></div>
         </div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px">
@@ -720,7 +771,8 @@ function defaultState() {
     setup: {
       school: "KEPS Science Academy, Ahmad Pur Sial, Jhang",
       clazz: "", subject: "", code: "", date: "", time: "2 Hours", medium: "en",
-      layout: "auto" /* page layout: "auto" | "front" | "back" — purane drafts mein na ho to "auto" */
+      layout: "auto", /* page layout: "auto" | "front" | "back" — purane drafts mein na ho to "auto" */
+      biStyle: "line" /* bilingual presentation: "line" (purana) | "side" (Side by Side) — purane drafts mein na ho to "line" */
     },
     sections: [makeSection("mcq"), makeSection("short"), makeSection("long")],
     scheme: null /* active pairing scheme (ya null) — drafts/persist ke sath rehta hai */
@@ -816,6 +868,32 @@ function richText(s, medium) {
   });
   return out;
 }
+/* Option ke liye MAZBOOT isolation (live-test defect, Nov 2026):
+   Urdu medium mein AKELA alamat wala option (sirf "∈" ya "≤") aam
+   .mx isolate ke bawajood kuch renderers (grid cell + RTL embedding,
+   PDF foreignObject) mein bidi-MIRROR ho jata tha — ∈ ka ∋ aur ≤ ka
+   ≥ ban jata tha (π/≠ theek rehte hain, un ka mirrored jora nahi).
+   Is liye option ke andar jo mx run SIRF alamaton par mushtamil ho
+   (koi Latin harf, number ya bracket nahi), use inline
+   unicode-bidi:isolate-override bhi milta hai — har renderer mein
+   us ki direction zabardasti LTR rehti hai aur mirrored jora kabhi
+   nahi palat sakta. Statements wala rasta (isolateRunsHtml) bilkul
+   waisa hi hai — wahan ye masla live test mein nahi aya. */
+function mxRunIsSymbolOnly(coreHtml) {
+  /* HTML entities (&lt; &gt; waghera) ko \u0001 placeholder se badal kar
+     jaanch — akela "<" ya ">" bhi alamat hai aur mirrored jora rakhta hai. */
+  var plain = String(coreHtml == null ? "" : coreHtml).replace(/&[a-z]+;|&#\d+;/gi, "");
+  if (!plain || !plain.trim()) return false;
+  if (/[A-Za-z0-9{}()\[\]]/.test(plain)) return false;
+  return /[∈∉⊆⊂⊃⊇∪∩∅≤≥≠≈√πθλμ αβΔ×÷±∞→⇒°∠∧∨−∝²³¹⁰⁴⁵⁶⁷⁸⁹₀₁₂₃₄₅₆₇₈₉%*\u0001]/.test(plain);
+}
+function optIsoHtml(raw) {
+  return isolateRunsHtml(raw).replace(/<span class="mx" dir="ltr">([^<]*)<\/span>/g, function (m, core) {
+    return mxRunIsSymbolOnly(core)
+      ? '<span class="mx" dir="ltr" style="unicode-bidi:isolate-override">' + core + "</span>"
+      : m;
+  });
+}
 /* MCQ option: pehli line par "(A)" wala label. RTL (Urdu medium) mein
    label ek isolate LTR tukra ban kar line ke RIGHT start par aata hai
    aur baqi option RTL flow mein us ke baad chalta hai — grid cell khud
@@ -827,13 +905,13 @@ function richOptText(o, letter, medium) {
     var cls = hasUrdu(lines[0])
       ? ' class="urdu-text' + (medium === "bi" ? " bi-ur" : "") + '"'
       : (medium === "bi" ? ' class="bi-ur"' : "");
-    return '<span dir="rtl"' + cls + '><span class="mx" dir="ltr">(' + letter + ")</span> " + isolateRunsHtml(lines[0]) + "</span>";
+    return '<span dir="rtl"' + cls + '><span class="mx" dir="ltr">(' + letter + ")</span> " + optIsoHtml(lines[0]) + "</span>";
   }
   if (lines.length === 1) return "<span" + langAttrs(o) + ">(" + letter + ") " + esc(o) + "</span>";
   var inner = lines.map(function (ln, i) {
     if (lineIsRtl(ln, medium)) {
       var rc = hasUrdu(ln) ? ' class="urdu-text' + (medium === "bi" ? " bi-ur" : "") + '"' : (medium === "bi" ? ' class="bi-ur"' : "");
-      return '<span dir="rtl"' + rc + ">" + (i === 0 ? '<span class="mx" dir="ltr">(' + letter + ")</span> " : "") + isolateRunsHtml(ln) + "</span>";
+      return '<span dir="rtl"' + rc + ">" + (i === 0 ? '<span class="mx" dir="ltr">(' + letter + ")</span> " : "") + optIsoHtml(ln) + "</span>";
     }
     return "<span" + langAttrs(ln) + ">" + (i === 0 ? "(" + letter + ") " : "") + esc(ln) + "</span>";
   });
@@ -849,7 +927,11 @@ function richOptText(o, letter, medium) {
 function autoCode(subject, clazz) {
   var subj = String(subject || "").trim();
   var cls = String(clazz || "").trim();
-  var initial = subj ? subj.replace(/[^A-Za-z]/g, "").charAt(0).toUpperCase() : "X";
+  /* Mashhoor subjects ke tayyar prefix (M, P, CH, EN, TQ...) — owner
+     ke paper codes wali convention; baqi subjects par pehla harf. */
+  var canon = canonicalSubject(subj);
+  var initial = (canon && SUBJECT_CODE_PREFIX[canon]) ? SUBJECT_CODE_PREFIX[canon]
+    : (subj ? subj.replace(/[^A-Za-z]/g, "").charAt(0).toUpperCase() : "X");
   var digits = cls.replace(/[^0-9]/g, "");
   var clsPart = digits || cls.replace(/[^A-Za-z]/g, "").slice(0, 2).toUpperCase() || "0";
   return initial + clsPart + "-01";
@@ -941,7 +1023,7 @@ function loadPersisted() {
     var raw = localStorage.getItem(LS_CUR);
     if (!raw) return false;
     var s = JSON.parse(raw);
-    if (s && s.setup && Array.isArray(s.sections)) { state = s; if (state.scheme === undefined) state.scheme = null; if (state.setup.layout === undefined) state.setup.layout = "auto"; return true; }
+    if (s && s.setup && Array.isArray(s.sections)) { state = s; if (state.scheme === undefined) state.scheme = null; if (state.setup.layout === undefined) state.setup.layout = "auto"; if (state.setup.biStyle === undefined) state.setup.biStyle = "line"; return true; }
   } catch (e) {}
   return false;
 }
@@ -972,6 +1054,7 @@ function loadDraft(name) {
   state = JSON.parse(JSON.stringify(drafts[name]));
   if (state.scheme === undefined) state.scheme = null; /* purane drafts mein scheme nahi hota — backward compatible */
   if (state.setup && state.setup.layout === undefined) state.setup.layout = "auto"; /* purane drafts mein layout nahi hota — Auto mana jata hai */
+  if (state.setup && state.setup.biStyle === undefined) state.setup.biStyle = "line"; /* purane drafts mein biStyle nahi hota — line-by-line mana jata hai */
   editCtx = null; formBuf = {}; bulkBuf = {};
   persist();
   return true;
@@ -1204,6 +1287,144 @@ function clearScheme() {
   state.sections.forEach(function (sec) { delete sec.schemeIdx; });
   renderAll(); persist();
 }
+/* ================= SUBJECT TEMPLATES (board layouts) =================
+   Owner ki hidayat: teacher pehle Subject select kare, phir paper ka
+   layout usi subject ke board pattern ke hisaab se bane — har subject
+   ka apna alag layout. Neeche 20 tayyar templates hain (9th/10th x
+   10 subjects) — data hamare verified patterns + web pairing schemes
+   se jaisa mahfooz tha waisa hi embedded hai (har entry ki
+   "confidence" usi data se hai). Subject ek SELECT hai; "Other" par
+   purana free-text input khul jata hai. setup.subject hamesha wahi
+   string rehti hai jo header mein jati hai (purane drafts bilkul
+   waisay hi load hote hain).
+   NOTE — 9-Islamiat: mahfooz verified pattern ke sections ka majmooa
+   88 banta hai (20 MCQ + Q2 12 + Q3 16 + Q4 10 + Q5 10 + Q6 20), jabke
+   entry ka kul total 100 hai. Ye farq data mein pehle se hai (us ke
+   saved model-paper pattern mein Q.3 ke "given" record nahi thay) —
+   data JAISA HAI waisa hi use hota hai; web wala variant khamoshi se
+   NAHI liya gaya. */
+var SUBJECT_LIST = ["Mathematics", "Physics", "Chemistry", "Biology", "Computer Science", "English", "Urdu", "Islamiat", "Tarjuma-tul-Quran", "Pakistan Studies"];
+var SUBJECT_CODE_PREFIX = { "Mathematics": "M", "Physics": "P", "Chemistry": "CH", "Biology": "B", "Computer Science": "CS", "English": "EN", "Urdu": "UR", "Islamiat": "IS", "Tarjuma-tul-Quran": "TQ", "Pakistan Studies": "PS" };
+function canonicalSubject(s) {
+  var v = String(s || "").trim().toLowerCase();
+  if (!v) return null;
+  for (var i = 0; i < SUBJECT_LIST.length; i++) if (SUBJECT_LIST[i].toLowerCase() === v) return SUBJECT_LIST[i];
+  if (v === "maths" || v === "math") return "Mathematics";
+  if (v === "pak studies" || v === "pakistan study") return "Pakistan Studies";
+  if (v === "tarjuma" || v === "tarjuma tul quran" || v === "tarjuma-tul-quran ul quran") return "Tarjuma-tul-Quran";
+  if (v === "computer") return "Computer Science";
+  return null;
+}
+var SUBJECT_TEMPLATES = {"10-Biology":{"class":10,"subject":"Biology","totalMarks":60,"time":"2 hours (Objective 15 min + Subjective 1:45)","confidence":"web","objective":{"marksEach":1,"mcqCount":12},"sections":[{"title":"Q.2 Short questions (Chapters 1, 2, 5)","type":"short","given":8,"attempt":5,"marksEach":2,"note":"Ch1x2, Ch2x4, Ch5x2"},{"title":"Q.3 Short questions (Chapters 3, 4, 6, 7)","type":"short","given":8,"attempt":5,"marksEach":2,"note":"Ch3x2, Ch4x3, Ch6x1, Ch7x2"},{"title":"Q.4 Short questions (Chapters 8, 9, 10)","type":"short","given":8,"attempt":5,"marksEach":2,"note":"Ch8x2, Ch9x2, Ch10x4"},{"title":"Q.5-Q.7 Long questions","type":"long","given":3,"attempt":2,"marksEach":9,"note":"Each long: part (a) 5 marks + part (b) 4 marks. Q5 Ch1+3, Q6 Ch6+5, Q7 Ch9+8"}]},"10-Chemistry":{"class":10,"subject":"Chemistry","totalMarks":60,"time":"2 hours (Objective 15 min + Subjective 1:45)","confidence":"web","objective":{"marksEach":1,"mcqCount":12},"sections":[{"title":"Q.2 Short questions (Chapters 14-18)","type":"short","given":8,"attempt":5,"marksEach":2,"note":"MCQs come from Chapters 14-26 (no MCQ from Ch 25)"},{"title":"Q.3 Short questions","type":"short","given":8,"attempt":5,"marksEach":2,"note":"Chapter groups per pairing scheme"},{"title":"Q.4 Short questions","type":"short","given":8,"attempt":5,"marksEach":2,"note":"Chapter groups per pairing scheme"},{"title":"Q.5-Q.7 Long questions","type":"long","given":3,"attempt":2,"marksEach":9,"note":"Each long: part (a) 5 marks + part (b) 4 marks"}]},"10-Computer Science":{"class":10,"subject":"Computer Science","totalMarks":50,"time":"2 hours (Objective 15 min + Subjective 1:45)","confidence":"web","objective":{"marksEach":1,"mcqCount":10},"sections":[{"title":"Q.2 Short questions","type":"short","given":6,"attempt":4,"marksEach":2,"note":""},{"title":"Q.3 Short questions","type":"short","given":6,"attempt":4,"marksEach":2,"note":""},{"title":"Q.4 Short questions","type":"short","given":6,"attempt":4,"marksEach":2,"note":"Short sections Q.2-Q.4 total 24 marks; per-section attempt (4 of 6) follows the same PECTAA structure as Grade 9 CS"},{"title":"Q.5-Q.7 Long questions","type":"long","given":3,"attempt":2,"marksEach":8,"note":"Computer Science & Entrepreneurship. Practical marks are separate from this 50-mark written paper"}]},"10-English":{"class":10,"subject":"English","totalMarks":75,"time":"2:30 hours (Objective 20 min + Subjective 2:10)","confidence":"verified-ours","objective":{"marksEach":1,"mcqCount":19},"sections":[{"title":"Q.2 Short questions from lessons","type":"short","given":8,"attempt":5,"marksEach":2,"note":"Any 5 of 8 = 10 marks. Objective split: verbs 5, spelling 4, meanings 5, grammar 5"},{"title":"Q.3 Translate into Urdu","type":"special","given":null,"attempt":null,"marksEach":null,"note":"Total 8 marks"},{"title":"Q.4 Summary of the poem / stanza explanation","type":"special","given":null,"attempt":null,"marksEach":null,"note":"Total 5 marks"},{"title":"Q.5 Essay OR Paragraph writing","type":"special","given":null,"attempt":null,"marksEach":null,"note":"Total 15 marks"},{"title":"Q.6 Direct / Indirect narration","type":"special","given":null,"attempt":null,"marksEach":null,"note":"Total 5 marks"},{"title":"Q.7 Pair of words (use in sentences)","type":"special","given":null,"attempt":null,"marksEach":null,"note":"Total 5 marks"},{"title":"Q.8 Translate into English","type":"special","given":null,"attempt":null,"marksEach":null,"note":"Total 8 marks"}]},"10-Islamiat":{"class":10,"subject":"Islamiat","totalMarks":50,"time":"2 hours (Objective 15 min + Subjective 1:45)","confidence":"web","objective":{"marksEach":1,"mcqCount":10},"sections":[{"title":"Q.2 Short questions from Qurani Ayat (Surah Al-Ahzab, Surah Al-Mumtahinah etc.)","type":"short","given":9,"attempt":6,"marksEach":2,"note":""},{"title":"Q.3 Short questions from Ahadith and Mauzuat","type":"short","given":9,"attempt":6,"marksEach":2,"note":""},{"title":"Q.4 Qurani Ayat ka Tarjuma","type":"special","given":3,"attempt":2,"marksEach":4,"note":"Section split per PBCC pairing-scheme reproductions; totals (10 MCQ / 24 short / 16 long) confirmed by several sources"},{"title":"Q.5 Hadith ka Tarjuma-o-Tashreeh","type":"special","given":1,"attempt":1,"marksEach":3,"note":""},{"title":"Q.6 Long question (Mauzuati Mutala)","type":"long","given":2,"attempt":1,"marksEach":5,"note":""}]},"10-Mathematics":{"class":10,"subject":"Mathematics","totalMarks":75,"time":"2:30 hours (Objective 20 min + Subjective 2:10)","confidence":"verified-ours","objective":{"marksEach":1,"mcqCount":15},"sections":[{"title":"Q.2 Short questions","type":"short","given":9,"attempt":6,"marksEach":2,"note":"Any 6 of 9 parts"},{"title":"Q.3 Short questions","type":"short","given":9,"attempt":6,"marksEach":2,"note":"Any 6 of 9 parts"},{"title":"Q.4 Short questions","type":"short","given":9,"attempt":6,"marksEach":2,"note":"Any 6 of 9 parts"},{"title":"Q.5-Q.7 Long questions","type":"long","given":3,"attempt":2,"marksEach":8,"note":"Each long has (a) 4 + (b) 4 parts"},{"title":"Q.8-Q.9 Long questions","type":"long","given":2,"attempt":1,"marksEach":8,"note":"Each long has (a) 4 + (b) 4 parts"}]},"10-Pakistan Studies":{"class":10,"subject":"Pakistan Studies","totalMarks":100,"time":"3 hours","confidence":"verified-ours","objective":{"marksEach":1,"mcqCount":20},"sections":[{"title":"Q.2 Short questions (Chapters 1, 2, 6)","type":"short","given":12,"attempt":8,"marksEach":2,"note":"MCQ split: Ch1:2, Ch2:2, Ch3:4, Ch4:3, Ch5:2, Ch6:2, Ch7:3, Ch8:2. Total shorts attempted = 25 (8 + 8 + 9)"},{"title":"Q.3 Short questions (Chapters 4, 7)","type":"short","given":null,"attempt":8,"marksEach":2,"note":"Given count per section not printed in the sources; attempted count (8) is confirmed"},{"title":"Q.4 Short questions (Chapters 3, 5, 8)","type":"short","given":null,"attempt":9,"marksEach":2,"note":"Given count per section not printed in the sources; attempted count (9) is confirmed"},{"title":"Q.5-Q.9 Long questions","type":"long","given":5,"attempt":3,"marksEach":10,"note":""}]},"10-Physics":{"class":10,"subject":"Physics","totalMarks":60,"time":"2 hours (Objective 15 min + Subjective 1:45)","confidence":"verified-ours","objective":{"marksEach":1,"mcqCount":12},"sections":[{"title":"Q.2 Short questions (Chapters 10-13)","type":"short","given":8,"attempt":5,"marksEach":2,"note":""},{"title":"Q.3 Short questions (Chapters 14-17)","type":"short","given":8,"attempt":5,"marksEach":2,"note":""},{"title":"Q.4 Short questions (Chapters 18-21)","type":"short","given":8,"attempt":5,"marksEach":2,"note":""},{"title":"Q.5-Q.7 Long questions","type":"long","given":3,"attempt":2,"marksEach":9,"note":"Each long: part (a) 4 marks + part (b) 5 marks"}]},"10-Tarjuma-tul-Quran":{"class":10,"subject":"Tarjuma-tul-Quran","totalMarks":50,"time":"2 hours (Objective 15 min + Subjective 1:45)","confidence":"verified-ours","objective":{"marksEach":1,"mcqCount":10},"sections":[{"title":"Q.2 Short questions","type":"short","given":8,"attempt":5,"marksEach":2,"note":""},{"title":"Q.3 Alfaz ke Maani (Qurani alfaz ke maani)","type":"special","given":8,"attempt":5,"marksEach":1,"note":""},{"title":"Q.4 Ayat ka ba-muhawara Tarjuma","type":"special","given":5,"attempt":3,"marksEach":5,"note":""},{"title":"Q.5 Tafseeli sawal (Surah ka taaruf / markazi mazameen)","type":"long","given":2,"attempt":1,"marksEach":10,"note":"Attempt 1 of 2 per web pairing schemes; his verified pattern fixes this question at 10 marks"}]},"10-Urdu":{"class":10,"subject":"Urdu","totalMarks":75,"time":"2:30 hours (Objective 20 min + Subjective 2:10)","confidence":"verified-ours","objective":{"marksEach":1,"mcqCount":15},"sections":[{"title":"Q.2 Ash'ar ki Tashreeh","type":"special","given":7,"attempt":5,"marksEach":2,"note":"Koi se 5 ash'ar ki tashreeh = 10 marks"},{"title":"Q.3 Nasri Iqtibas ki Tashreeh (siaq-o-sabaq ke sath)","type":"special","given":2,"attempt":2,"marksEach":5,"note":"Dono iqtibasat ki tashreeh = 10 marks"},{"title":"Q.4 Asbaaq se short questions","type":"short","given":8,"attempt":5,"marksEach":2,"note":""},{"title":"Q.5-Q.6 Qawaid-o-Insha (khulasa, markazi khayal, khat/darkhwast/mukalma, qawaid)","type":"special","given":null,"attempt":null,"marksEach":null,"note":"Combined Qawaid-o-Insha block per his precedent paper (UR10-02); internal split follows that paper"},{"title":"Q.7 Mazmoon (Essay)","type":"special","given":1,"attempt":1,"marksEach":15,"note":"Compulsory at the END of the subjective part (his standing correction, Nov 2026); 15 marks per board-pattern overviews"},{"title":"Q.8 Tafheem-e-Ibarat (Comprehension)","type":"special","given":1,"attempt":1,"marksEach":10,"note":"Compulsory at the END of the subjective part (his standing correction, Nov 2026); marks per board-pattern overviews"}]},"9-Biology":{"class":9,"subject":"Biology","totalMarks":60,"time":"2 hours (Objective 15 min + Subjective 1:45)","confidence":"web","objective":{"marksEach":1,"mcqCount":12},"sections":[{"title":"Q.2 Short questions (Chapters 1-3)","type":"short","given":8,"attempt":5,"marksEach":2,"note":""},{"title":"Q.3 Short questions (Chapters 4-6 + 10)","type":"short","given":8,"attempt":5,"marksEach":2,"note":""},{"title":"Q.4 Short questions (Chapters 7-9)","type":"short","given":8,"attempt":5,"marksEach":2,"note":"Chapter 11 (Biostatistics) is excluded from the 2027 paper"},{"title":"Q.5-Q.7 Long questions","type":"long","given":3,"attempt":2,"marksEach":9,"note":"Each long: part (a) 5 marks + part (b) 4 marks"}]},"9-Chemistry":{"class":9,"subject":"Chemistry","totalMarks":60,"time":"2 hours (Objective 15 min + Subjective 1:45)","confidence":"web","objective":{"marksEach":1,"mcqCount":12},"sections":[{"title":"Q.2 Short questions (Chapters 1-4)","type":"short","given":8,"attempt":5,"marksEach":2,"note":""},{"title":"Q.3 Short questions (Chapters 5-8)","type":"short","given":8,"attempt":5,"marksEach":2,"note":""},{"title":"Q.4 Short questions (Chapters 9-11)","type":"short","given":8,"attempt":5,"marksEach":2,"note":""},{"title":"Q.5-Q.7 Long questions","type":"long","given":3,"attempt":2,"marksEach":9,"note":"Each long: part (a) 5 marks + part (b) 4 marks per PECTAA paper-setter instructions (some secondary sites swap a/b)"}]},"9-Computer Science":{"class":9,"subject":"Computer Science","totalMarks":50,"time":"2 hours (Objective 15 min + Subjective 1:45)","confidence":"web","objective":{"marksEach":1,"mcqCount":10},"sections":[{"title":"Q.2 Short questions","type":"short","given":6,"attempt":4,"marksEach":2,"note":""},{"title":"Q.3 Short questions","type":"short","given":6,"attempt":4,"marksEach":2,"note":""},{"title":"Q.4 Short questions","type":"short","given":6,"attempt":4,"marksEach":2,"note":""},{"title":"Q.5-Q.7 Long questions","type":"long","given":3,"attempt":2,"marksEach":8,"note":"New book: Computer Science & Entrepreneurship (PECTAA notif. 2026/1255). Practical marks are separate from this 50-mark written paper"}]},"9-English":{"class":9,"subject":"English","totalMarks":75,"time":"2:30 hours (Objective 20 min + Subjective 2:10)","confidence":"web","objective":{"marksEach":1,"mcqCount":19},"sections":[{"title":"Q.2 Part A: Short questions from textbook exercises","type":"short","given":5,"attempt":3,"marksEach":2,"note":"Units 1,2,3,4,6 + Review-I (3 questions) and Units 7,9,11 + Review-II (2 questions)"},{"title":"Q.2 Part B: Short questions from the Play (The Dear Departed)","type":"short","given":2,"attempt":1,"marksEach":4,"note":""},{"title":"Q.3 Translate paragraphs into Urdu / re-write in simple English","type":"special","given":3,"attempt":2,"marksEach":4,"note":"Paragraphs from Units 1, 2, 4, 6 and 9 only"},{"title":"Q.4 Summary of the poem OR explain the stanza with reference to the context","type":"special","given":1,"attempt":1,"marksEach":5,"note":""},{"title":"Q.5 Use words / phrases / idioms in your own sentences","type":"special","given":8,"attempt":5,"marksEach":1,"note":""},{"title":"Q.6 Write a letter OR a story OR a dialogue","type":"special","given":1,"attempt":1,"marksEach":8,"note":"From English Grammar and Composition 9-10"},{"title":"Q.7 Comprehension: read the passage and answer the questions","type":"special","given":1,"attempt":1,"marksEach":10,"note":"One passage with 2 questions x 5 marks"},{"title":"Q.8 Translate any five sentences into English","type":"special","given":null,"attempt":5,"marksEach":1,"note":"Number of sentences given is not printed in the scheme. English-medium candidates instead write a paragraph of 10 sentences"},{"title":"Q.9 Change the voice (Active / Passive)","type":"special","given":5,"attempt":5,"marksEach":1,"note":"All five sentences"}]},"9-Islamiat":{"class":9,"subject":"Islamiat","totalMarks":100,"time":"3 hours","confidence":"verified-ours","objective":{"marksEach":1,"mcqCount":20},"sections":[{"title":"Q.2 Short questions","type":"short","given":9,"attempt":6,"marksEach":2,"note":"Any 6 of 9 parts = 12 marks"},{"title":"Q.3 Short questions from Qurani Ayat and Ahadith","type":"short","given":null,"attempt":8,"marksEach":2,"note":"16 marks per his saved model-paper pattern (8 x 2); given count not recorded in the saved pattern"},{"title":"Q.4 Qurani Ayat ka Tarjuma","type":"special","given":3,"attempt":2,"marksEach":5,"note":""},{"title":"Q.5 Ahadith ka Tarjuma","type":"special","given":3,"attempt":2,"marksEach":5,"note":""},{"title":"Q.6 Long questions","type":"long","given":4,"attempt":2,"marksEach":10,"note":""}]},"9-Mathematics":{"class":9,"subject":"Mathematics","totalMarks":75,"time":"2:30 hours (Objective 20 min + Subjective 2:10)","confidence":"verified-ours","objective":{"marksEach":1,"mcqCount":15},"sections":[{"title":"Q.2 Short questions (Units 1-5: U1x2, U2x2, U3x2, U4x2, U5x1)","type":"short","given":9,"attempt":6,"marksEach":2,"note":"Any 6 of 9 parts"},{"title":"Q.3 Short questions (Units 6, 7, 9: U6x3, U7x3, U9x3)","type":"short","given":9,"attempt":6,"marksEach":2,"note":"Any 6 of 9 parts"},{"title":"Q.4 Short questions (Units 10-13: U10x2, U11x2, U12x2, U13x3)","type":"short","given":9,"attempt":6,"marksEach":2,"note":"Any 6 of 9 parts"},{"title":"Q.5-Q.7 Long questions","type":"long","given":3,"attempt":2,"marksEach":8,"note":"Q5 (a) U1 (b) U2 | Q6 (a) U3 (b) U4 | Q7 (a) U5 (b) U6"},{"title":"Q.8-Q.9 Long questions","type":"long","given":2,"attempt":1,"marksEach":8,"note":"Q8 (a) U7+U10 (b) U9 | Q9 (a) U12 (b) U11+U13"}]},"9-Pakistan Studies":{"class":9,"subject":"Pakistan Studies","totalMarks":50,"time":"2 hours (Objective 15 min + Subjective 1:45)","confidence":"web","objective":{"marksEach":1,"mcqCount":10},"sections":[{"title":"Q.2 Short questions","type":"short","given":9,"attempt":6,"marksEach":2,"note":"Two short sections (Q.2 + Q.3) of 12 marks each = 24. Sourcing for this subject is weaker than for the science subjects; given count follows pairing-scheme reproductions"},{"title":"Q.3 Short questions","type":"short","given":9,"attempt":6,"marksEach":2,"note":""},{"title":"Q.4-Q.6 Long questions","type":"long","given":3,"attempt":2,"marksEach":8,"note":"Current book has 4 chapters; many schemes still circulating online are for the old 5-chapter book"}]},"9-Physics":{"class":9,"subject":"Physics","totalMarks":60,"time":"2 hours (Objective 15 min + Subjective 1:45)","confidence":"web","objective":{"marksEach":1,"mcqCount":12},"sections":[{"title":"Q.2 Short questions (Chapters 1-3)","type":"short","given":8,"attempt":5,"marksEach":2,"note":""},{"title":"Q.3 Short questions (Chapters 4-6)","type":"short","given":8,"attempt":5,"marksEach":2,"note":""},{"title":"Q.4 Short questions (Chapters 7-9)","type":"short","given":8,"attempt":5,"marksEach":2,"note":""},{"title":"Q.5-Q.7 Long questions","type":"long","given":3,"attempt":2,"marksEach":9,"note":"Each long: part (a) 4 marks + part (b) 5 marks, from different chapters (PECTAA 2027 scheme)"}]},"9-Tarjuma-tul-Quran":{"class":9,"subject":"Tarjuma-tul-Quran","totalMarks":50,"time":"2 hours (Objective 15 min + Subjective 1:45)","confidence":"verified-ours","objective":{"marksEach":1,"mcqCount":10},"sections":[{"title":"Q.2 Short questions","type":"short","given":8,"attempt":5,"marksEach":2,"note":""},{"title":"Q.3 Alfaz ke Maani (Qurani alfaz ke maani)","type":"special","given":8,"attempt":5,"marksEach":1,"note":""},{"title":"Q.4 Ayat ka ba-muhawara Tarjuma","type":"special","given":5,"attempt":3,"marksEach":5,"note":""},{"title":"Q.5 Tafseeli sawal (Surah ka taaruf / markazi mazameen)","type":"long","given":2,"attempt":1,"marksEach":10,"note":"Attempt 1 of 2 per web pairing schemes; his verified pattern fixes this question at 10 marks"}]},"9-Urdu":{"class":9,"subject":"Urdu","totalMarks":75,"time":"2:30 hours (Objective 20 min + Subjective 2:10)","confidence":"web","objective":{"marksEach":1,"mcqCount":15},"sections":[{"title":"Q.2 Ash'ar ki Tashreeh (Nazm + Ghazal)","type":"special","given":7,"attempt":5,"marksEach":2,"note":"7 ashaar given (4 from nazms + 3 from ghazals); explain any 5 (3 nazm + 2 ghazal) = 10 marks"},{"title":"Q.3 Nasri Iqtibas ki Tashreeh (siaq-o-sabaq ke sath)","type":"special","given":2,"attempt":1,"marksEach":10,"note":"Marks split: musannif ka naam 1, sabaq ka naam 1, khat-kashida alfaz ke maani 3, tashreeh 5"},{"title":"Q.4 Short questions from lessons","type":"short","given":8,"attempt":5,"marksEach":2,"note":"Nasr 4, Nazm 2, Ghazal 2"},{"title":"Q.5 Kisi ek sabaq ka Khulasa","type":"special","given":2,"attempt":1,"marksEach":5,"note":""},{"title":"Q.6 Nazm ka Khulasa ya Markazi Khayal","type":"special","given":2,"attempt":1,"marksEach":5,"note":"One poem's summary and another's central idea are set; attempt as directed in the scheme"},{"title":"Q.7 Darkhwast ya Khat","type":"special","given":1,"attempt":1,"marksEach":10,"note":"One application OR one letter (Qawaid-o-Insha)"},{"title":"Q.8 Kahani ya Mukalma","type":"special","given":1,"attempt":1,"marksEach":5,"note":"One story OR one dialogue"},{"title":"Q.9 Qawaid: jumlon ki durustagi / takmeel","type":"special","given":7,"attempt":5,"marksEach":1,"note":"7 parts given (4 from nahw + 3 zarb-ul-amsaal), attempt any 5"}]}};
+/* Class (9th/10th — text se number nikala jata hai) + Subject se
+   template. Sirf 9th/10th ke templates hain; koi aur class ho to null. */
+function subjectTemplateFor(clazz, subject) {
+  var canon = canonicalSubject(subject);
+  if (!canon) return null;
+  var num = parseInt(String(clazz || "").replace(/[^0-9]/g, ""), 10);
+  if (num !== 9 && num !== 10) return null;
+  return SUBJECT_TEMPLATES[num + "-" + canon] || null;
+}
+/* Template ke section title se "Q.2 " / "Q.5-Q.7 " wala agla hissa
+   hata do — paper ka heading apna "Q.N" khud lagata hai (scheme
+   presets wali convention), warna number dohra ho jayega. */
+function templateSectionTitle(t) {
+  return String(t || "Section").replace(/^Q\.\s*\d+(?:\s*[-–]\s*Q\.\s*\d+)?\s*[:.]?\s*/i, "") || "Section";
+}
+function pushTemplateBlanks(sec, n) {
+  n = parseInt(n, 10);
+  if (isNaN(n) || n < 1) n = 1;
+  if (n > 60) n = 60;
+  for (var i = 0; i < n; i++) sec.questions.push(blankQuestion(sec.type));
+  return sec;
+}
+/* Template se asal paper sections: MCQ section objective ki tadaad
+   ke khaali sawalon ke sath; har section apne given/attempt/marks ke
+   sath. "special" qisam ke sections (tarjuma, tashreeh, mazmoon,
+   tafheem waghera) maujooda sab se qareeb type "long" par model hote
+   hain — title aur note (instruction) template ke hi rehte hain.
+   Jin specials ke marksEach null hain, un ka kul number pehle note
+   ke "Total X marks" se, warna template ke kul total mein se baqi
+   sections ke baad bacha hua hissa (10-Urdu ke Qawaid-o-Insha block
+   jaisa) — taake paper ka majmooa template ke total ke barabar ho. */
+function templateSections(tpl) {
+  var secs = [];
+  var mcq = makeSection("mcq");
+  mcq.marksEach = Number(tpl.objective && tpl.objective.marksEach) || 1;
+  pushTemplateBlanks(mcq, tpl.objective ? tpl.objective.mcqCount : 0);
+  secs.push(mcq);
+  var pending = [];
+  (tpl.sections || []).forEach(function (es) {
+    var type = es.type === "short" ? "short" : "long"; /* special -> long (sab se qareeb) */
+    var sec = makeSection(type);
+    sec.title = templateSectionTitle(es.title);
+    var given = parseInt(es.given, 10); if (isNaN(given) || given < 1) given = 0;
+    var att = parseInt(es.attempt, 10); if (isNaN(att) || att < 1) att = 0;
+    var n = given || att || 1;
+    if (typeof es.marksEach === "number" && es.marksEach > 0) {
+      sec.marksEach = es.marksEach;
+    } else {
+      var m = /total\s+(\d+)\s*marks/i.exec(String(es.note || ""));
+      if (m) { sec.marksEach = parseInt(m[1], 10); n = 1; }
+      else { sec.marksEach = 0; pending.push(sec); }
+    }
+    pushTemplateBlanks(sec, n);
+    sec.attempt = (att && given && att < given) ? String(att) : "";
+    if (es.note) sec.note = es.note;
+    secs.push(sec);
+  });
+  if (pending.length) {
+    var known = 0;
+    secs.forEach(function (s) { known += sectionCountedMarks(s).marks; });
+    var rest = (Number(tpl.totalMarks) || 0) - known;
+    if (rest > 0) pending.forEach(function (s) { s.marksEach = rest / s.questions.length; });
+  }
+  return secs;
+}
+/* Template lagao (applyScheme wala pattern): pehle se sawal hon to
+   confirm lazmi — cancel par KUCH nahi badalta. Time template se,
+   paper code subject ke prefix se (autoCode), Page Layout Auto hi
+   rehta hai (kul number se Front/Front+Back khud resolve hota hai). */
+function applySubjectTemplate() {
+  var tpl = subjectTemplateFor(state.setup.clazz, state.setup.subject);
+  if (!tpl) return false;
+  var hasQ = state.sections.some(function (s) { return s.questions.length > 0; });
+  if (hasQ && !window.confirm("Is paper mein pehle se sawal hain. Template lagane se maujooda sawal hat kar " + tpl.subject + " (" + tpl["class"] + "th) ka khaali board layout ban jayega. Kya aap waqai template lagana chahte hain?")) return false;
+  state.setup.time = tpl.time;
+  state.setup.code = autoCode(state.setup.subject, state.setup.clazz);
+  _lastAutoCode = state.setup.code;
+  state.sections = templateSections(tpl);
+  state.scheme = null;
+  editCtx = null; formBuf = {}; bulkBuf = {};
+  renderAll(); persist();
+  return true;
+}
+/* Template bar: sirf tab dikhta hai jab maujooda Class (9th/10th) +
+   Subject ka template mojood ho. */
+function renderTemplateBar() {
+  var bar = document.getElementById("subjTplBar");
+  if (!bar) return;
+  var tpl = subjectTemplateFor(state.setup.clazz, state.setup.subject);
+  if (!tpl) { bar.style.display = "none"; return; }
+  bar.style.display = "";
+  var tx = document.getElementById("subjTplText");
+  if (tx) tx.textContent = "📐 " + tpl.subject + " (" + tpl["class"] + "th) ka Board Layout — kul " + tpl.totalMarks + " number, " + tpl.time;
+}
+/* Subject field ki UI haalat: mashhoor subject ho to select par wahi,
+   koi aur text ho to "Other" + free-text input khula, khaali ho to
+   select khaali. setup.subject hamesha asal string hi rehti hai. */
+function renderSubjectField() {
+  var sel = document.getElementById("inSubjectSel");
+  var inp = document.getElementById("inSubject");
+  var subj = String(state.setup.subject || "");
+  var canon = canonicalSubject(subj);
+  if (sel) sel.value = canon ? canon : (subj.trim() ? "__other" : "");
+  if (inp) {
+    inp.value = subj;
+    inp.style.display = (sel && sel.value === "__other") ? "" : "none";
+  }
+}
+
 
 /* Scheme ke mutabiq progress: har scheme-section ke liye bharay hue
    sawal (state sections jinka schemeIdx wahi hai), per-chapter slot
@@ -1351,20 +1572,23 @@ function puterChatText(prompt) {
   });
 }
 
-/* ================= AI ENGINE (Puter FREE / apni Gemini Key) =================
+/* ================= AI ENGINE (Puter FREE / Gemini Key / ChatGPT) =================
    Photo/Text panel ke upar "⚙ AI Engine" selector hai. Default Puter
    (FREE) hai. "Apni Gemini Key" chunne par tamam AI generation —
    Photo, Text Paste, Urdu Tarjuma aur Pairing Scheme parse — Puter ki
    bajaye owner ki apni Gemini key se hoti hai (wohi key jo neeche
    Advanced hisse mein save hoti hai: localStorage GEMINI_LS, ek hi
-   jagah). Gemini par Puter wali free limit nahi hoti. Engine ki
-   choice bhi browser mein yaad rehti hai (kpg_ai_engine). */
+   jagah). "ChatGPT (OpenAI API Key)" chunne par wahi tamam generation
+   owner ki apni OpenAI key (localStorage OPENAI_LS) se hoti hai —
+   OpenAI key PAID hoti hai, ChatGPT Plus is se alag hai. Key wale
+   engines par Puter wali free limit nahi hoti. Engine ki choice bhi
+   browser mein yaad rehti hai (kpg_ai_engine). */
 var AI_ENGINE_LS = "kpg_ai_engine";
 var aiEngineChoice = "puter";
-try { if (localStorage.getItem(AI_ENGINE_LS) === "gemini") aiEngineChoice = "gemini"; } catch (e) {}
-function aiEngine() { return aiEngineChoice === "gemini" ? "gemini" : "puter"; }
+try { var _savedEng = localStorage.getItem(AI_ENGINE_LS); if (_savedEng === "gemini" || _savedEng === "openai") aiEngineChoice = _savedEng; } catch (e) {}
+function aiEngine() { return (aiEngineChoice === "gemini" || aiEngineChoice === "openai") ? aiEngineChoice : "puter"; }
 function setAiEngine(v) {
-  aiEngineChoice = (v === "gemini") ? "gemini" : "puter";
+  aiEngineChoice = (v === "gemini" || v === "openai") ? v : "puter";
   try { localStorage.setItem(AI_ENGINE_LS, aiEngineChoice); } catch (e) {}
   refreshEngineUI();
   return aiEngineChoice;
@@ -1394,17 +1618,47 @@ function geminiSavedKey() {
   if (b && b.value && String(b.value).trim()) return String(b.value).trim();
   try { return String(localStorage.getItem(GEMINI_LS) || "").trim(); } catch (e) { return ""; }
 }
+/* OpenAI (ChatGPT) key ki alag storage — Gemini wali key se bilkul
+   alag (OPENAI_LS). Save shuda key: pehle Engine wale input ki value,
+   phir localStorage. */
+var OPENAI_LS = "kpg_openai_key";
+function openaiSavedKey() {
+  var b = document.getElementById("engineOpenaiKey");
+  if (b && b.value && String(b.value).trim()) return String(b.value).trim();
+  try { return String(localStorage.getItem(OPENAI_LS) || "").trim(); } catch (e) { return ""; }
+}
+/* AI error jo apna EK saaf Roman-Urdu paigham khud rakhta ho (masalan
+   OpenAI ki ghalat key / quota) — panels use bilkul waisa hi dikhate
+   hain: na raw error, na Puter wali limit wala paigham. */
+function aiUserMsg(e) { return (e && e.userMsg && e.message) ? String(e.message) : ""; }
 function refreshEngineUI() {
   var sel = document.getElementById("aiEngineSel");
   if (sel) sel.value = aiEngine();
-  var g = aiEngine() === "gemini";
-  var has = !!geminiSavedKey();
+  var eng = aiEngine();
+  var g = eng === "gemini", o = eng === "openai";
+  var has = !!geminiSavedKey(), hasO = !!openaiSavedKey();
   var box = document.getElementById("engineKeyBox");
   if (box) box.style.display = (g && !has) ? "" : "none";
+  var obox = document.getElementById("engineOpenaiBox");
+  if (obox) obox.style.display = (o && !hasO) ? "" : "none";
   var st = document.getElementById("engineState");
   if (st) st.textContent = g
     ? (has ? "✔ Gemini key save hai — sawal ab Gemini se banege (Puter wali free limit is par nahi hoti)." : "⚠ Gemini Engine chuna hai lekin abhi koi key save nahi — neeche apni FREE Gemini key lagayein.")
-    : "Puter (FREE) — sawal free allowance se bante hain; pehle halka model (gpt-4o-mini) chalta hai taake limit der se aye.";
+    : o
+      ? (hasO ? "✔ OpenAI key save hai — sawal ab ChatGPT (gpt-4o-mini) se banege (Puter wali free limit is par nahi hoti)." : "⚠ ChatGPT Engine chuna hai lekin abhi koi key save nahi — neeche apni OpenAI API key lagayein (ye key PAID hoti hai).")
+      : "Puter (FREE) — sawal free allowance se bante hain; pehle halka model (gpt-4o-mini) chalta hai taake limit der se aye.";
+}
+function saveEngineOpenaiKey() {
+  var inp = document.getElementById("engineOpenaiKey");
+  var key = inp ? String(inp.value || "").trim() : "";
+  var stEl = document.getElementById("engineOpenaiKeyState");
+  if (!key) { if (stEl) stEl.textContent = "⚠ Pehle key likhein, phir Save dabayein."; return false; }
+  try { localStorage.setItem(OPENAI_LS, key); } catch (e) {}
+  if (inp) inp.value = "";
+  refreshEngineUI();
+  var st = document.getElementById("aiGenStatus");
+  if (st) st.textContent = "✔ OpenAI key save ho gayi — ab Generate dabayein, sawal ChatGPT se banege.";
+  return true;
 }
 function saveEngineGeminiKey() {
   var inp = document.getElementById("engineGeminiKey");
@@ -1420,13 +1674,20 @@ function saveEngineGeminiKey() {
   if (st) st.textContent = "✔ Gemini key save ho gayi — ab Generate dabayein, sawal Gemini se banege.";
   return true;
 }
-/* Generation ke liye EK rasta: Engine Gemini ho aur key mojood ho to
-   Gemini, warna Puter. (Key na ho to callers pehle hi rok kar key
-   wala box dikha dete hain — ye fallback sirf hifazat ke liye hai.) */
+/* Generation ke liye EK rasta: Engine Gemini/OpenAI ho aur us ki key
+   mojood ho to wahi engine, warna Puter. (Key na ho to callers pehle
+   hi rok kar key wala box dikha dete hain — ye fallback sirf hifazat
+   ke liye hai.) Photo, Text Paste, Tarjuma aur Scheme parse — charon
+   isi ek dispatch se jate hain, is liye ChatGPT engine teeno jagah
+   khud bakhud chal jata hai. */
 function aiChatText(prompt) {
   if (aiEngine() === "gemini") {
     var key = geminiSavedKey();
     if (key) return geminiText(prompt, key);
+  }
+  if (aiEngine() === "openai") {
+    var k2 = openaiSavedKey();
+    if (k2) return openaiText(prompt, k2);
   }
   return puterChatText(prompt);
 }
@@ -1435,6 +1696,10 @@ function aiChatPhoto(prompt, file) {
     var key = geminiSavedKey();
     if (key) return geminiPhotoText(prompt, file, key);
   }
+  if (aiEngine() === "openai") {
+    var k2 = openaiSavedKey();
+    if (k2) return openaiPhotoText(prompt, file, k2);
+  }
   return puterChatOnce(prompt, file);
 }
 /* Scheme AI se parho: {file: imageFile} ya {text: "..."} — kamyabi par
@@ -1442,9 +1707,10 @@ function aiChatPhoto(prompt, file) {
 function runSchemeAiParse(src) {
   var st = document.getElementById("schemeAiStatus");
   function say(m) { if (st) st.textContent = m; }
-  var useGemini = aiEngine() === "gemini";
-  if (useGemini && !geminiSavedKey()) { say("⚠ AI Engine 'Apni Gemini Key' chuna hai lekin koi key save nahi — neeche Photo wale hisse mein Engine ke neeche apni Gemini key lagayein, ya Engine 'Puter (FREE)' kar dein."); return Promise.resolve(null); }
-  if (!useGemini && !puterReady()) { say("⚠ Puter library load nahi hui — internet check karke page refresh karein."); return Promise.resolve(null); }
+  var eng = aiEngine();
+  if (eng === "gemini" && !geminiSavedKey()) { say("⚠ AI Engine 'Apni Gemini Key' chuna hai lekin koi key save nahi — neeche Photo wale hisse mein Engine ke neeche apni Gemini key lagayein, ya Engine 'Puter (FREE)' kar dein."); return Promise.resolve(null); }
+  if (eng === "openai" && !openaiSavedKey()) { say("⚠ AI Engine 'ChatGPT (OpenAI API Key)' chuna hai lekin koi key save nahi — neeche Photo wale hisse mein Engine ke neeche apni OpenAI key lagayein, ya Engine 'Puter (FREE)' kar dein."); return Promise.resolve(null); }
+  if (eng === "puter" && !puterReady()) { say("⚠ Puter library load nahi hui — internet check karke page refresh karein."); return Promise.resolve(null); }
   function go() {
     var prompt = buildSchemePrompt();
     var call;
@@ -1464,12 +1730,14 @@ function runSchemeAiParse(src) {
       say("✔ Scheme lag gayi: " + sc.name + " — neeche progress check kar lein.");
       return sc;
     }).catch(function (e) {
+      var um = aiUserMsg(e);
+      if (um) { say(um); return null; }
       if (isAiLimitError(e)) { say(PUTER_LIMIT_MSG); return null; }
       say("⚠ Scheme parse fail: " + (e && e.message ? e.message : e));
       return null;
     });
   }
-  if (useGemini) return go();
+  if (eng !== "puter") return go();
   if (puterSignedIn()) return go();
   say("🔐 Pehle FREE Puter sign in chahiye — popup khul raha hai…");
   return puterDoSignIn().then(function (ok) {
@@ -1570,9 +1838,10 @@ function runTranslate() {
   function say(m) { if (stEl) stEl.textContent = m; }
   var medium = state.setup.medium;
   if (medium !== "ur" && medium !== "bi") { say("⚠ Pehle Medium ko Urdu ya Bilingual karein."); return Promise.resolve(0); }
-  var useGemini = aiEngine() === "gemini";
-  if (useGemini && !geminiSavedKey()) { say("⚠ AI Engine 'Apni Gemini Key' chuna hai lekin koi key save nahi — neeche Photo wale hisse mein Engine ke neeche apni Gemini key lagayein, ya Engine 'Puter (FREE)' kar dein."); return Promise.resolve(0); }
-  if (!useGemini && !puterReady()) { say("⚠ Puter library load nahi hui — internet check karke page refresh karein."); return Promise.resolve(0); }
+  var eng = aiEngine();
+  if (eng === "gemini" && !geminiSavedKey()) { say("⚠ AI Engine 'Apni Gemini Key' chuna hai lekin koi key save nahi — neeche Photo wale hisse mein Engine ke neeche apni Gemini key lagayein, ya Engine 'Puter (FREE)' kar dein."); return Promise.resolve(0); }
+  if (eng === "openai" && !openaiSavedKey()) { say("⚠ AI Engine 'ChatGPT (OpenAI API Key)' chuna hai lekin koi key save nahi — neeche Photo wale hisse mein Engine ke neeche apni OpenAI key lagayein, ya Engine 'Puter (FREE)' kar dein."); return Promise.resolve(0); }
+  if (eng === "puter" && !puterReady()) { say("⚠ Puter library load nahi hui — internet check karke page refresh karein."); return Promise.resolve(0); }
   var items = collectTranslateItems();
   if (!items.length) { say("⚠ Abhi paper mein koi statement nahi — pehle sawal shamil karein."); return Promise.resolve(0); }
   function go() {
@@ -1607,12 +1876,14 @@ function runTranslate() {
       say("✔ " + items.length + " statements translate ho gayin" + (medium === "bi" ? " (har statement ke neeche Urdu line jud gayi)" : "") + " — paper preview check kar lein. Pasand na aye to ↩ Asal text wapas karein dabayein.");
       return items.length;
     }).catch(function (e) {
+      var um = aiUserMsg(e);
+      if (um) { say(um); return 0; }
       if (isAiLimitError(e)) { say(PUTER_LIMIT_MSG); return 0; }
       say("⚠ Tarjuma fail: " + (e && e.message ? e.message : e) + " Paper mein koi tabdeeli nahi hui.");
       return 0;
     });
   }
-  if (useGemini) return go();
+  if (eng !== "puter") return go();
   if (puterSignedIn()) return go();
   say("🔐 Pehle FREE Puter sign in chahiye — popup khul raha hai…");
   return puterDoSignIn().then(function (ok) {
@@ -1714,6 +1985,53 @@ function layoutStatusText(st) {
     ? "Abhi: Front + Back lagega (kul number " + t.marks + ")"
     : "Abhi: Sirf Front Side lagega (kul number " + t.marks + ")";
 }
+/* ---- Bilingual Presentation: Line-by-line (purana) ya Side-by-Side ----
+   Owner ki hidayat: Bilingual medium mein agar "Side by Side" chuna
+   ho to paper EK A4 LANDSCAPE sheet par do hison mein ata hai —
+   RIGHT half English, LEFT half Urdu, darmiyan mein dashed cut line
+   (un ke combined sheets jaisi shakal). Choice setup.biStyle mein
+   rehti hai ("line" default; purane drafts mein na ho to "line").
+   Side-by-Side SIRF Front (ek sheet) layout par lagta hai — layout
+   Front + Back resolve ho to paper line-by-line hi rehta hai. */
+function biStyleChoice(st) {
+  var v = st && st.setup ? st.setup.biStyle : "";
+  return v === "side" ? "side" : "line";
+}
+function isSideBySide(st) {
+  return !!st && !!st.setup && st.setup.medium === "bi" &&
+    biStyleChoice(st) === "side" && effectiveLayout(st) === "front";
+}
+/* Bilingual text ka EN/UR split — bilkul wahi mechanism jis par
+   maujooda line-by-line rendering chalti hai (lineIsRtl): jis line
+   mein Urdu script hai wo Urdu hissa, baqi English hissa. Translate
+   wala flow dono ko ek hi field mein "\n" se jod kar rakhta hai.
+   Fallback: ek hissa khaali ho to doosra hissa AS-IS dono taraf
+   jata hai — koi half kabhi khaali nahi rehta. */
+function splitBiText(s) {
+  var full = String(s == null ? "" : s);
+  var en = [], ur = [];
+  full.split("\n").forEach(function (ln) { (hasUrdu(ln) ? ur : en).push(ln); });
+  var enT = en.join("\n").trim(), urT = ur.join("\n").trim();
+  return { en: enT || full, ur: urT || full };
+}
+/* Ek half ke liye sections ki naqal: har sawal/option ka sirf usi
+   half ki zuban wala hissa. Section ki baqi tamam khasoosiyat
+   (type, title, marksEach, attempt, note) waisi ki waisi — is liye
+   number aur numberon ki tadaad dono halves mein ek jaisi rehti hai. */
+function biHalfSections(st, half) {
+  return st.sections.map(function (sec) {
+    var c = {};
+    Object.keys(sec).forEach(function (k) { c[k] = sec[k]; });
+    c.questions = sec.questions.map(function (q) {
+      var nq = {};
+      Object.keys(q).forEach(function (k) { nq[k] = q[k]; });
+      nq.q = splitBiText(q.q)[half];
+      if (Array.isArray(q.opts)) nq.opts = q.opts.map(function (o) { return splitBiText(o)[half]; });
+      return nq;
+    });
+    return c;
+  });
+}
 /* Back mode ka split: Page 1 = MCQ/Objective sections, Page 2 = baqi
    (Short/Long). MCQ section hi na ho — ya sirf MCQ hi hon — to sawalon
    ki tadaad ke hisaab se takreeban aadha-aadha. entries: [{sec, idx}]
@@ -1751,7 +2069,10 @@ function fitScaleForHeight(contentH, pageH) {
 }
 function applyPaperFit(el) {
   if (!el || typeof el.scrollHeight !== "number" || !el.style || typeof el.style.setProperty !== "function") return _lastFitScale;
-  var target = Math.round((el.offsetWidth || PDF_A4_W) * PDF_A4_RATIO);
+  /* Landscape (Side-by-Side) sheet ka target ulta ratio hai:
+     unchai = chaudi x 210/297. Baaqi sab portrait (297/210). */
+  var isLand = el.classList && typeof el.classList.contains === "function" && el.classList.contains("paper-land");
+  var target = Math.round((el.offsetWidth || PDF_A4_W) * (isLand ? PDF_A4_RATIO_LAND : PDF_A4_RATIO));
   var s = fitScaleForHeight(el.scrollHeight, target);
   el.style.setProperty("--fit", String(s));
   var guard = 0;
@@ -1794,6 +2115,21 @@ function paperContHeadHTML(st) {
     (su.clazz ? " &nbsp;|&nbsp; " + labSpan(L.clazz, L.urdu) + " <span" + langAttrs(su.clazz) + ">" + esc(su.clazz) + "</span>" : "") +
     (su.code ? " &nbsp;|&nbsp; " + labSpan(L.code, L.urdu) + " " + esc(su.code) : "") +
     '</span><span class="p-page2-tag">Page 2 — Back Side</span></div></div>';
+  return h;
+}
+/* Side-by-Side ke har half ka compact header — wahi header rule
+   (hamesha English/LTR): school naam + Subject/Class + Paper Code +
+   Total Marks + Time, ek hi band mein. Dono halves ka header ek
+   jaisa hota hai; farq sirf neeche ke sections ki zuban ka hai. */
+function paperHalfHeadHTML(st, t) {
+  var su = st.setup;
+  var L = paperLabels(su.medium);
+  var h = '<div class="p-head"><div class="p-school p-school-sm' + (hasUrdu(su.school) ? " urdu-text" : "") + '" dir="auto">' + esc(su.school || "School Name") + "</div>";
+  h += '<div class="p-cont-line"><span>' + labSpan(L.subject, L.urdu) + " <span" + langAttrs(su.subject) + ">" + esc(su.subject || "—") + "</span>" +
+    (su.clazz ? " &nbsp;|&nbsp; " + labSpan(L.clazz, L.urdu) + " <span" + langAttrs(su.clazz) + ">" + esc(su.clazz) + "</span>" : "") +
+    (su.code ? " &nbsp;|&nbsp; " + labSpan(L.code, L.urdu) + " " + esc(su.code) : "") +
+    '</span><span>' + labSpan(L.total, L.urdu) + " " + t.marks +
+    (su.time ? " &nbsp;|&nbsp; " + labSpan(L.time, L.urdu) + " <span" + langAttrs(su.time) + ">" + esc(su.time) + "</span>" : "") + "</span></div></div>";
   return h;
 }
 /* Ek section ka paper HTML — pehle paperHTML ke andar tha, ab alag
@@ -1852,6 +2188,28 @@ function paperHTML(st) {
      Short/Long sections; FRONT SIDE / BACK SIDE labels sirf screen
      ke liye hain (.page-tag — print mein CSS se gayab, PDF clone
      inhein strip kar deta hai). */
+  /* Bilingual Side-by-Side: EK landscape sheet — LEFT half Urdu,
+     RIGHT half English (container LTR flex hai, is liye DOM mein
+     Urdu half pehle ata hai = left par), darmiyan mein dashed cut
+     line. Har half ka apna compact header aur apni zuban ke sections
+     (EN half medium "en" se LTR, UR half medium "ur" se mukammal
+     RTL — wahi isolation/symbol rules). Sirf Front layout par. */
+  if (isSideBySide(st) && shown.length) {
+    var enEntries = biHalfSections(st, "en").map(function (sec, i) { return { sec: sec, idx: i }; })
+      .filter(function (e) { return e.sec.questions.length > 0; });
+    var urEntries = biHalfSections(st, "ur").map(function (sec, i) { return { sec: sec, idx: i }; })
+      .filter(function (e) { return e.sec.questions.length > 0; });
+    /* idx asal section number nahi — shown sections ki tartib hai
+       (single-page wale raste ki tarah), dono halves mein ek jaisi. */
+    enEntries.forEach(function (e, i) { e.idx = i; });
+    urEntries.forEach(function (e, i) { e.idx = i; });
+    var urHalf = '<div class="bi-half bi-half-ur">' + paperHalfHeadHTML(st, t) +
+      urEntries.map(function (e) { return paperSectionHTML(e.sec, e.idx, "ur"); }).join("") + "</div>";
+    var enHalf = '<div class="bi-half bi-half-en">' + paperHalfHeadHTML(st, t) +
+      enEntries.map(function (e) { return paperSectionHTML(e.sec, e.idx, "en"); }).join("") + "</div>";
+    return '<div class="land-scroll"><div class="paper paper-land" dir="ltr"' + paperFitAttr(st) + '><div class="bi-sheet">' +
+      urHalf + '<div class="bi-cut"></div>' + enHalf + "</div></div></div>";
+  }
   if (effectiveLayout(st) === "back" && shown.length > 1) {
     var entries = shown.map(function (sec, i) { return { sec: sec, idx: i }; });
     var split = splitForBack(entries);
@@ -2021,6 +2379,15 @@ function renderLayoutStatus() {
   var el = document.getElementById("layoutStatus");
   if (el) el.textContent = layoutStatusText(state);
 }
+/* Bilingual Presentation wala select SIRF Bilingual medium mein
+   dikhta hai (translateBox wale pattern par). */
+function renderBiStyleBox() {
+  var box = document.getElementById("biStyleBox");
+  if (!box) return;
+  box.style.display = state.setup.medium === "bi" ? "" : "none";
+  var sel = document.getElementById("inBiStyle");
+  if (sel) sel.value = biStyleChoice(state);
+}
 function renderPreview() {
   var pv = document.getElementById("paperPreview");
   pv.innerHTML = paperHTML(state);
@@ -2041,12 +2408,13 @@ function renderSetup() {
   var su = state.setup;
   document.getElementById("inSchool").value = su.school || "";
   document.getElementById("inClass").value = su.clazz || "";
-  document.getElementById("inSubject").value = su.subject || "";
+  renderSubjectField();
   document.getElementById("inCode").value = su.code || "";
   document.getElementById("inDate").value = su.date || "";
   document.getElementById("inTime").value = su.time || "";
   document.getElementById("inMedium").value = su.medium || "en";
   document.getElementById("inLayout").value = layoutChoice(state);
+  renderBiStyleBox();
 }
 function renderDrafts() {
   var drafts = getDrafts();
@@ -2056,12 +2424,12 @@ function renderDrafts() {
     return '<option value="' + esc(n) + '"' + (n === cur ? " selected" : "") + ">" + esc(n) + "</option>";
   }).join("");
 }
-function renderAll() { renderSetup(); renderSections(); renderPreview(); renderDrafts(); renderSchemeProgress(); renderTranslateBox(); }
-function refreshLight() { renderPreview(); persist(); renderSchemeProgress(); renderTranslateBox(); }
+function renderAll() { renderSetup(); renderSections(); renderPreview(); renderDrafts(); renderSchemeProgress(); renderTranslateBox(); renderBiStyleBox(); renderTemplateBar(); }
+function refreshLight() { renderPreview(); persist(); renderSchemeProgress(); renderTranslateBox(); renderBiStyleBox(); renderTemplateBar(); }
 
 /* ================= EVENTS: SETUP ================= */
 function bindSetup() {
-  var map = { inSchool: "school", inClass: "clazz", inSubject: "subject", inCode: "code", inDate: "date", inTime: "time", inMedium: "medium", inLayout: "layout" };
+  var map = { inSchool: "school", inClass: "clazz", inSubject: "subject", inCode: "code", inDate: "date", inTime: "time", inMedium: "medium", inLayout: "layout", inBiStyle: "biStyle" };
   Object.keys(map).forEach(function (id) {
     var el = document.getElementById(id);
     el.addEventListener("input", function () {
@@ -2083,9 +2451,41 @@ function bindSetup() {
     document.getElementById("inCode").value = state.setup.code;
     refreshLight();
   });
+  /* Subject SELECT: mashhoor subject chunne par setup.subject wahi
+     naam ho jata hai (header mein wahi jayega) aur auto code bhi
+     naye prefix se ban jata hai (agar code auto par tha). "Other"
+     par free-text input khulta hai — us ki typing purane generic
+     handler (inSubject -> subject) se hi chalti hai. */
+  var subjSel = document.getElementById("inSubjectSel");
+  if (subjSel) subjSel.addEventListener("change", function () {
+    var v = subjSel.value;
+    var inp2 = document.getElementById("inSubject");
+    if (v === "__other") {
+      if (inp2) {
+        if (!String(inp2.value || "").trim()) inp2.value = state.setup.subject || "";
+        inp2.style.display = "";
+        if (inp2.focus) inp2.focus();
+      }
+    } else {
+      state.setup.subject = v;
+      if (inp2) { inp2.value = v; inp2.style.display = "none"; }
+      var auto = autoCode(state.setup.subject, state.setup.clazz);
+      if (!state.setup.code || state.setup.code === _lastAutoCode) {
+        state.setup.code = auto;
+        document.getElementById("inCode").value = auto;
+      }
+      _lastAutoCode = auto;
+    }
+    refreshLight();
+  });
+  var btnTpl = document.getElementById("btnApplyTemplate");
+  if (btnTpl) btnTpl.addEventListener("click", function () { applySubjectTemplate(); });
+  renderSubjectField();
+  renderTemplateBar();
   document.getElementById("btnTranslate").addEventListener("click", function () { runTranslate(); });
   document.getElementById("btnTranslateUndo").addEventListener("click", function () { undoTranslate(); });
   renderTranslateBox();
+  renderBiStyleBox();
 }
 
 /* ================= EVENTS: SECTIONS (delegated) ================= */
@@ -2267,8 +2667,10 @@ function printHTML(kind) {
    fresh clone se dobara koshish, phir bhi kharab ho to print wala
    tareeqa; shift wali PDF khamoshi se kabhi nahi bhejte. */
 var PDF_A4_W = 794;      /* A4 @ 96dpi: 210mm ≈ 794px (lambai content ke hisaab se) */
+var PDF_A4_W_LAND = 1123;   /* A4 landscape @ 96dpi: 297mm ≈ 1123px */
 var PDF_MIN_BYTES = 8192;
 var PDF_A4_RATIO = 297 / 210;   /* A4 height/width — page slicing ke liye */
+var PDF_A4_RATIO_LAND = 210 / 297;   /* A4 landscape height/width */
 
 function pdfStatus(msg) {
   var el = document.getElementById("pdfStatus");
@@ -2307,7 +2709,8 @@ function buildPdfClone(kind) {
   var pages = [];
   for (var pi = 0; pi < paperEls.length; pi++) {
     var paper = paperEls[pi];
-    paper.style.width = PDF_A4_W + "px";
+    var isLand = paper.classList && typeof paper.classList.contains === "function" && paper.classList.contains("paper-land");
+    paper.style.width = (isLand ? PDF_A4_W_LAND : PDF_A4_W) + "px";
     paper.style.margin = "0";
     paper.style.position = "relative";
     paper.style.left = "0";
@@ -2428,6 +2831,29 @@ function pdfDocFromPageImages(imgs) {
   });
   return doc;
 }
+/* Side-by-Side (Bilingual) ka PDF: EK A4 LANDSCAPE page — tasveer ko
+   page ke andar mutanاسب fit karke center mein dalte hain (kaatte
+   nahi), taake poori sheet ek hi landscape page par aye. */
+function pdfDocFromLandscapeImage(img) {
+  var JsPDF = window.jspdf && window.jspdf.jsPDF;
+  if (!JsPDF) throw new Error("jsPDF library nahi mili");
+  var W = img.naturalWidth || img.width;
+  var H = img.naturalHeight || img.height;
+  if (!W || !H) throw new Error("PNG ka size nahi mila");
+  var doc = new JsPDF({ unit: "mm", format: "a4", orientation: "landscape" });
+  var c = document.createElement("canvas");
+  c.width = W;
+  c.height = H;
+  var ctx = c.getContext("2d");
+  if (!ctx) throw new Error("canvas context nahi mila");
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, W, H);
+  ctx.drawImage(img, 0, 0, W, H);
+  var sc = Math.min(297 / W, 210 / H);
+  var dw = Math.round(W * sc * 100) / 100, dh = Math.round(H * sc * 100) / 100;
+  doc.addImage(c.toDataURL("image/jpeg", 0.95), "JPEG", Math.round((297 - dw) * 50) / 100, Math.round((210 - dh) * 50) / 100, dw, dh);
+  return doc;
+}
 /* ---- Capture self-check (fix #3): tasveer ke ghair-safed kinare ----
    pdfEdgesFromImageData: har column ko scan karke sab se left aur sab
    se right wo column deta hai jahan content (ghair-safed pixel) hai.
@@ -2537,7 +2963,8 @@ function downloadPDF(kind) {
         pdfPrintFallback(kind, "PDF ki tasveer do dafa shift/crop ayi, is liye kharab PDF nahi bheja");
         return false;
       }
-      var doc = (res.imgs && res.imgs.length > 1) ? pdfDocFromPageImages(res.imgs) : pdfDocFromImage(res.img);
+      var isLandImg = !!res.img && ((res.img.naturalWidth || res.img.width || 0) > (res.img.naturalHeight || res.img.height || 0));
+      var doc = (res.imgs && res.imgs.length > 1) ? pdfDocFromPageImages(res.imgs) : (isLandImg ? pdfDocFromLandscapeImage(res.img) : pdfDocFromImage(res.img));
       var blob = doc.output("blob");
       if (!blob || typeof blob.size !== "number" || blob.size < PDF_MIN_BYTES) {
         pdfPrintFallback(kind, "PDF khaali bana (file size bohat chhota)");
@@ -3092,17 +3519,19 @@ function runPuterGen(files) {
   function go() {
     var prompt = buildGenPrompt(counts.nMcq, counts.nShort, counts.nLong, true);
     st.textContent = "🤖 AI ko photo bhej rahe hain…";
-    var all = [], failed = 0, limitHit = false;
+    var all = [], failed = 0, limitHit = false, fatalMsg = "";
     var chain = Promise.resolve();
     use.forEach(function (f, i) {
       chain = chain.then(function () {
-        if (limitHit) return; /* limit ke baad baqi photos par koi call nahi */
+        if (limitHit || fatalMsg) return; /* limit/fatal ke baad baqi photos par koi call nahi */
         st.textContent = "🤖 Photo " + (i + 1) + "/" + use.length + " — AI safha parh kar sawal bana raha hai…";
         return aiChatPhoto(prompt, f).then(function (txt) {
           var cands = parseAiQuestions(txt);
           if (!cands.length) throw new Error("AI ke jawab se koi sawal nahi bana — photo saaf aur qareeb se le kar dobara koshish karein");
           all = all.concat(cands);
         }).catch(function (e) {
+          var um = aiUserMsg(e);
+          if (um) { fatalMsg = um; return; }
           if (isAiLimitError(e)) { limitHit = true; return; }
           failed++;
           st.textContent = "⚠ Photo " + (i + 1) + " fail: " + (e && e.message ? e.message : e) + (use.length > 1 ? " — baqi photos jari hain…" : "");
@@ -3110,6 +3539,15 @@ function runPuterGen(files) {
       });
     });
     return chain.then(function () {
+      if (fatalMsg) {
+        if (all.length) {
+          setCandidates(all);
+          st.textContent = "✔ " + all.length + " sawal ban gaye. " + fatalMsg;
+          return all.length;
+        }
+        st.textContent = fatalMsg;
+        return 0;
+      }
       if (limitHit) {
         if (all.length) {
           setCandidates(all);
@@ -3134,6 +3572,10 @@ function runPuterGen(files) {
   }
   if (aiEngine() === "gemini") {
     if (!geminiSavedKey()) { refreshEngineUI(); st.textContent = "⚠ AI Engine 'Apni Gemini Key' chuna hai lekin koi key save nahi — pehle Engine ke neeche apni Gemini key lagayein (FREE milti hai), ya Engine 'Puter (FREE)' kar dein."; return Promise.resolve(0); }
+    return go();
+  }
+  if (aiEngine() === "openai") {
+    if (!openaiSavedKey()) { refreshEngineUI(); st.textContent = "⚠ AI Engine 'ChatGPT (OpenAI API Key)' chuna hai lekin koi key save nahi — pehle Engine ke neeche apni OpenAI key lagayein, ya Engine 'Puter (FREE)' kar dein."; return Promise.resolve(0); }
     return go();
   }
   if (!puterReady()) { st.textContent = "⚠ Puter library load nahi hui — internet check karke page refresh karein, ya neeche wala slow tareeqa azmayein."; return Promise.resolve(0); }
@@ -3265,6 +3707,8 @@ function runPuterTextGen(textOverride) {
       st.textContent = "✔ AI ne " + cands.length + " sawal banaye (" + nm + " MCQ, " + ns + " Short, " + nl + " Long) — neeche Review mein sawal aur sahi jawab check karke paper mein shamil karein.";
       return cands.length;
     }).catch(function (e) {
+      var um = aiUserMsg(e);
+      if (um) { st.textContent = um; return 0; }
       if (isAiLimitError(e)) { st.textContent = PUTER_LIMIT_MSG; return 0; }
       st.textContent = "⚠ AI fail: " + (e && e.message ? e.message : e) + " — dobara koshish karein. Agar ye ghalti baar baar aaye to ho sakta hai is month ki free allowance khatam ho — kuch dair baad dobara koshish karein.";
       return 0;
@@ -3272,6 +3716,10 @@ function runPuterTextGen(textOverride) {
   }
   if (aiEngine() === "gemini") {
     if (!geminiSavedKey()) { refreshEngineUI(); st.textContent = "⚠ AI Engine 'Apni Gemini Key' chuna hai lekin koi key save nahi — pehle Engine ke neeche apni Gemini key lagayein (FREE milti hai), ya Engine 'Puter (FREE)' kar dein."; return Promise.resolve(0); }
+    return go();
+  }
+  if (aiEngine() === "openai") {
+    if (!openaiSavedKey()) { refreshEngineUI(); st.textContent = "⚠ AI Engine 'ChatGPT (OpenAI API Key)' chuna hai lekin koi key save nahi — pehle Engine ke neeche apni OpenAI key lagayein, ya Engine 'Puter (FREE)' kar dein."; return Promise.resolve(0); }
     return go();
   }
   if (!puterReady()) { st.textContent = "⚠ Puter library load nahi hui — internet check karke page refresh karein."; return Promise.resolve(0); }
@@ -3350,6 +3798,63 @@ function geminiPhotoText(prompt, file, key) {
     return t;
   });
 }
+/* ---- ChatGPT (OpenAI) engine: owner ki apni API key ----
+   geminiCall ki tarah EK mushtarak helper — OpenAI chat completions
+   ko POST, jawab ka assistant text wapas (parsing purana hi chalta
+   hai: parseAiQuestions waghera). Ghaltiyon par raw error kabhi
+   nahi: 401 par key wala saaf paigham, insufficient_quota/429 par
+   balance wala saaf paigham — dono userMsg flag ke sath, taake panel
+   unhein bilkul waisa hi dikhaye (Puter wali limit wala paigham in
+   par NAHI lagta). Koi retry-loop nahi. */
+var OPENAI_MODEL = "gpt-4o-mini";
+function openaiHttpError(status, j) {
+  var code = (j && j.error) ? String(j.error.code || "") : "";
+  var err;
+  if (status === 401) err = new Error("⚠ OpenAI key ghalat hai — key check karke dobara lagayein.");
+  else if (status === 429 || code === "insufficient_quota") err = new Error("⚠ OpenAI key ka balance/quota khatam hai — platform.openai.com par balance check karein, ya Engine Puter (FREE) kar dein.");
+  else err = new Error("⚠ OpenAI ne jawab nahi diya (" + status + ") — dobara koshish karein.");
+  err.userMsg = true;
+  return err;
+}
+function openaiCall(messages, key) {
+  return fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + key },
+    body: JSON.stringify({ model: OPENAI_MODEL, messages: messages })
+  }).then(function (r) {
+    return r.json().catch(function () { return null; }).then(function (j) {
+      if (!r.ok) throw openaiHttpError(r.status, j);
+      var txt = (j && j.choices && j.choices[0] && j.choices[0].message) ? j.choices[0].message.content : "";
+      if (Array.isArray(txt)) txt = txt.map(function (p) { return (p && p.text) || ""; }).join("");
+      return String(txt || "");
+    });
+  }).catch(function (e) {
+    if (e && e.userMsg) throw e;
+    throw new Error("OpenAI se rabta nahi ho saka — internet check karke dobara koshish karein.");
+  });
+}
+/* Engine route (text): Puter wale generation prompts ChatGPT ko —
+   jawab ka text waisa hi wapas, parsing Puter wala hi. */
+function openaiText(prompt, key) {
+  return openaiCall([{ role: "user", content: String(prompt || "") }], key).then(function (t) {
+    if (!t) throw new Error("ChatGPT ne khaali jawab diya");
+    return t;
+  });
+}
+/* Engine route (photo): prompt + photo (data URL image_url part)
+   ChatGPT ko, jawab text. */
+function openaiPhotoText(prompt, file, key) {
+  return fileToBase64(file).then(function (b64) {
+    var url = "data:" + (file.type || "image/jpeg") + ";base64," + b64;
+    return openaiCall([{ role: "user", content: [
+      { type: "text", text: String(prompt || "") },
+      { type: "image_url", image_url: { url: url } }
+    ] }], key);
+  }).then(function (t) {
+    if (!t) throw new Error("ChatGPT ne khaali jawab diya");
+    return t;
+  });
+}
 function runGemini(files) {
   var st = document.getElementById("geminiStatus");
   var keyInput = document.getElementById("geminiKey");
@@ -3398,6 +3903,8 @@ function bindPhoto() {
   if (engSel) engSel.addEventListener("change", function () { setAiEngine(engSel.value); });
   var engSave = document.getElementById("btnEngineKeySave");
   if (engSave) engSave.addEventListener("click", function () { saveEngineGeminiKey(); });
+  var engSaveO = document.getElementById("btnEngineOpenaiSave");
+  if (engSaveO) engSaveO.addEventListener("click", function () { saveEngineOpenaiKey(); });
   refreshEngineUI();
   document.getElementById("btnGemini").addEventListener("click", function () { runGemini(selectedPhotoFiles()); });
   document.getElementById("btnGeminiForget").addEventListener("click", function () {
@@ -4189,9 +4696,19 @@ window.KPG = {
   splitForBack: splitForBack, paperHeadHTML: paperHeadHTML, paperContHeadHTML: paperContHeadHTML, paperSectionHTML: paperSectionHTML,
   fitScaleForHeight: fitScaleForHeight, applyPaperFit: applyPaperFit, FIT_MIN: FIT_MIN, LAYOUT_FRONT_MAX_MARKS: LAYOUT_FRONT_MAX_MARKS,
   getAiEngine: aiEngine, setAiEngine: setAiEngine, refreshEngineUI: refreshEngineUI, saveEngineGeminiKey: saveEngineGeminiKey,
+  saveEngineOpenaiKey: saveEngineOpenaiKey, openaiSavedKey: openaiSavedKey, aiUserMsg: aiUserMsg,
+  openaiCall: openaiCall, openaiText: openaiText, openaiPhotoText: openaiPhotoText, OPENAI_MODEL: OPENAI_MODEL, OPENAI_LS: OPENAI_LS,
   isAiLimitError: isAiLimitError, PUTER_LIMIT_MSG: PUTER_LIMIT_MSG, PUTER_MODEL_MINI: PUTER_MODEL_MINI,
   aiChatText: aiChatText, aiChatPhoto: aiChatPhoto, geminiSavedKey: geminiSavedKey,
   geminiCall: geminiCall, geminiText: geminiText, geminiPhotoText: geminiPhotoText, GEMINI_MODEL: GEMINI_MODEL, GEMINI_LS: GEMINI_LS,
+  mxRunIsSymbolOnly: mxRunIsSymbolOnly, optIsoHtml: optIsoHtml,
+  biStyleChoice: biStyleChoice, isSideBySide: isSideBySide, splitBiText: splitBiText, biHalfSections: biHalfSections,
+  paperHalfHeadHTML: paperHalfHeadHTML, renderBiStyleBox: renderBiStyleBox,
+  PDF_A4_W_LAND: PDF_A4_W_LAND, PDF_A4_RATIO_LAND: PDF_A4_RATIO_LAND, pdfDocFromLandscapeImage: pdfDocFromLandscapeImage,
+  SUBJECT_LIST: SUBJECT_LIST, SUBJECT_CODE_PREFIX: SUBJECT_CODE_PREFIX, SUBJECT_TEMPLATES: SUBJECT_TEMPLATES,
+  canonicalSubject: canonicalSubject, subjectTemplateFor: subjectTemplateFor, templateSectionTitle: templateSectionTitle,
+  templateSections: templateSections, applySubjectTemplate: applySubjectTemplate,
+  renderTemplateBar: renderTemplateBar, renderSubjectField: renderSubjectField, loadPersisted: loadPersisted,
   PDF_A4_W: PDF_A4_W, PDF_MIN_BYTES: PDF_MIN_BYTES, PDF_A4_RATIO: PDF_A4_RATIO,
   AUTH_URL_LS: AUTH_URL_LS, AUTH_SESS_SS: AUTH_SESS_SS,
   authServerUrl: authServerUrl, authSetServerUrl: authSetServerUrl, authValidUrl: authValidUrl,
