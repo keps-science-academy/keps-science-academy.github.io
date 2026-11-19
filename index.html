@@ -105,7 +105,20 @@ input:focus,select:focus,textarea:focus{outline:2px solid #9ec7e8;border-color:v
 .sticky{position:sticky;top:86px}
 @media(max-width:900px){.sticky{position:static}}
 /* ===== A4 PAPER PREVIEW ===== */
-.paper{background:#fff;color:#000;border:1px solid #bbb;box-shadow:0 2px 10px rgba(0,0,0,.12);padding:16mm 13mm;font-family:"Noto Sans","Times New Roman",Times,Arial,"Noto Nastaliq Urdu",sans-serif;font-size:13.5px;line-height:1.5;min-height:200px}
+.paper{background:#fff;color:#000;border:1px solid #bbb;box-shadow:0 2px 10px rgba(0,0,0,.12);padding:16mm 13mm;font-family:"Noto Sans","Times New Roman",Times,Arial,"Noto Nastaliq Urdu",sans-serif;font-size:calc(13.5px * var(--fit,1));line-height:1.5;min-height:200px}
+/* Page Layout (Front-only fit): paper ke andar ke font-size aur spacing
+   em mein hain taake --fit scale (applyPaperFit, 1 se 0.72 tak) lagte hi
+   poora paper mutanاسب (proportional) chhota ho kar ek A4 par aa jaye.
+   --fit na ho to 1 — purani shakal bilkul waisi hi. */
+/* Front + Back mode: do .paper pages ke upar screen-only labels —
+   print/PDF mein kabhi nahi aate (.page-tag print rule + PDF clone
+   inhein strip karta hai). */
+.page-tag{text-align:center;font:700 11px/1.5 "Segoe UI",sans-serif;letter-spacing:2.5px;color:#8a97a3;margin:10px 0 6px}
+.page-tag:first-child{margin-top:0}
+.paper-page2{margin-top:2px}
+.p-school-sm{font-size:1.185em}
+.p-cont-line{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1.5px solid #000;padding:.2em .4em;font-weight:700;font-size:1.111em;background:#f2f2f2;margin-top:6px;text-align:left}
+.p-page2-tag{white-space:nowrap}
 /* Urdu-script text ONLY: Nastaliq font + tall line-height. Ye class sirf
    font badalti hai; direction ka faisla medium karta hai — Urdu medium
    mein section .p-rtl se RTL hota hai, English/Bilingual ki English
@@ -118,15 +131,15 @@ input:focus,select:focus,textarea:focus{outline:2px solid #9ec7e8;border-color:v
    .p-sec-sub ke font-size par jeet-ta hai; .p-school.urdu-text (neeche,
    barabar specificity) school naam ko apne 19px par rakhta hai. */
 .paper .urdu-text{font-size:calc(1em * var(--ur-scale))}
-.p-head{border-top:4px double #000;border-bottom:4px double #000;padding:7px 4px 9px;text-align:center}
-.p-school{font-size:21px;font-weight:700;letter-spacing:.3px}
-.p-school.urdu-text{font-size:19px}
-.p-band{margin-top:6px;border:1.5px solid #000;padding:3px 6px;font-weight:700;font-size:15px;background:#f2f2f2}
-.p-info{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
-.p-info td{border:1px solid #000;padding:3px 7px;text-align:left}
-.p-sec{margin-top:14px}
-.p-sec-head{display:flex;justify-content:space-between;gap:8px;border-bottom:1.5px solid #000;padding-bottom:2px;font-weight:700;font-size:14.5px}
-.p-sec-sub{font-weight:600;font-size:13px;margin-top:1px}
+.p-head{border-top:4px double #000;border-bottom:4px double #000;padding:.52em .3em .67em;text-align:center}
+.p-school{font-size:1.556em;font-weight:700;letter-spacing:.3px}
+.p-school.urdu-text{font-size:1.407em}
+.p-band{margin-top:6px;border:1.5px solid #000;padding:.2em .4em;font-weight:700;font-size:1.111em;background:#f2f2f2}
+.p-info{width:100%;border-collapse:collapse;margin-top:8px;font-size:.963em}
+.p-info td{border:1px solid #000;padding:.23em .54em;text-align:left}
+.p-sec{margin-top:1.037em}
+.p-sec-head{display:flex;justify-content:space-between;gap:8px;border-bottom:1.5px solid #000;padding-bottom:.14em;font-weight:700;font-size:1.074em}
+.p-sec-sub{font-weight:600;font-size:.963em;margin-top:1px}
 /* Urdu medium (Nov 2026 — owner ki nayi hidayat, Capture-24): jab pure
    statements Urdu mein translate ho jayein to header ke NEECHE ka sara
    hissa asal Urdu paper ki tarah RIGHT side se shuru hota hai. Is liye
@@ -137,19 +150,19 @@ input:focus,select:focus,textarea:focus{outline:2px solid #9ec7e8;border-color:v
    bidi-isolate rehte hain taake RTL flow mein un ki andar ki tartib
    (masalan {a, b} ya 3x + 1 = 0) na tute aur jumla un ke gird na phate. */
 .p-rtl{direction:rtl;text-align:right}
-.p-rtl .p-opts{margin-left:0;margin-right:20px}
+.p-rtl .p-opts{margin-left:0;margin-right:1.54em}
 .mx{unicode-bidi:isolate}
 .urdu-text .mx{font-family:"Noto Sans","Times New Roman",Times,Arial,sans-serif;font-size:calc(1em / var(--ur-scale))}
 .bi-ur{display:block;text-align:right}
 .p-sec-sub[dir="rtl"]{text-align:right}
-.p-note{font-style:italic;font-size:12.5px;margin:4px 0 2px}
+.p-note{font-style:italic;font-size:.926em;margin:.32em 0 .16em}
 .p-note.urdu-text{font-style:normal}
-.p-q{margin:7px 0 2px}
-.p-opts{display:grid;grid-template-columns:1fr 1fr;gap:1px 18px;margin:1px 0 5px 20px;font-size:13px}
-.p-lines{border-bottom:1px dotted #999;height:20px;margin:2px 0}
+.p-q{margin:.52em 0 .15em}
+.p-opts{display:grid;grid-template-columns:1fr 1fr;gap:.08em 1.38em;margin:.08em 0 .38em 1.54em;font-size:.963em}
+.p-lines{border-bottom:1px dotted #999;height:1.48em;margin:.15em 0}
 .keytable{border-collapse:collapse;margin:8px 0}
 .keytable td{border:1px solid #000;padding:4px 10px;text-align:center;font-weight:600}
-.empty-note{color:#888;text-align:center;padding:26px 10px;font-family:"Segoe UI",sans-serif;font-size:13.5px}
+.empty-note{color:#888;text-align:center;padding:26px 10px;font-family:"Segoe UI",sans-serif;font-size:1em}
 footer.appfoot{max-width:1240px;margin:0 auto;padding:6px 14px 22px;color:var(--mut);font-size:12.5px;text-align:center}
 /* ===== LOGIN / ADMIN ===== */
 #setupBanner{background:#fff3cd;border-bottom:2px solid #e3c766;color:#5f4b00;padding:10px 16px;font-size:13.5px;text-align:center}
@@ -239,6 +252,8 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
   #printRoot{display:block !important}
   #printRoot .paper{border:none;box-shadow:none;padding:0;min-height:0}
   .p-sec{page-break-inside:avoid}
+  .page-tag{display:none !important}
+  #printRoot .paper-page2{break-before:page;page-break-before:always}
 }
 </style>
 </head>
@@ -299,6 +314,13 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
         <button type="button" class="btn ghost" id="btnTranslateUndo" style="display:none">↩ Asal text wapas karein</button>
         <div class="hint" id="translateStatus"></div>
       </div>
+      <label class="fl" for="inLayout">📄 Page Layout</label>
+      <select id="inLayout">
+        <option value="auto">Auto (marks ke hisab se)</option>
+        <option value="front">Sirf Front Side (1 page)</option>
+        <option value="back">Front + Back (2 pages)</option>
+      </select>
+      <div class="hint" id="layoutStatus"></div>
       <div class="chips">
         <span class="chip">Questions: <span id="sumQuestions">0</span></span>
         <span class="chip">Total Marks: <span id="sumMarks">0</span></span>
@@ -384,6 +406,22 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
           <button type="button" class="btn ghost" id="btnPuterSignOut" style="display:none">Sign Out</button>
         </div>
         <div class="hint">Puter account <b>bilkul free</b> hai — sirf email se banta hai, <b>koi bank card nahi chahiye</b>. Har free account ko har month kuch <b>free AI allowance</b> milta hai; sawal usi allowance se bante hain, is website ko kuch pay nahi karna parta. Ek dafa sign in kar lein to browser yaad rakhta hai — har dafa sign in nahi karna parta.</div>
+      </div>
+      <div style="margin:10px 0">
+        <label class="fl" for="aiEngineSel">⚙ AI Engine</label>
+        <select id="aiEngineSel">
+          <option value="puter">Puter (FREE)</option>
+          <option value="gemini">Apni Gemini Key</option>
+        </select>
+        <div class="hint" id="engineState" style="margin-top:4px"></div>
+        <div id="engineKeyBox" style="display:none;border:1px dashed var(--line);border-radius:8px;padding:9px 10px;margin-top:8px">
+          <div class="hint" style="margin:0 0 7px">Google AI Studio se FREE key milti hai — key sirf aap ke browser mein rehti hai.</div>
+          <div class="row2">
+            <input type="password" id="engineGeminiKey" placeholder="Apni Gemini API key yahan lagayein" autocomplete="off">
+            <button type="button" class="btn" id="btnEngineKeySave">💾 Key Save Karein</button>
+          </div>
+          <div class="hint" id="engineKeyState"></div>
+        </div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px">
         <button type="button" class="btn" id="btnModePhoto">📷 Photo se</button>
@@ -681,7 +719,8 @@ function defaultState() {
   return {
     setup: {
       school: "KEPS Science Academy, Ahmad Pur Sial, Jhang",
-      clazz: "", subject: "", code: "", date: "", time: "2 Hours", medium: "en"
+      clazz: "", subject: "", code: "", date: "", time: "2 Hours", medium: "en",
+      layout: "auto" /* page layout: "auto" | "front" | "back" — purane drafts mein na ho to "auto" */
     },
     sections: [makeSection("mcq"), makeSection("short"), makeSection("long")],
     scheme: null /* active pairing scheme (ya null) — drafts/persist ke sath rehta hai */
@@ -899,7 +938,7 @@ function loadPersisted() {
     var raw = localStorage.getItem(LS_CUR);
     if (!raw) return false;
     var s = JSON.parse(raw);
-    if (s && s.setup && Array.isArray(s.sections)) { state = s; if (state.scheme === undefined) state.scheme = null; return true; }
+    if (s && s.setup && Array.isArray(s.sections)) { state = s; if (state.scheme === undefined) state.scheme = null; if (state.setup.layout === undefined) state.setup.layout = "auto"; return true; }
   } catch (e) {}
   return false;
 }
@@ -929,6 +968,7 @@ function loadDraft(name) {
   if (!drafts[name]) return false;
   state = JSON.parse(JSON.stringify(drafts[name]));
   if (state.scheme === undefined) state.scheme = null; /* purane drafts mein scheme nahi hota — backward compatible */
+  if (state.setup && state.setup.layout === undefined) state.setup.layout = "auto"; /* purane drafts mein layout nahi hota — Auto mana jata hai */
   editCtx = null; formBuf = {}; bulkBuf = {};
   persist();
   return true;
@@ -1284,8 +1324,12 @@ function pdfFileToText(file) {
     return chain;
   });
 }
-/* Sirf text ke liye Puter chat (photo wale puterChatOnce jaisa hi —
-   pehle mazboot model, fail ho to default model). */
+/* Sirf text ke liye Puter chat (photo wale puterChatOnce jaisa hi).
+   Model tartib (Nov 2026 — free allowance bachane ke liye): pehle
+   HALKA model (gpt-4o-mini — free allowance bohat kam khata hai),
+   fail ho to Puter ka default, aakhir mein mazboot gpt-4o. Limit/
+   quota wali ghalti par dobara koshish BILKUL nahi — wo error seedha
+   upar jata hai jahan PUTER_LIMIT_MSG dikhta hai. */
 function puterChatText(prompt) {
   function attempt(opts) {
     return Promise.resolve().then(function () { return window.puter.ai.chat(prompt, undefined, false, opts); })
@@ -1295,25 +1339,120 @@ function puterChatText(prompt) {
         return t;
       });
   }
-  return attempt({ model: PUTER_MODEL, temperature: 0.3 }).catch(function () { return attempt({ temperature: 0.3 }); });
+  return attempt({ model: PUTER_MODEL_MINI, temperature: 0.3 }).catch(function (e) {
+    if (isAiLimitError(e)) throw e;
+    return attempt({ temperature: 0.3 }).catch(function (e2) {
+      if (isAiLimitError(e2)) throw e2;
+      return attempt({ model: PUTER_MODEL, temperature: 0.3 });
+    });
+  });
+}
+
+/* ================= AI ENGINE (Puter FREE / apni Gemini Key) =================
+   Photo/Text panel ke upar "⚙ AI Engine" selector hai. Default Puter
+   (FREE) hai. "Apni Gemini Key" chunne par tamam AI generation —
+   Photo, Text Paste, Urdu Tarjuma aur Pairing Scheme parse — Puter ki
+   bajaye owner ki apni Gemini key se hoti hai (wohi key jo neeche
+   Advanced hisse mein save hoti hai: localStorage GEMINI_LS, ek hi
+   jagah). Gemini par Puter wali free limit nahi hoti. Engine ki
+   choice bhi browser mein yaad rehti hai (kpg_ai_engine). */
+var AI_ENGINE_LS = "kpg_ai_engine";
+var aiEngineChoice = "puter";
+try { if (localStorage.getItem(AI_ENGINE_LS) === "gemini") aiEngineChoice = "gemini"; } catch (e) {}
+function aiEngine() { return aiEngineChoice === "gemini" ? "gemini" : "puter"; }
+function setAiEngine(v) {
+  aiEngineChoice = (v === "gemini") ? "gemini" : "puter";
+  try { localStorage.setItem(AI_ENGINE_LS, aiEngineChoice); } catch (e) {}
+  refreshEngineUI();
+  return aiEngineChoice;
+}
+/* Puter ki free limit khatam hone par EK saaf paigham — raw error
+   kabhi nahi dikhta, aur limit par retry-loop bhi nahi chalta. */
+var PUTER_LIMIT_MSG = "⚠ Puter ki FREE limit khatam ho gayi hai. Thora intezar karein (limit khud refresh hoti hai) — ya neeche 'Apni Gemini Key' wala tareeqa use karein, us par ye limit nahi hoti.";
+/* Error limit/quota wala hai ya nahi: message/type mein limit, quota,
+   usage, insufficient — ya HTTP 402/429 (status field ya message mein). */
+function isAiLimitError(e) {
+  if (!e) return false;
+  var code = 0;
+  try { code = Number(e.status || e.code || e.statusCode || 0) || 0; } catch (x) { code = 0; }
+  if (code === 402 || code === 429) return true;
+  var s = "";
+  try { s = String((e && e.message) || e || ""); } catch (x) { s = ""; }
+  var low = s.toLowerCase();
+  return low.indexOf("limit") >= 0 || low.indexOf("quota") >= 0 || low.indexOf("usage") >= 0 ||
+    low.indexOf("insufficient") >= 0 || low.indexOf("402") >= 0 || low.indexOf("429") >= 0;
+}
+/* Save shuda Gemini key — pehle Advanced wale input ki value, phir
+   Engine wale input ki, phir localStorage (teeno ek hi key hain). */
+function geminiSavedKey() {
+  var a = document.getElementById("geminiKey");
+  if (a && a.value && String(a.value).trim()) return String(a.value).trim();
+  var b = document.getElementById("engineGeminiKey");
+  if (b && b.value && String(b.value).trim()) return String(b.value).trim();
+  try { return String(localStorage.getItem(GEMINI_LS) || "").trim(); } catch (e) { return ""; }
+}
+function refreshEngineUI() {
+  var sel = document.getElementById("aiEngineSel");
+  if (sel) sel.value = aiEngine();
+  var g = aiEngine() === "gemini";
+  var has = !!geminiSavedKey();
+  var box = document.getElementById("engineKeyBox");
+  if (box) box.style.display = (g && !has) ? "" : "none";
+  var st = document.getElementById("engineState");
+  if (st) st.textContent = g
+    ? (has ? "✔ Gemini key save hai — sawal ab Gemini se banege (Puter wali free limit is par nahi hoti)." : "⚠ Gemini Engine chuna hai lekin abhi koi key save nahi — neeche apni FREE Gemini key lagayein.")
+    : "Puter (FREE) — sawal free allowance se bante hain; pehle halka model (gpt-4o-mini) chalta hai taake limit der se aye.";
+}
+function saveEngineGeminiKey() {
+  var inp = document.getElementById("engineGeminiKey");
+  var key = inp ? String(inp.value || "").trim() : "";
+  var stEl = document.getElementById("engineKeyState");
+  if (!key) { if (stEl) stEl.textContent = "⚠ Pehle key likhein, phir Save dabayein."; return false; }
+  try { localStorage.setItem(GEMINI_LS, key); } catch (e) {}
+  if (inp) inp.value = "";
+  var adv = document.getElementById("geminiKeyState");
+  if (adv) adv.textContent = "✔ Key is browser mein save hai.";
+  refreshEngineUI();
+  var st = document.getElementById("aiGenStatus");
+  if (st) st.textContent = "✔ Gemini key save ho gayi — ab Generate dabayein, sawal Gemini se banege.";
+  return true;
+}
+/* Generation ke liye EK rasta: Engine Gemini ho aur key mojood ho to
+   Gemini, warna Puter. (Key na ho to callers pehle hi rok kar key
+   wala box dikha dete hain — ye fallback sirf hifazat ke liye hai.) */
+function aiChatText(prompt) {
+  if (aiEngine() === "gemini") {
+    var key = geminiSavedKey();
+    if (key) return geminiText(prompt, key);
+  }
+  return puterChatText(prompt);
+}
+function aiChatPhoto(prompt, file) {
+  if (aiEngine() === "gemini") {
+    var key = geminiSavedKey();
+    if (key) return geminiPhotoText(prompt, file, key);
+  }
+  return puterChatOnce(prompt, file);
 }
 /* Scheme AI se parho: {file: imageFile} ya {text: "..."} — kamyabi par
    scheme khud lag jata hai. Returns: Promise<scheme|null> */
 function runSchemeAiParse(src) {
   var st = document.getElementById("schemeAiStatus");
   function say(m) { if (st) st.textContent = m; }
-  if (!puterReady()) { say("⚠ Puter library load nahi hui — internet check karke page refresh karein."); return Promise.resolve(null); }
+  var useGemini = aiEngine() === "gemini";
+  if (useGemini && !geminiSavedKey()) { say("⚠ AI Engine 'Apni Gemini Key' chuna hai lekin koi key save nahi — neeche Photo wale hisse mein Engine ke neeche apni Gemini key lagayein, ya Engine 'Puter (FREE)' kar dein."); return Promise.resolve(null); }
+  if (!useGemini && !puterReady()) { say("⚠ Puter library load nahi hui — internet check karke page refresh karein."); return Promise.resolve(null); }
   function go() {
     var prompt = buildSchemePrompt();
     var call;
     if (src && src.file) {
       say("🤖 AI scheme ki photo parh raha hai…");
-      call = puterChatOnce(prompt, src.file);
+      call = aiChatPhoto(prompt, src.file);
     } else {
       var text = String((src && src.text) || "").trim();
       if (!text) { say("⚠ Pehle scheme ka text paste karein ya file select karein."); return Promise.resolve(null); }
       say("🤖 AI scheme parh raha hai…");
-      call = puterChatText(prompt + "\n\nPAIRING SCHEME TEXT:\n" + text.slice(0, 12000));
+      call = aiChatText(prompt + "\n\nPAIRING SCHEME TEXT:\n" + text.slice(0, 12000));
     }
     return call.then(function (txt) {
       var sc = parseAiScheme(txt);
@@ -1322,10 +1461,12 @@ function runSchemeAiParse(src) {
       say("✔ Scheme lag gayi: " + sc.name + " — neeche progress check kar lein.");
       return sc;
     }).catch(function (e) {
+      if (isAiLimitError(e)) { say(PUTER_LIMIT_MSG); return null; }
       say("⚠ Scheme parse fail: " + (e && e.message ? e.message : e));
       return null;
     });
   }
+  if (useGemini) return go();
   if (puterSignedIn()) return go();
   say("🔐 Pehle FREE Puter sign in chahiye — popup khul raha hai…");
   return puterDoSignIn().then(function (ok) {
@@ -1416,7 +1557,9 @@ function runTranslate() {
   function say(m) { if (stEl) stEl.textContent = m; }
   var medium = state.setup.medium;
   if (medium !== "ur" && medium !== "bi") { say("⚠ Pehle Medium ko Urdu ya Bilingual karein."); return Promise.resolve(0); }
-  if (!puterReady()) { say("⚠ Puter library load nahi hui — internet check karke page refresh karein."); return Promise.resolve(0); }
+  var useGemini = aiEngine() === "gemini";
+  if (useGemini && !geminiSavedKey()) { say("⚠ AI Engine 'Apni Gemini Key' chuna hai lekin koi key save nahi — neeche Photo wale hisse mein Engine ke neeche apni Gemini key lagayein, ya Engine 'Puter (FREE)' kar dein."); return Promise.resolve(0); }
+  if (!useGemini && !puterReady()) { say("⚠ Puter library load nahi hui — internet check karke page refresh karein."); return Promise.resolve(0); }
   var items = collectTranslateItems();
   if (!items.length) { say("⚠ Abhi paper mein koi statement nahi — pehle sawal shamil karein."); return Promise.resolve(0); }
   function go() {
@@ -1429,7 +1572,7 @@ function runTranslate() {
         say(batches.length > 1
           ? "🌐 Tarjuma ho raha hai… Batch " + (bi + 1) + "/" + batches.length
           : "🌐 AI statements ka Urdu tarjuma kar raha hai…");
-        return puterChatText(buildTranslatePrompt(batch.map(function (it) { return it.text; }))).then(function (txt) {
+        return aiChatText(buildTranslatePrompt(batch.map(function (it) { return it.text; }))).then(function (txt) {
           var arr = parseTranslateReply(txt, batch.length);
           if (!arr) throw new Error("AI ke jawab ki shakal durust nahi mili — koi tabdeeli nahi ki gayi. Dobara koshish karein.");
           results = results.concat(arr);
@@ -1451,10 +1594,12 @@ function runTranslate() {
       say("✔ " + items.length + " statements translate ho gayin" + (medium === "bi" ? " (har statement ke neeche Urdu line jud gayi)" : "") + " — paper preview check kar lein. Pasand na aye to ↩ Asal text wapas karein dabayein.");
       return items.length;
     }).catch(function (e) {
+      if (isAiLimitError(e)) { say(PUTER_LIMIT_MSG); return 0; }
       say("⚠ Tarjuma fail: " + (e && e.message ? e.message : e) + " Paper mein koi tabdeeli nahi hui.");
       return 0;
     });
   }
+  if (useGemini) return go();
   if (puterSignedIn()) return go();
   say("🔐 Pehle FREE Puter sign in chahiye — popup khul raha hai…");
   return puterDoSignIn().then(function (ok) {
@@ -1532,19 +1677,88 @@ function sampleState() {
   return st;
 }
 /* ================= PAPER / KEY HTML ================= */
-function paperHTML(st) {
+/* ================= PAGE LAYOUT (Front / Front+Back) =================
+   Owner ki hidayat: chhota paper (30 number tak) sirf FRONT side par
+   adjust ho; bara paper (50 se upar, 75 tak) Front + Back — ek hi
+   sheet ke dono taraf. Paper Setup mein "📄 Page Layout" select hai:
+   Auto (marks ke hisab se) / Sirf Front Side / Front + Back. Manual
+   choice hamesha jeet-ti hai; Auto mein kul number 50 se zyada hon to
+   Back, warna Front. Choice setup.layout mein rehti hai — drafts ke
+   sath save/load hoti hai; purane drafts (baghair layout) par "auto". */
+var LAYOUT_FRONT_MAX_MARKS = 50;
+function layoutChoice(st) {
+  var v = st && st.setup ? st.setup.layout : "";
+  return (v === "front" || v === "back") ? v : "auto";
+}
+function effectiveLayout(st) {
+  var c = layoutChoice(st);
+  if (c !== "auto") return c;
+  return computeTotals(st).marks > LAYOUT_FRONT_MAX_MARKS ? "back" : "front";
+}
+function layoutStatusText(st) {
   var t = computeTotals(st);
+  return effectiveLayout(st) === "back"
+    ? "Abhi: Front + Back lagega (kul number " + t.marks + ")"
+    : "Abhi: Sirf Front Side lagega (kul number " + t.marks + ")";
+}
+/* Back mode ka split: Page 1 = MCQ/Objective sections, Page 2 = baqi
+   (Short/Long). MCQ section hi na ho — ya sirf MCQ hi hon — to sawalon
+   ki tadaad ke hisaab se takreeban aadha-aadha. entries: [{sec, idx}]
+   — idx paper par section ka asal number (Q.1, Q.2...) hai jo dono
+   pages par barqarar rehta hai. */
+function splitForBack(entries) {
+  var front = entries.filter(function (e) { return e.sec.type === "mcq"; });
+  var back = entries.filter(function (e) { return e.sec.type !== "mcq"; });
+  if (!front.length || !back.length) {
+    var total = entries.reduce(function (a, e) { return a + e.sec.questions.length; }, 0);
+    front = []; back = [];
+    var run = 0;
+    entries.forEach(function (e) {
+      if (front.length && run >= total / 2) back.push(e);
+      else { front.push(e); run += e.sec.questions.length; }
+    });
+    if (!back.length && front.length > 1) back.push(front.pop());
+  }
+  return { front: front, back: back };
+}
+/* ---- Front-only fit: paper ko ek A4 par adjust karna ----
+   Scale --fit (1 se floor 0.72 tak, step 0.02) paper ke base font-size
+   par lagta hai; andar ke tamam size/spacing em mein hain is liye
+   poora paper mutanاسب chhota hota hai. fitScaleForHeight PURE hai
+   (tests isi ko karte hain); applyPaperFit asal DOM par nap kar
+   refine karta hai aur _lastFitScale yaad rakhta hai taake Print aur
+   PDF clone (jo paperHTML se bante hain) wahi scale le lein. */
+var FIT_MIN = 0.72, FIT_STEP = 0.02;
+var _lastFitScale = 1;
+function fitScaleForHeight(contentH, pageH) {
+  if (!contentH || !pageH || contentH <= pageH) return 1;
+  var s = 1;
+  while (s > FIT_MIN && contentH * s > pageH) s = Math.round((s - FIT_STEP) * 100) / 100;
+  return s;
+}
+function applyPaperFit(el) {
+  if (!el || typeof el.scrollHeight !== "number" || !el.style || typeof el.style.setProperty !== "function") return _lastFitScale;
+  var target = Math.round((el.offsetWidth || PDF_A4_W) * PDF_A4_RATIO);
+  var s = fitScaleForHeight(el.scrollHeight, target);
+  el.style.setProperty("--fit", String(s));
+  var guard = 0;
+  while (el.scrollHeight > target && s > FIT_MIN && guard < 20) {
+    s = Math.max(FIT_MIN, Math.round((s - FIT_STEP) * 100) / 100);
+    el.style.setProperty("--fit", String(s));
+    guard++;
+  }
+  _lastFitScale = s;
+  return s;
+}
+function paperFitAttr(st) {
+  return (effectiveLayout(st) === "front" && _lastFitScale < 1) ? ' style="--fit:' + _lastFitScale + '"' : "";
+}
+/* Paper ka poora header (school + band + info table) — HAR medium mein
+   English/LTR (paperLabels), bilkul pehle jaisa. */
+function paperHeadHTML(st, t) {
   var su = st.setup;
   var L = paperLabels(su.medium);
-  var shown = st.sections.filter(function (s) { return s.questions.length > 0; });
-  /* Paper ka container HAR medium mein dir="ltr" rehta hai aur header
-     hamesha English (paperLabels). Urdu medium mein header ke NEECHE ke
-     sections .p-rtl (dir="rtl") bante hain — asal Urdu paper ki tarah
-     sab kuch right side se shuru hota hai (owner ki nayi hidayat jab se
-     pure statements translate hote hain). English medium sab LTR;
-     Bilingual mein English lines LTR aur Urdu lines apni RTL line mein. */
-  var h = '<div class="paper" dir="ltr">';
-  h += '<div class="p-head"><div class="p-school' + (hasUrdu(su.school) ? " urdu-text" : "") + '" dir="auto">' + esc(su.school || "School Name") + "</div>";
+  var h = '<div class="p-head"><div class="p-school' + (hasUrdu(su.school) ? " urdu-text" : "") + '" dir="auto">' + esc(su.school || "School Name") + "</div>";
   h += '<div class="p-band">' + labSpan(L.subject, L.urdu) + " <span" + langAttrs(su.subject) + ">" + esc(su.subject || "—") + "</span>" +
     (su.clazz ? " &nbsp;|&nbsp; " + labSpan(L.clazz, L.urdu) + " <span" + langAttrs(su.clazz) + ">" + esc(su.clazz) + "</span>" : "") + "</div>";
   h += '<table class="p-info"><tr>' +
@@ -1554,45 +1768,95 @@ function paperHTML(st) {
     "<td><b>" + labSpan(L.total, L.urdu) + "</b> " + t.marks + "</td></tr>" +
     '<tr><td colspan="2"><b>' + labSpan(L.student, L.urdu) + "</b> ______________________________</td>" +
     '<td colspan="2"><b>' + labSpan(L.roll, L.urdu) + "</b> ____________________</td></tr></table></div>";
+  return h;
+}
+/* Page 2 (Back Side) ka patla continuation header — wahi header rule:
+   hamesha English/LTR. School naam + Subject/Class + Paper Code +
+   "Page 2 — Back Side". */
+function paperContHeadHTML(st) {
+  var su = st.setup;
+  var L = paperLabels(su.medium);
+  var h = '<div class="p-head"><div class="p-school p-school-sm' + (hasUrdu(su.school) ? " urdu-text" : "") + '" dir="auto">' + esc(su.school || "School Name") + "</div>";
+  h += '<div class="p-cont-line"><span>' + labSpan(L.subject, L.urdu) + " <span" + langAttrs(su.subject) + ">" + esc(su.subject || "—") + "</span>" +
+    (su.clazz ? " &nbsp;|&nbsp; " + labSpan(L.clazz, L.urdu) + " <span" + langAttrs(su.clazz) + ">" + esc(su.clazz) + "</span>" : "") +
+    (su.code ? " &nbsp;|&nbsp; " + labSpan(L.code, L.urdu) + " " + esc(su.code) : "") +
+    '</span><span class="p-page2-tag">Page 2 — Back Side</span></div></div>';
+  return h;
+}
+/* Ek section ka paper HTML — pehle paperHTML ke andar tha, ab alag
+   taake Front+Back mode mein dono pages isi se banein. idx = section
+   ka paper par asal number (Q.1, Q.2...) jo split ke baad bhi rehta hai. */
+function paperSectionHTML(sec, idx, medium) {
+  var h = "";
+  var c = sectionCountedMarks(sec);
+  var rtlSec = medium === "ur";
+  h += '<div class="p-sec' + (rtlSec ? " p-rtl" : "") + '"' + (rtlSec ? ' dir="rtl"' : "") + '><div class="p-sec-head"><div>' + secHeadTitle(sec, idx, medium) + "</div><span>(" + c.marks + ")</span></div>";
+  var instr = [];
+  if (sec.attempt && parseInt(sec.attempt, 10) > 0 && parseInt(sec.attempt, 10) < sec.questions.length) {
+    if (medium === "ur")
+      instr.push("کل " + sec.questions.length + " سوالوں میں سے کوئی سے " + sec.attempt + " سوال حل کریں۔");
+    else
+      instr.push("Attempt any " + sec.attempt + " of " + sec.questions.length + " questions.");
+  }
+  if (sec.note) {
+    var note = sec.note;
+    if (medium === "ur" && note === (DEFAULT_NOTES[sec.type] || "")) note = DEFAULT_NOTES_UR[sec.type] || note;
+    instr.push(note);
+    if (medium === "bi" && sec.type === "mcq" && sec.note === DEFAULT_NOTES.mcq)
+      instr.push("درست جواب کا انتخاب کریں۔");
+  }
+  if (instr.length) {
+    var instrText = instr.join(" ");
+    h += '<div class="p-note' + (hasUrdu(instrText) ? " urdu-text" : "") + '" dir="' + (rtlSec ? "rtl" : "auto") + '">' + esc(instrText) + "</div>";
+  }
+  sec.questions.forEach(function (q, qi) {
+    h += '<div class="p-q"><b>' + (qi + 1) + ".</b> " + richText(q.q, medium) + "</div>";
+    if (sec.type === "mcq") {
+      h += '<div class="p-opts">';
+      q.opts.forEach(function (o, oi) {
+        h += richOptText(o, LETTERS[oi], medium);
+      });
+      h += "</div>";
+    } else if (sec.type === "long") {
+      h += '<div class="p-lines"></div><div class="p-lines"></div>';
+    }
+  });
+  h += "</div>";
+  return h;
+}
+function paperHTML(st) {
+  var t = computeTotals(st);
+  var su = st.setup;
+  var shown = st.sections.filter(function (s) { return s.questions.length > 0; });
+  /* Paper ka container HAR medium mein dir="ltr" rehta hai aur header
+     hamesha English (paperLabels). Urdu medium mein header ke NEECHE ke
+     sections .p-rtl (dir="rtl") bante hain — asal Urdu paper ki tarah
+     sab kuch right side se shuru hota hai (owner ki nayi hidayat jab se
+     pure statements translate hote hain). English medium sab LTR;
+     Bilingual mein English lines LTR aur Urdu lines apni RTL line mein.
+     Front+Back layout mein do .paper bante hain: Page 1 par poora
+     header + MCQ sections, Page 2 par patla continuation header +
+     Short/Long sections; FRONT SIDE / BACK SIDE labels sirf screen
+     ke liye hain (.page-tag — print mein CSS se gayab, PDF clone
+     inhein strip kar deta hai). */
+  if (effectiveLayout(st) === "back" && shown.length > 1) {
+    var entries = shown.map(function (sec, i) { return { sec: sec, idx: i }; });
+    var split = splitForBack(entries);
+    if (split.front.length && split.back.length) {
+      var p1 = '<div class="paper" dir="ltr">' + paperHeadHTML(st, t) +
+        split.front.map(function (e) { return paperSectionHTML(e.sec, e.idx, su.medium); }).join("") + "</div>";
+      var p2 = '<div class="paper paper-page2" dir="ltr">' + paperContHeadHTML(st) +
+        split.back.map(function (e) { return paperSectionHTML(e.sec, e.idx, su.medium); }).join("") + "</div>";
+      return '<div class="page-tag" aria-hidden="true">FRONT SIDE</div>' + p1 +
+        '<div class="page-tag" aria-hidden="true">BACK SIDE</div>' + p2;
+    }
+  }
+  var h = '<div class="paper" dir="ltr"' + paperFitAttr(st) + ">";
+  h += paperHeadHTML(st, t);
   if (!shown.length) {
     h += '<div class="empty-note">Abhi koi sawal nahi — pehle sawal shamil karein, preview yahan banta jayega.</div>';
   }
-  shown.forEach(function (sec, i) {
-    var c = sectionCountedMarks(sec);
-    var rtlSec = su.medium === "ur";
-    h += '<div class="p-sec' + (rtlSec ? " p-rtl" : "") + '"' + (rtlSec ? ' dir="rtl"' : "") + '><div class="p-sec-head"><div>' + secHeadTitle(sec, i, su.medium) + "</div><span>(" + c.marks + ")</span></div>";
-    var instr = [];
-    if (sec.attempt && parseInt(sec.attempt, 10) > 0 && parseInt(sec.attempt, 10) < sec.questions.length) {
-      if (su.medium === "ur")
-        instr.push("کل " + sec.questions.length + " سوالوں میں سے کوئی سے " + sec.attempt + " سوال حل کریں۔");
-      else
-        instr.push("Attempt any " + sec.attempt + " of " + sec.questions.length + " questions.");
-    }
-    if (sec.note) {
-      var note = sec.note;
-      if (su.medium === "ur" && note === (DEFAULT_NOTES[sec.type] || "")) note = DEFAULT_NOTES_UR[sec.type] || note;
-      instr.push(note);
-      if (su.medium === "bi" && sec.type === "mcq" && sec.note === DEFAULT_NOTES.mcq)
-        instr.push("درست جواب کا انتخاب کریں۔");
-    }
-    if (instr.length) {
-      var instrText = instr.join(" ");
-      h += '<div class="p-note' + (hasUrdu(instrText) ? " urdu-text" : "") + '" dir="' + (rtlSec ? "rtl" : "auto") + '">' + esc(instrText) + "</div>";
-    }
-    sec.questions.forEach(function (q, qi) {
-      h += '<div class="p-q"><b>' + (qi + 1) + ".</b> " + richText(q.q, su.medium) + "</div>";
-      if (sec.type === "mcq") {
-        h += '<div class="p-opts">';
-        q.opts.forEach(function (o, oi) {
-          h += richOptText(o, LETTERS[oi], su.medium);
-        });
-        h += "</div>";
-      } else if (sec.type === "long") {
-        h += '<div class="p-lines"></div><div class="p-lines"></div>';
-      }
-    });
-    h += "</div>";
-  });
+  shown.forEach(function (sec, i) { h += paperSectionHTML(sec, i, su.medium); });
   h += "</div>";
   return h;
 }
@@ -1740,12 +2004,25 @@ function renderSections() {
   wrap.innerHTML = html;
 }
 
+function renderLayoutStatus() {
+  var el = document.getElementById("layoutStatus");
+  if (el) el.textContent = layoutStatusText(state);
+}
 function renderPreview() {
-  document.getElementById("paperPreview").innerHTML = paperHTML(state);
+  var pv = document.getElementById("paperPreview");
+  pv.innerHTML = paperHTML(state);
+  /* Front-only: preview ke paper par fit pass — content ek A4 se lamba
+     ho to --fit scale step-down ho kar ek hi page par adjust ho jata
+     hai (har render par dobara nap hota hai). */
+  if (effectiveLayout(state) === "front" && pv.querySelector) {
+    var pel = pv.querySelector(".paper");
+    if (pel) applyPaperFit(pel);
+  }
   document.getElementById("keyPreview").innerHTML = keyHTML(state);
   var t = computeTotals(state);
   document.getElementById("sumQuestions").textContent = t.questions;
   document.getElementById("sumMarks").textContent = t.marks;
+  renderLayoutStatus();
 }
 function renderSetup() {
   var su = state.setup;
@@ -1756,6 +2033,7 @@ function renderSetup() {
   document.getElementById("inDate").value = su.date || "";
   document.getElementById("inTime").value = su.time || "";
   document.getElementById("inMedium").value = su.medium || "en";
+  document.getElementById("inLayout").value = layoutChoice(state);
 }
 function renderDrafts() {
   var drafts = getDrafts();
@@ -1770,7 +2048,7 @@ function refreshLight() { renderPreview(); persist(); renderSchemeProgress(); re
 
 /* ================= EVENTS: SETUP ================= */
 function bindSetup() {
-  var map = { inSchool: "school", inClass: "clazz", inSubject: "subject", inCode: "code", inDate: "date", inTime: "time", inMedium: "medium" };
+  var map = { inSchool: "school", inClass: "clazz", inSubject: "subject", inCode: "code", inDate: "date", inTime: "time", inMedium: "medium", inLayout: "layout" };
   Object.keys(map).forEach(function (id) {
     var el = document.getElementById(id);
     el.addEventListener("input", function () {
@@ -2003,8 +2281,19 @@ function buildPdfClone(kind) {
   var holder = document.createElement("div");
   holder.style.cssText = "display:block;text-align:left;margin:0;padding:0;";
   holder.innerHTML = kind === "key" ? keyHTML(state) : paperHTML(state);
-  var paper = holder.querySelector(".paper");
-  if (paper) {
+  /* FRONT SIDE / BACK SIDE wale .page-tag labels sirf screen ke liye
+     hain — PDF mein kabhi nahi jate, clone se pehle hi hata do. */
+  var tags = holder.querySelectorAll(".page-tag");
+  for (var ti = 0; ti < tags.length; ti++) {
+    if (tags[ti].parentNode) tags[ti].parentNode.removeChild(tags[ti]);
+  }
+  /* Front+Back layout mein do .paper hote hain — har page ko alag
+     capture karke PDF ka ek A4 page banana hai, is liye pages ki list
+     bhi return hoti hai. Har paper par wahi saaf geometry lagti hai. */
+  var paperEls = holder.querySelectorAll(".paper");
+  var pages = [];
+  for (var pi = 0; pi < paperEls.length; pi++) {
+    var paper = paperEls[pi];
     paper.style.width = PDF_A4_W + "px";
     paper.style.margin = "0";
     paper.style.position = "relative";
@@ -2015,6 +2304,7 @@ function buildPdfClone(kind) {
     paper.style.background = "#ffffff";
     paper.style.color = "#000000";
     paper.style.transform = "none";
+    pages.push(paper);
   }
   var all = holder.querySelectorAll("*");
   for (var i = 0; i < all.length; i++) {
@@ -2024,7 +2314,7 @@ function buildPdfClone(kind) {
   }
   stage.appendChild(holder);
   document.body.appendChild(stage);
-  return { stage: stage, el: paper || holder };
+  return { stage: stage, el: pages.length ? pages[0] : holder, pages: pages };
 }
 function removePdfStage(built) {
   var old = document.getElementById("pdfStage");
@@ -2097,6 +2387,34 @@ function pdfDocFromImage(img) {
   });
   return doc;
 }
+/* Front+Back layout ka PDF: har page element ki tasveer apne A4 page
+   par — bilkul 2 pages (Front, Back). Tasveer page se lambi ho to
+   mutanاسب chhoti karke pure page par fit kar dete hain (kaatte nahi),
+   taake duplex print mein back side hamesha page 2 par hi aye. */
+function pdfDocFromPageImages(imgs) {
+  var JsPDF = window.jspdf && window.jspdf.jsPDF;
+  if (!JsPDF) throw new Error("jsPDF library nahi mili");
+  var doc = new JsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+  imgs.forEach(function (img, i) {
+    if (i > 0) doc.addPage();
+    var W = img.naturalWidth || img.width;
+    var H = img.naturalHeight || img.height;
+    if (!W || !H) throw new Error("PNG ka size nahi mila");
+    var pageH = Math.max(1, Math.round(W * PDF_A4_RATIO));
+    var c = document.createElement("canvas");
+    c.width = W;
+    c.height = pageH;
+    var ctx = c.getContext("2d");
+    if (!ctx) throw new Error("canvas context nahi mila");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, W, pageH);
+    var dw = W, dh = H;
+    if (H > pageH) { var sc = pageH / H; dw = Math.round(W * sc); dh = pageH; }
+    ctx.drawImage(img, 0, 0, W, H, Math.round((W - dw) / 2), 0, dw, dh);
+    doc.addImage(c.toDataURL("image/jpeg", 0.95), "JPEG", 0, 0, 210, 297);
+  });
+  return doc;
+}
 /* ---- Capture self-check (fix #3): tasveer ke ghair-safed kinare ----
    pdfEdgesFromImageData: har column ko scan karke sab se left aur sab
    se right wo column deta hai jahan content (ghair-safed pixel) hai.
@@ -2135,31 +2453,52 @@ function pdfCheckCaptureImage(img) {
   var e = pdfEdgesFromImageData(d.data, W, H);
   return { defective: pdfCaptureDefective(e.left, e.right, W), left: e.left, right: e.right, width: W };
 }
-/* Ek capture koshish: saaf geometry wala clone -> toPng (size sirf node
-   ke offsetWidth/offsetHeight se) -> PNG -> pixel self-check.
-   Resolve: {img, built, defective}. Hard ghalti par reject (stage saaf
-   karke). */
+/* Ek page element ki capture: toPng (size sirf node ke
+   offsetWidth/offsetHeight se) -> PNG -> pixel self-check. */
+function captureOnePdfPage(el) {
+  return window.htmlToImage.toPng(el, {
+    pixelRatio: 2, backgroundColor: "#ffffff",
+    width: el.offsetWidth, height: el.offsetHeight
+  }).then(function (dataUrl) {
+    if (!dataUrl || typeof dataUrl !== "string" || dataUrl.length < 1000) throw new Error("capture khaali aya");
+    return loadPngImage(dataUrl);
+  }).then(function (img) {
+    var chk;
+    try { chk = pdfCheckCaptureImage(img); }
+    catch (e) { chk = { defective: true, left: -1, right: -1, width: 0 }; }
+    return { img: img, defective: !!chk.defective, chk: chk };
+  });
+}
+/* Ek capture koshish: saaf geometry wala clone -> har page element ki
+   alag capture -> pixel self-check (har page ka). Front-only layout
+   mein capture se pehle clone par fit pass chalta hai (794px par asal
+   nap) taake PDF hamesha ek hi A4 page par aye.
+   Resolve: {img (pehla page), imgs (sab pages), built, defective}.
+   Hard ghalti par reject (stage saaf karke). */
 function attemptPdfCapture(kind) {
   var built = buildPdfClone(kind);
   var fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve(null);
   return Promise.resolve(fontsReady)
     .then(function () { return waitFrames(2); })
     .then(function () {
-      var el = built.el;
-      return window.htmlToImage.toPng(el, {
-        pixelRatio: 2, backgroundColor: "#ffffff",
-        width: el.offsetWidth, height: el.offsetHeight
+      if (kind === "paper" && effectiveLayout(state) === "front" && built.el) applyPaperFit(built.el);
+      var pages = (built.pages && built.pages.length) ? built.pages : [built.el];
+      var caps = [];
+      var chain = Promise.resolve();
+      pages.forEach(function (el) {
+        chain = chain.then(function () { return captureOnePdfPage(el); })
+          .then(function (r) { caps.push(r); });
       });
+      return chain.then(function () { return caps; });
     })
-    .then(function (dataUrl) {
-      if (!dataUrl || typeof dataUrl !== "string" || dataUrl.length < 1000) throw new Error("capture khaali aya");
-      return loadPngImage(dataUrl);
-    })
-    .then(function (img) {
-      var chk;
-      try { chk = pdfCheckCaptureImage(img); }
-      catch (e) { chk = { defective: true, left: -1, right: -1, width: 0 }; }
-      return { img: img, built: built, defective: !!chk.defective, chk: chk };
+    .then(function (caps) {
+      var defective = caps.some(function (c) { return c.defective; });
+      return {
+        img: caps.length ? caps[0].img : null,
+        imgs: caps.map(function (c) { return c.img; }),
+        built: built, defective: defective,
+        chk: caps.length ? caps[0].chk : null
+      };
     })
     .catch(function (err) {
       removePdfStage(built);
@@ -2185,7 +2524,7 @@ function downloadPDF(kind) {
         pdfPrintFallback(kind, "PDF ki tasveer do dafa shift/crop ayi, is liye kharab PDF nahi bheja");
         return false;
       }
-      var doc = pdfDocFromImage(res.img);
+      var doc = (res.imgs && res.imgs.length > 1) ? pdfDocFromPageImages(res.imgs) : pdfDocFromImage(res.img);
       var blob = doc.output("blob");
       if (!blob || typeof blob.size !== "number" || blob.size < PDF_MIN_BYTES) {
         pdfPrintFallback(kind, "PDF khaali bana (file size bohat chhota)");
@@ -2640,6 +2979,9 @@ function runAiGen(files) {
    testMode, options) jahan media = String | File — file input ka File
    object seedha diya jata hai, koi upload/base64 nahi chahiye. */
 var PUTER_MODEL = "gpt-4o";
+/* Halka model — pehle yahi chalta hai (free allowance bohat kam khata
+   hai); gpt-4o sirf aakhri fallback hai. */
+var PUTER_MODEL_MINI = "gpt-4o-mini";
 function puterReady() {
   return typeof window !== "undefined" && !!window.puter && !!window.puter.ai && typeof window.puter.ai.chat === "function" && !!window.puter.auth;
 }
@@ -2704,8 +3046,10 @@ function puterRespText(resp) {
   try { var s = resp.toString(); if (s && s !== "[object Object]") return s; } catch (e) {}
   return "";
 }
-/* Ek photo ke liye ek chat call: pehle mazboot model (gpt-4o);
-   wo fail ho jaye to Puter ke default model se ek aur koshish. */
+/* Ek photo ke liye ek chat call. Model tartib (allowance bachane ke
+   liye): pehle halka gpt-4o-mini, fail ho to Puter ka default, aakhir
+   mein mazboot gpt-4o. Limit/quota error par koi dobara koshish nahi —
+   error seedha upar jata hai (PUTER_LIMIT_MSG wahan dikhta hai). */
 function puterChatOnce(prompt, file) {
   function attempt(opts) {
     return Promise.resolve().then(function () { return window.puter.ai.chat(prompt, file, false, opts); })
@@ -2715,12 +3059,17 @@ function puterChatOnce(prompt, file) {
         return t;
       });
   }
-  return attempt({ model: PUTER_MODEL, temperature: 0.4 }).catch(function () { return attempt({ temperature: 0.4 }); });
+  return attempt({ model: PUTER_MODEL_MINI, temperature: 0.4 }).catch(function (e) {
+    if (isAiLimitError(e)) throw e;
+    return attempt({ temperature: 0.4 }).catch(function (e2) {
+      if (isAiLimitError(e2)) throw e2;
+      return attempt({ model: PUTER_MODEL, temperature: 0.4 });
+    });
+  });
 }
 function runPuterGen(files) {
   var st = document.getElementById("aiGenStatus");
   if (!files || !files.length) { st.textContent = "⚠ Pehle page ki photo select karein."; return Promise.resolve(0); }
-  if (!puterReady()) { st.textContent = "⚠ Puter library load nahi hui — internet check karke page refresh karein, ya neeche wala slow tareeqa azmayein."; return Promise.resolve(0); }
   var counts = aiCounts();
   if (aiCountsAllZero(counts)) { st.textContent = AI_ZERO_MSG; return Promise.resolve(0); }
   var use = files.slice(0, 3);
@@ -2728,22 +3077,33 @@ function runPuterGen(files) {
   function go() {
     var prompt = buildGenPrompt(counts.nMcq, counts.nShort, counts.nLong, true);
     st.textContent = "🤖 AI ko photo bhej rahe hain…";
-    var all = [], failed = 0;
+    var all = [], failed = 0, limitHit = false;
     var chain = Promise.resolve();
     use.forEach(function (f, i) {
       chain = chain.then(function () {
+        if (limitHit) return; /* limit ke baad baqi photos par koi call nahi */
         st.textContent = "🤖 Photo " + (i + 1) + "/" + use.length + " — AI safha parh kar sawal bana raha hai…";
-        return puterChatOnce(prompt, f).then(function (txt) {
+        return aiChatPhoto(prompt, f).then(function (txt) {
           var cands = parseAiQuestions(txt);
           if (!cands.length) throw new Error("AI ke jawab se koi sawal nahi bana — photo saaf aur qareeb se le kar dobara koshish karein");
           all = all.concat(cands);
         }).catch(function (e) {
+          if (isAiLimitError(e)) { limitHit = true; return; }
           failed++;
           st.textContent = "⚠ Photo " + (i + 1) + " fail: " + (e && e.message ? e.message : e) + (use.length > 1 ? " — baqi photos jari hain…" : "");
         });
       });
     });
     return chain.then(function () {
+      if (limitHit) {
+        if (all.length) {
+          setCandidates(all);
+          st.textContent = "✔ " + all.length + " sawal ban gaye. " + PUTER_LIMIT_MSG;
+          return all.length;
+        }
+        st.textContent = PUTER_LIMIT_MSG;
+        return 0;
+      }
       if (!all.length) {
         if (!failed) st.textContent = "⚠ AI se koi sawal nahi bana. Photo saaf, seedhi aur qareeb se ho to dobara koshish karein.";
         else if (use.length === 1) st.textContent += " Agar ye ghalti baar baar aaye to ho sakta hai is month ki free allowance khatam ho — kuch dair baad dobara koshish karein, ya neeche wala slow tareeqa azmayein.";
@@ -2757,6 +3117,11 @@ function runPuterGen(files) {
       return all.length;
     });
   }
+  if (aiEngine() === "gemini") {
+    if (!geminiSavedKey()) { refreshEngineUI(); st.textContent = "⚠ AI Engine 'Apni Gemini Key' chuna hai lekin koi key save nahi — pehle Engine ke neeche apni Gemini key lagayein (FREE milti hai), ya Engine 'Puter (FREE)' kar dein."; return Promise.resolve(0); }
+    return go();
+  }
+  if (!puterReady()) { st.textContent = "⚠ Puter library load nahi hui — internet check karke page refresh karein, ya neeche wala slow tareeqa azmayein."; return Promise.resolve(0); }
   if (puterSignedIn()) return go();
   st.textContent = "🔐 Pehle FREE Puter sign in chahiye — popup khul raha hai…";
   return puterDoSignIn().then(function (ok) {
@@ -2812,7 +3177,6 @@ function runPuterTextGen(textOverride) {
   if (typeof textOverride === "string") text = textOverride.trim();
   else { var ta = document.getElementById("pasteText"); text = ta ? String(ta.value || "").trim() : ""; }
   if (!text) { st.textContent = "⚠ Pehle upar wale box mein book ka text paste karein."; return Promise.resolve(0); }
-  if (!puterReady()) { st.textContent = "⚠ Puter library load nahi hui — internet check karke page refresh karein."; return Promise.resolve(0); }
   var counts = aiCounts();
   if (aiCountsAllZero(counts)) { st.textContent = AI_ZERO_MSG; return Promise.resolve(0); }
   function go() {
@@ -2820,7 +3184,7 @@ function runPuterTextGen(textOverride) {
     var prompt = buildTextGenPrompt(counts.nMcq, counts.nShort, counts.nLong) +
       "\n\n===== PASTED TEXT =====\n" + clipped + "\n===== END OF PASTED TEXT =====";
     st.textContent = "🤖 AI text parh kar sawal bana raha hai…" + (text.length > 8000 ? " (text bara tha — pehle 8000 characters bheje gaye hain)" : "");
-    return puterChatText(prompt).then(function (txt) {
+    return aiChatText(prompt).then(function (txt) {
       var cands = parseAiQuestions(txt);
       if (!cands.length) { st.textContent = "⚠ AI ke jawab se koi sawal nahi bana — text check karke dobara koshish karein. Agar text mein sawal hain to thora saaf hissa paste karke azmayein."; return 0; }
       setCandidates(cands);
@@ -2830,10 +3194,16 @@ function runPuterTextGen(textOverride) {
       st.textContent = "✔ AI ne " + cands.length + " sawal banaye (" + nm + " MCQ, " + ns + " Short, " + nl + " Long) — neeche Review mein sawal aur sahi jawab check karke paper mein shamil karein.";
       return cands.length;
     }).catch(function (e) {
+      if (isAiLimitError(e)) { st.textContent = PUTER_LIMIT_MSG; return 0; }
       st.textContent = "⚠ AI fail: " + (e && e.message ? e.message : e) + " — dobara koshish karein. Agar ye ghalti baar baar aaye to ho sakta hai is month ki free allowance khatam ho — kuch dair baad dobara koshish karein.";
       return 0;
     });
   }
+  if (aiEngine() === "gemini") {
+    if (!geminiSavedKey()) { refreshEngineUI(); st.textContent = "⚠ AI Engine 'Apni Gemini Key' chuna hai lekin koi key save nahi — pehle Engine ke neeche apni Gemini key lagayein (FREE milti hai), ya Engine 'Puter (FREE)' kar dein."; return Promise.resolve(0); }
+    return go();
+  }
+  if (!puterReady()) { st.textContent = "⚠ Puter library load nahi hui — internet check karke page refresh karein."; return Promise.resolve(0); }
   if (puterSignedIn()) return go();
   st.textContent = "🔐 Pehle FREE Puter sign in chahiye — popup khul raha hai…";
   return puterDoSignIn().then(function (ok) {
@@ -2869,18 +3239,44 @@ function parseGeminiJson(txt) {
     }).filter(function (c) { return c.q; });
   } catch (e) { return []; }
 }
+/* Gemini ka EK mushtarak call helper — Advanced wala purana route
+   (geminiExtract) aur naya Engine route (geminiText/geminiPhotoText)
+   dono isi se jate hain: wahi endpoint, wahi model, wahi key. Jawab
+   ka raw text return hota hai; parsing caller ka kaam hai. */
+var GEMINI_MODEL = "gemini-2.0-flash";
+function geminiCall(parts, key) {
+  return fetch("https://generativelanguage.googleapis.com/v1beta/models/" + GEMINI_MODEL + ":generateContent?key=" + encodeURIComponent(key), {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ contents: [{ parts: parts }] })
+  }).then(function (r) { if (!r.ok) throw new Error("Gemini ne jawab nahi diya (" + r.status + ") — key check karein"); return r.json(); })
+    .then(function (j) {
+      var parts = (((j.candidates || [])[0] || {}).content || {}).parts || [];
+      return parts.map(function (p) { return p.text || ""; }).join("");
+    });
+}
 function geminiExtract(file, key) {
   return fileToBase64(file).then(function (b64) {
     var prompt = "Transcribe ALL questions from this textbook page image EXACTLY as printed - word by word, do NOT translate, rewrite or invent anything, and do NOT mix scripts: copy every word in the same script it is printed in (Urdu words stay in Urdu script, English stays English). Keep math in plain text exactly as printed, e.g. {x | x < 12}. Return ONLY a JSON array. Each item: {\"type\":\"mcq\" or \"short\", \"q\":\"question text exactly as written\", \"opts\":[\"A\",\"B\",\"C\",\"D\"] (only for mcq, else []), \"ans\": correct option index 0-3 if printed or -1}. No extra text outside the JSON array.";
-    return fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + encodeURIComponent(key), {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: file.type || "image/jpeg", data: b64 } }] }] })
-    }).then(function (r) { if (!r.ok) throw new Error("Gemini ne jawab nahi diya (" + r.status + ") — key check karein"); return r.json(); })
-      .then(function (j) {
-        var parts = (((j.candidates || [])[0] || {}).content || {}).parts || [];
-        var txt = parts.map(function (p) { return p.text || ""; }).join("");
-        return parseGeminiJson(txt);
-      });
+    return geminiCall([{ text: prompt }, { inline_data: { mime_type: file.type || "image/jpeg", data: b64 } }], key)
+      .then(function (txt) { return parseGeminiJson(txt); });
+  });
+}
+/* Engine route (text): Puter wale generation prompts (buildGenPrompt /
+   buildTextGenPrompt / translate / scheme) Gemini ko — jawab ka text
+   waisa hi wapas, parsing Puter wala hi (parseAiQuestions waghera). */
+function geminiText(prompt, key) {
+  return geminiCall([{ text: String(prompt || "") }], key).then(function (t) {
+    if (!t) throw new Error("Gemini ne khaali jawab diya");
+    return t;
+  });
+}
+/* Engine route (photo): prompt + photo file Gemini ko, jawab text. */
+function geminiPhotoText(prompt, file, key) {
+  return fileToBase64(file).then(function (b64) {
+    return geminiCall([{ text: String(prompt || "") }, { inline_data: { mime_type: file.type || "image/jpeg", data: b64 } }], key);
+  }).then(function (t) {
+    if (!t) throw new Error("Gemini ne khaali jawab diya");
+    return t;
   });
 }
 function runGemini(files) {
@@ -2927,6 +3323,11 @@ function bindPhoto() {
   document.getElementById("btnPuterSignIn").addEventListener("click", function () { puterDoSignIn(); });
   document.getElementById("btnPuterSignOut").addEventListener("click", function () { puterDoSignOut(); });
   refreshPuterAuthUI();
+  var engSel = document.getElementById("aiEngineSel");
+  if (engSel) engSel.addEventListener("change", function () { setAiEngine(engSel.value); });
+  var engSave = document.getElementById("btnEngineKeySave");
+  if (engSave) engSave.addEventListener("click", function () { saveEngineGeminiKey(); });
+  refreshEngineUI();
   document.getElementById("btnGemini").addEventListener("click", function () { runGemini(selectedPhotoFiles()); });
   document.getElementById("btnGeminiForget").addEventListener("click", function () {
     try { localStorage.removeItem(GEMINI_LS); } catch (e) {}
@@ -3706,12 +4107,19 @@ window.KPG = {
   AI_COUNT_LIMITS: AI_COUNT_LIMITS,
   blankQuestion: blankQuestion, addBlankQuestions: addBlankQuestions,
   puterSignedIn: puterSignedIn, refreshPuterAuthUI: refreshPuterAuthUI, PUTER_MODEL: PUTER_MODEL,
-  renderAll: renderAll, renderSections: renderSections, renderPreview: renderPreview,
+  renderAll: renderAll, renderSetup: renderSetup, renderSections: renderSections, renderPreview: renderPreview,
   buildPdfClone: buildPdfClone, removePdfStage: removePdfStage,
   downloadPDF: downloadPDF, printHTML: printHTML, pdfStatus: pdfStatus,
   pdfEdgesFromImageData: pdfEdgesFromImageData, pdfCaptureDefective: pdfCaptureDefective,
   pdfCheckCaptureImage: pdfCheckCaptureImage, attemptPdfCapture: attemptPdfCapture,
-  pdfPageSlices: pdfPageSlices, pdfDocFromImage: pdfDocFromImage, loadPngImage: loadPngImage,
+  pdfPageSlices: pdfPageSlices, pdfDocFromImage: pdfDocFromImage, pdfDocFromPageImages: pdfDocFromPageImages, loadPngImage: loadPngImage,
+  layoutChoice: layoutChoice, effectiveLayout: effectiveLayout, layoutStatusText: layoutStatusText,
+  splitForBack: splitForBack, paperHeadHTML: paperHeadHTML, paperContHeadHTML: paperContHeadHTML, paperSectionHTML: paperSectionHTML,
+  fitScaleForHeight: fitScaleForHeight, applyPaperFit: applyPaperFit, FIT_MIN: FIT_MIN, LAYOUT_FRONT_MAX_MARKS: LAYOUT_FRONT_MAX_MARKS,
+  getAiEngine: aiEngine, setAiEngine: setAiEngine, refreshEngineUI: refreshEngineUI, saveEngineGeminiKey: saveEngineGeminiKey,
+  isAiLimitError: isAiLimitError, PUTER_LIMIT_MSG: PUTER_LIMIT_MSG, PUTER_MODEL_MINI: PUTER_MODEL_MINI,
+  aiChatText: aiChatText, aiChatPhoto: aiChatPhoto, geminiSavedKey: geminiSavedKey,
+  geminiCall: geminiCall, geminiText: geminiText, geminiPhotoText: geminiPhotoText, GEMINI_MODEL: GEMINI_MODEL, GEMINI_LS: GEMINI_LS,
   PDF_A4_W: PDF_A4_W, PDF_MIN_BYTES: PDF_MIN_BYTES, PDF_A4_RATIO: PDF_A4_RATIO,
   AUTH_URL_LS: AUTH_URL_LS, AUTH_SESS_SS: AUTH_SESS_SS,
   authServerUrl: authServerUrl, authSetServerUrl: authSetServerUrl, authValidUrl: authValidUrl,
