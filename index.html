@@ -53,7 +53,6 @@
 <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
-<script src="https://js.puter.com/v2/"></script>
 <style>
 /* Jameel Noori Nastaleeq — professional Urdu publishing font, self-hosted
    (fonts/ folder, same repo). Noto Nastaliq Urdu (Google Fonts) is the
@@ -373,7 +372,7 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
         <option value="bi">Bilingual</option>
       </select>
       <div id="translateBox" style="display:none;border:1px dashed var(--line);border-radius:8px;padding:9px 10px;margin:10px 0">
-        <div class="hint" style="margin:0 0 7px">The Medium only changes labels and headings — the question <b>statements stay in their original (English) language</b>. Use AI to <b>translate all statements and MCQ options into Urdu</b> (the same FREE Puter account method — the sign-in from the Photo section below will work):</div>
+        <div class="hint" style="margin:0 0 7px">The Medium only changes labels and headings — the question <b>statements stay in their original (English) language</b>. Use AI to <b>translate all statements and MCQ options into Urdu</b> (it uses your FREE Google Gemini key — the AI Key in the Photo section below):</div>
         <button type="button" class="btn" id="btnTranslate">🌐 Translate All Statements into Urdu (AI)</button>
         <button type="button" class="btn ghost" id="btnTranslateUndo" style="display:none">↩ Restore Original Text</button>
         <div class="hint" id="translateStatus"></div>
@@ -433,7 +432,7 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
         <button type="button" class="btn" id="btnSchemeAiParse">🤖 Read Scheme with AI</button>
         <span class="hint" id="schemeAiStatus"></span>
       </div>
-      <div class="hint">The AI method reads a photo/PDF/text and creates the scheme — it needs the <b>FREE Puter sign in</b> (the same account as the Photo section below). Before applying a scheme, check it in the progress below; if something is wrong, fix it with the Manual Editor.</div>
+      <div class="hint">The AI method reads a photo/PDF/text and creates the scheme — it uses your <b>FREE Google Gemini key</b> (the AI Key in the Photo section below). Before applying a scheme, check it in the progress below; if something is wrong, fix it with the Manual Editor.</div>
 
       <details style="margin-top:10px">
         <summary style="cursor:pointer;font-size:13.5px;font-weight:600;color:var(--brand2)">✍️ Manual Scheme Editor (no AI — create the scheme yourself)</summary>
@@ -484,39 +483,16 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
 
     <div class="card" id="photoCard">
       <h2>3️⃣ 📷 Generate Questions from a Photo</h2>
-      <p class="hint" style="margin-top:0">Attach a photo of a book page — a <b>strong AI (GPT/Claude class)</b> will read the page and <b>generate MCQs (with 4 options + the correct answer), Short and Long questions</b> from its content. The questions first appear in <b>Review</b> — check them, then add them to the paper. This AI needs a <b>FREE Puter sign in only the first time</b> (box below) — after that, questions are usually generated within seconds.</p>
-      <div id="puterAuthBox" style="border:1px dashed var(--line);border-radius:8px;padding:9px 10px;margin:10px 0">
-        <div class="hint" id="puterAuthStatus" style="margin:0">Checking the Puter account…</div>
-        <div style="margin-top:6px">
-          <button type="button" class="btn" id="btnPuterSignIn">🔐 Sign In with a FREE Puter Account (only once)</button>
-          <button type="button" class="btn ghost" id="btnPuterSignOut" style="display:none">Sign Out</button>
-        </div>
-        <div class="hint">A Puter account is <b>completely free</b> — it is created with just an email, <b>no bank card is needed</b>. Every free account gets some <b>free AI allowance</b> each month; questions are generated from that allowance, and this website never has to pay anything. Sign in once and the browser remembers you — you will not have to sign in every time.</div>
-      </div>
+      <p class="hint" style="margin-top:0">Attach a photo of a book page — <b>Google Gemini AI</b> will read the page and <b>generate MCQs (with 4 options + the correct answer), Short and Long questions</b> from its content. The questions first appear in <b>Review</b> — check them, then add them to the paper. It works with your <b>FREE Google Gemini key</b> (the AI Key box below) — after that, questions are usually generated within seconds.</p>
       <div style="margin:10px 0">
-        <label class="fl" for="aiEngineSel">⚙ AI Engine</label>
-        <select id="aiEngineSel">
-          <option value="puter">Puter (FREE)</option>
-          <option value="gemini">Your Own Gemini Key</option>
-          <option value="openai">ChatGPT (OpenAI API Key)</option>
-        </select>
-        <div class="hint" id="engineState" style="margin-top:4px"></div>
-        <div id="engineKeyBox" style="display:none;border:1px dashed var(--line);border-radius:8px;padding:9px 10px;margin-top:8px">
-          <div class="hint" style="margin:0 0 7px">A FREE key is available from Google AI Studio — the key stays only in your browser.</div>
-          <div class="row2">
-            <input type="password" id="engineGeminiKey" placeholder="Paste your Gemini API key here" autocomplete="off">
-            <button type="button" class="btn" id="btnEngineKeySave">💾 Save Key</button>
-          </div>
-          <div class="hint" id="engineKeyState"></div>
+        <label class="fl" for="engineGeminiKey">🔑 AI Key — Google Gemini (FREE)</label>
+        <div class="row2">
+          <input type="password" id="engineGeminiKey" placeholder="Paste your Gemini API key here" autocomplete="off">
+          <button type="button" class="btn" id="btnEngineKeySave">💾 Save Key</button>
         </div>
-        <div id="engineOpenaiBox" style="display:none;border:1px dashed var(--line);border-radius:8px;padding:9px 10px;margin-top:8px">
-          <div class="hint" style="margin:0 0 7px">The OpenAI API key is available from platform.openai.com — it is PAID (you have to add balance), and ChatGPT Plus is separate from it. The key stays only in your browser.</div>
-          <div class="row2">
-            <input type="password" id="engineOpenaiKey" placeholder="Paste your OpenAI API key here" autocomplete="off">
-            <button type="button" class="btn" id="btnEngineOpenaiSave">💾 Save Key</button>
-          </div>
-          <div class="hint" id="engineOpenaiKeyState"></div>
-        </div>
+        <div class="hint" id="engineKeyState" style="margin-top:4px"></div>
+        <div class="hint" style="margin-top:4px">Reading photos? The Gemini engine reads best — a free Google AI Studio key works, paste it in the AI Key box above.</div>
+        <div class="hint" style="margin-top:4px">A FREE key is available from Google AI Studio (aistudio.google.com/apikey) — the key stays only in your browser.</div>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px">
         <button type="button" class="btn" id="btnModePhoto">📷 From Photo</button>
@@ -532,6 +508,7 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
         <label class="fl" for="pasteText">Paste Book Text / Questions</label>
         <textarea id="pasteText" rows="8" placeholder="Paste the book text or questions here — the AI will separate MCQs, Short and Long questions and add them to the paper."></textarea>
         <div class="hint">Paste up to <b>~8000 characters</b> at a time; for a large chapter, paste in parts. If the text already contains questions/exercises, the AI will extract those same questions <b>word for word</b>; if it is only chapter text, the AI will generate questions from it. The questions will be in the same language as the text.</div>
+        <div class="hint" style="margin-top:4px">Paste book text — questions are split into MCQs, Short and Long by the counts above and added to the paper.</div>
         <div class="hint" id="pasteCount" style="margin-top:2px">0 characters</div>
         <div style="margin-top:8px;max-width:260px">
           <label class="fl" for="textDifficulty">Difficulty</label>
@@ -556,8 +533,8 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
         <div><label class="fl" for="aiLongCount">How many Long?</label>
           <input type="number" id="aiLongCount" min="0" max="10" step="1" value="1"></div>
       </div>
-      <button type="button" class="btn big" id="btnAiGen" style="margin-top:10px">🤖 Generate Questions with AI — Free, No Key</button>
-      <div class="hint">This is a <b>strong AI</b> (GPT/Claude class) that reads the photo and <b>generates</b> questions — <b>no API key is needed</b>, just the <b>one-time FREE Puter sign in</b> above. The reply usually arrives within <b>seconds to a minute</b>. For the best result: <b>one page = one photo, close up, in clear light</b>.</div>
+      <button type="button" class="btn big" id="btnAiGen" style="margin-top:10px">🤖 Generate Questions with AI</button>
+      <div class="hint">This is <b>Google Gemini AI</b> that reads the photo and <b>generates</b> questions — it works with your <b>FREE Gemini key</b> (the AI Key box above). The reply usually arrives within <b>seconds to a minute</b>. For the best result: <b>one page = one photo, close up, in clear light</b>.</div>
       <div class="hint" id="aiGenStatus"></div>
       <h3>📝 Review — Check the Questions</h3>
       <div class="hint" style="border:1px solid var(--warn);border-radius:7px;padding:7px 9px">⚠ <b>Note:</b> The questions and their <b>correct answers were created by AI</b> — before adding them to the paper, check every question and its correct answer yourself. Fix anything that looks wrong right here, or unselect it.</div>
@@ -775,7 +752,7 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
   </div>
 </div>
 
-<footer class="appfoot">© KEPS Academy — Paper Generator, free for teachers. Papers and drafts are saved only in your browser; they are never uploaded anywhere.<br>Questions from a photo or text: the AI Engine (Puter FREE, or your own Gemini / ChatGPT key) reads the photo and generates MCQs, Short and Long questions.</footer>
+<footer class="appfoot">© KEPS Academy — Paper Generator, free for teachers. Papers and drafts are saved only in your browser; they are never uploaded anywhere.<br>Questions from a photo or text: Google Gemini AI (your FREE Gemini key) reads the photo and generates MCQs, Short and Long questions.</footer>
 
 <div id="loginGate" style="display:none">
   <div class="lg-shell">
@@ -1725,7 +1702,7 @@ function renderSchemePresets() {
   }).join("");
 }
 
-/* ---- Scheme upload: PDF se text (pdf.js), AI parse (Puter) ---- */
+/* ---- Scheme upload: PDF se text (pdf.js), AI parse (Gemini) ---- */
 function pdfFileToText(file) {
   if (!window.pdfjsLib || typeof window.pdfjsLib.getDocument !== "function") {
     return Promise.reject(new Error("The PDF library (pdf.js) did not load — check your internet and refresh the page"));
@@ -1751,56 +1728,24 @@ function pdfFileToText(file) {
     return chain;
   });
 }
-/* Sirf text ke liye Puter chat (photo wale puterChatOnce jaisa hi).
-   Model tartib (Nov 2026 — free allowance bachane ke liye): pehle
-   HALKA model (gpt-4o-mini — free allowance bohat kam khata hai),
-   fail ho to Puter ka default, aakhir mein mazboot gpt-4o. Limit/
-   quota wali ghalti par dobara koshish BILKUL nahi — wo error seedha
-   upar jata hai jahan PUTER_LIMIT_MSG dikhta hai. */
-function puterChatText(prompt) {
-  function attempt(opts) {
-    return Promise.resolve().then(function () { return window.puter.ai.chat(prompt, undefined, false, opts); })
-      .then(function (resp) {
-        var t = puterRespText(resp);
-        if (!t) throw new Error("The AI returned an empty reply");
-        return t;
-      });
-  }
-  return attempt({ model: PUTER_MODEL_MINI, temperature: 0.3 }).catch(function (e) {
-    if (isAiLimitError(e)) throw e;
-    return attempt({ temperature: 0.3 }).catch(function (e2) {
-      if (isAiLimitError(e2)) throw e2;
-      return attempt({ model: PUTER_MODEL, temperature: 0.3 });
-    });
-  });
-}
-
-/* ================= AI ENGINE (Puter FREE / Gemini Key / ChatGPT) =================
-   Photo/Text panel ke upar "⚙ AI Engine" selector hai. Default Puter
-   (FREE) hai. "Apni Gemini Key" chunne par tamam AI generation —
-   Photo, Text Paste, Urdu Tarjuma aur Pairing Scheme parse — Puter ki
-   bajaye owner ki apni Gemini key se hoti hai (wohi key jo Engine
-   selector ke neeche wale key box mein save hoti hai: localStorage
-   GEMINI_LS, ek hi jagah — purana Advanced wala hissa hata diya gaya
-   hai, key ki storage wahi hai taake save shuda key chalti rahe).
-   "ChatGPT (OpenAI API Key)" chunne par wahi tamam generation
-   owner ki apni OpenAI key (localStorage OPENAI_LS) se hoti hai —
-   OpenAI key PAID hoti hai, ChatGPT Plus is se alag hai. Key wale
-   engines par Puter wali free limit nahi hoti. Engine ki choice bhi
-   browser mein yaad rehti hai (kpg_ai_engine). */
-var AI_ENGINE_LS = "kpg_ai_engine";
-var aiEngineChoice = "puter";
-try { var _savedEng = localStorage.getItem(AI_ENGINE_LS); if (_savedEng === "gemini" || _savedEng === "openai") aiEngineChoice = _savedEng; } catch (e) {}
-function aiEngine() { return (aiEngineChoice === "gemini" || aiEngineChoice === "openai") ? aiEngineChoice : "puter"; }
-function setAiEngine(v) {
-  aiEngineChoice = (v === "gemini" || v === "openai") ? v : "puter";
-  try { localStorage.setItem(AI_ENGINE_LS, aiEngineChoice); } catch (e) {}
-  refreshEngineUI();
-  return aiEngineChoice;
-}
-/* Puter ki free limit khatam hone par EK saaf paigham — raw error
+/* ================= AI — SIRF GOOGLE GEMINI =================
+   Tamam AI generation ab SIRF owner ki apni FREE Google Gemini key
+   se hoti hai (localStorage GEMINI_LS — wahi purani storage, is liye
+   pehle se save shuda key bilkul waisi hi chalti hai). Koi doosra
+   engine ya route NAHI hai. Photo, Text Paste, Paper ki Photo, Urdu
+   Tarjuma, Pairing Scheme parse aur Books — sab isi ek dispatch
+   (aiChatText / aiChatPhoto) se jate hain, jo seedha geminiCall ko
+   jata hai (primary gemini-2.5-flash, model wali ghalti par
+   gemini-2.0-flash se ek fallback).
+   KEY NA HO to dispatch network call se PEHLE ruk jata hai: promise
+   NO_AI_KEY_MSG wale userMsg error se reject hoti hai, aur har panel
+   wahi ek paigham apni status line mein dikhata hai. */
+/* Key na hone par EK saaf paigham — har AI action se pehle yahi
+   dikhta hai; is surat mein koi network call NAHI hoti. */
+var NO_AI_KEY_MSG = "Please paste your free Google Gemini key in the AI Key box (Photo section) first — it takes one minute: aistudio.google.com/apikey";
+/* Gemini ki free quota khatam hone par EK saaf paigham — raw error
    kabhi nahi dikhta, aur limit par retry-loop bhi nahi chalta. */
-var PUTER_LIMIT_MSG = "⚠ The FREE Puter limit has been used up. Please wait a while (the limit refreshes itself) — or use the 'Your Own Gemini Key' method below; this limit does not apply to it.";
+var AI_LIMIT_MSG = "⚠ The Gemini free quota seems to be finished for now — please wait a while and try again (or check your key at aistudio.google.com).";
 /* Error limit/quota wala hai ya nahi: message/type mein limit, quota,
    usage, insufficient — ya HTTP 402/429 (status field ya message mein). */
 function isAiLimitError(e) {
@@ -1814,56 +1759,27 @@ function isAiLimitError(e) {
   return low.indexOf("limit") >= 0 || low.indexOf("quota") >= 0 || low.indexOf("usage") >= 0 ||
     low.indexOf("insufficient") >= 0 || low.indexOf("402") >= 0 || low.indexOf("429") >= 0;
 }
-/* Save shuda Gemini key — pehle Engine wale input ki value, phir
-   localStorage (ek hi key: GEMINI_LS). Purana Advanced wala input
-   hata diya gaya hai; storage wahi hai, is liye pehle se save shuda
-   key bilkul waisi hi chalti hai. */
+/* Save shuda Gemini key — pehle AI Key wale input ki value, phir
+   localStorage (ek hi key: GEMINI_LS). Storage wahi purani hai, is
+   liye pehle se save shuda key bilkul waisi hi chalti hai. */
 function geminiSavedKey() {
   var b = document.getElementById("engineGeminiKey");
   if (b && b.value && String(b.value).trim()) return String(b.value).trim();
   try { return String(localStorage.getItem(GEMINI_LS) || "").trim(); } catch (e) { return ""; }
 }
-/* OpenAI (ChatGPT) key ki alag storage — Gemini wali key se bilkul
-   alag (OPENAI_LS). Save shuda key: pehle Engine wale input ki value,
-   phir localStorage. */
-var OPENAI_LS = "kpg_openai_key";
-function openaiSavedKey() {
-  var b = document.getElementById("engineOpenaiKey");
-  if (b && b.value && String(b.value).trim()) return String(b.value).trim();
-  try { return String(localStorage.getItem(OPENAI_LS) || "").trim(); } catch (e) { return ""; }
-}
-/* AI error jo apna EK saaf Roman-Urdu paigham khud rakhta ho (masalan
-   OpenAI ki ghalat key / quota) — panels use bilkul waisa hi dikhate
-   hain: na raw error, na Puter wali limit wala paigham. */
+/* AI error jo apna EK saaf paigham khud rakhta ho (masalan key na
+   hone wala error) — panels use bilkul waisa hi dikhate hain: na raw
+   error, na limit wala paigham. */
 function aiUserMsg(e) { return (e && e.userMsg && e.message) ? String(e.message) : ""; }
-function refreshEngineUI() {
-  var sel = document.getElementById("aiEngineSel");
-  if (sel) sel.value = aiEngine();
-  var eng = aiEngine();
-  var g = eng === "gemini", o = eng === "openai";
-  var has = !!geminiSavedKey(), hasO = !!openaiSavedKey();
-  var box = document.getElementById("engineKeyBox");
-  if (box) box.style.display = (g && !has) ? "" : "none";
-  var obox = document.getElementById("engineOpenaiBox");
-  if (obox) obox.style.display = (o && !hasO) ? "" : "none";
-  var st = document.getElementById("engineState");
-  if (st) st.textContent = g
-    ? (has ? "✔ A Gemini key is saved — questions will now be generated by Gemini (the Puter free limit does not apply to it)." : "⚠ The Gemini Engine is selected but no key is saved yet — add your FREE Gemini key below.")
-    : o
-      ? (hasO ? "✔ An OpenAI key is saved — questions will now be generated by ChatGPT (gpt-4o-mini) (the Puter free limit does not apply to it)." : "⚠ The ChatGPT Engine is selected but no key is saved yet — add your OpenAI API key below (this key is PAID).")
-      : "Puter (FREE) — questions are generated from the free allowance; the lighter model (gpt-4o-mini) runs first so the limit comes later.";
-}
-function saveEngineOpenaiKey() {
-  var inp = document.getElementById("engineOpenaiKey");
-  var key = inp ? String(inp.value || "").trim() : "";
-  var stEl = document.getElementById("engineOpenaiKeyState");
-  if (!key) { if (stEl) stEl.textContent = "⚠ Write the key first, then press Save."; return false; }
-  try { localStorage.setItem(OPENAI_LS, key); } catch (e) {}
-  if (inp) inp.value = "";
-  refreshEngineUI();
-  var st = document.getElementById("aiGenStatus");
-  if (st) st.textContent = "✔ The OpenAI key is saved — now press Generate; questions will be generated by ChatGPT.";
-  return true;
+/* Key na hone wala error — userMsg flag ke sath, taake har panel ka
+   maujooda catch use bilkul waisa hi dikhaye. */
+function noAiKeyError() { var e = new Error(NO_AI_KEY_MSG); e.userMsg = true; e.noKey = true; return e; }
+function refreshAiKeyUI() {
+  var st = document.getElementById("engineKeyState");
+  if (!st) return;
+  st.textContent = geminiSavedKey()
+    ? "✔ A Gemini key is saved in this browser — questions will be generated by Google Gemini."
+    : "⚠ No Gemini key is saved yet — paste your FREE key above and press Save (get one free at aistudio.google.com/apikey).";
 }
 function saveEngineGeminiKey() {
   var inp = document.getElementById("engineGeminiKey");
@@ -1872,88 +1788,62 @@ function saveEngineGeminiKey() {
   if (!key) { if (stEl) stEl.textContent = "⚠ Write the key first, then press Save."; return false; }
   try { localStorage.setItem(GEMINI_LS, key); } catch (e) {}
   if (inp) inp.value = "";
-  refreshEngineUI();
+  refreshAiKeyUI();
   var st = document.getElementById("aiGenStatus");
   if (st) st.textContent = "✔ The Gemini key is saved — now press Generate; questions will be generated by Gemini.";
   return true;
 }
-/* Generation ke liye EK rasta: Engine Gemini/OpenAI ho aur us ki key
-   mojood ho to wahi engine, warna Puter. (Key na ho to callers pehle
-   hi rok kar key wala box dikha dete hain — ye fallback sirf hifazat
-   ke liye hai.) Photo, Text Paste, Tarjuma aur Scheme parse — charon
-   isi ek dispatch se jate hain, is liye ChatGPT engine teeno jagah
-   khud bakhud chal jata hai. */
+/* Generation ke liye EK rasta: seedha Gemini. Key na ho to network
+   call se PEHLE NO_AI_KEY_MSG ke sath reject — koi fetch nahi hoti.
+   Photo, Text Paste, Paper ki Photo, Tarjuma, Scheme parse aur
+   Books — sab isi dispatch se jate hain. */
 function aiChatText(prompt) {
-  if (aiEngine() === "gemini") {
-    var key = geminiSavedKey();
-    if (key) return geminiText(prompt, key);
-  }
-  if (aiEngine() === "openai") {
-    var k2 = openaiSavedKey();
-    if (k2) return openaiText(prompt, k2);
-  }
-  return puterChatText(prompt);
+  var key = geminiSavedKey();
+  if (!key) return Promise.reject(noAiKeyError());
+  return geminiText(prompt, key);
 }
 function aiChatPhoto(prompt, file) {
-  if (aiEngine() === "gemini") {
-    var key = geminiSavedKey();
-    if (key) return geminiPhotoText(prompt, file, key);
-  }
-  if (aiEngine() === "openai") {
-    var k2 = openaiSavedKey();
-    if (k2) return openaiPhotoText(prompt, file, k2);
-  }
-  return puterChatOnce(prompt, file);
+  var key = geminiSavedKey();
+  if (!key) return Promise.reject(noAiKeyError());
+  return geminiPhotoText(prompt, file, key);
 }
 /* Scheme AI se parho: {file: imageFile} ya {text: "..."} — kamyabi par
    scheme khud lag jata hai. Returns: Promise<scheme|null> */
 function runSchemeAiParse(src) {
   var st = document.getElementById("schemeAiStatus");
   function say(m) { if (st) st.textContent = m; }
-  var eng = aiEngine();
-  if (eng === "gemini" && !geminiSavedKey()) { say("⚠ The AI Engine 'Your Own Gemini Key' is selected but no key is saved — add your Gemini key under the Engine in the Photo section below, or set the Engine to 'Puter (FREE)'."); return Promise.resolve(null); }
-  if (eng === "openai" && !openaiSavedKey()) { say("⚠ The AI Engine 'ChatGPT (OpenAI API Key)' is selected but no key is saved — add your OpenAI key under the Engine in the Photo section below, or set the Engine to 'Puter (FREE)'."); return Promise.resolve(null); }
-  if (eng === "puter" && !puterReady()) { say("⚠ The Puter library did not load — check your internet and refresh the page."); return Promise.resolve(null); }
-  function go() {
-    var prompt = buildSchemePrompt();
-    var call;
-    if (src && src.file) {
-      say("🤖 The AI is reading the scheme photo…");
-      call = aiChatPhoto(prompt, src.file);
-    } else {
-      var text = String((src && src.text) || "").trim();
-      if (!text) { say("⚠ First paste the scheme text or select a file."); return Promise.resolve(null); }
-      say("🤖 The AI is reading the scheme…");
-      call = aiChatText(prompt + "\n\nPAIRING SCHEME TEXT:\n" + text.slice(0, 12000));
-    }
-    return call.then(function (txt) {
-      var sc = parseAiScheme(txt);
-      if (!sc) { say("⚠ No scheme could be created from the AI reply — if the text is written clearly, try again, or use the Manual Editor."); return null; }
-      applyScheme(sc);
-      say("✔ Scheme applied: " + sc.name + " — check the progress below.");
-      return sc;
-    }).catch(function (e) {
-      var um = aiUserMsg(e);
-      if (um) { say(um); return null; }
-      if (isAiLimitError(e)) { say(PUTER_LIMIT_MSG); return null; }
-      say("⚠ Scheme parse fail: " + (e && e.message ? e.message : e));
-      return null;
-    });
+  if (!geminiSavedKey()) { say(NO_AI_KEY_MSG); return Promise.resolve(null); }
+  var prompt = buildSchemePrompt();
+  var call;
+  if (src && src.file) {
+    say("🤖 The AI is reading the scheme photo…");
+    call = aiChatPhoto(prompt, src.file);
+  } else {
+    var text = String((src && src.text) || "").trim();
+    if (!text) { say("⚠ First paste the scheme text or select a file."); return Promise.resolve(null); }
+    say("🤖 The AI is reading the scheme…");
+    call = aiChatText(prompt + "\n\nPAIRING SCHEME TEXT:\n" + text.slice(0, 12000));
   }
-  if (eng !== "puter") return go();
-  if (puterSignedIn()) return go();
-  say("🔐 A FREE Puter sign in is needed first — opening the popup…");
-  return puterDoSignIn().then(function (ok) {
-    if (!ok) { say("⚠ Sign in with a FREE Puter account first (the Sign In button in the Photo section) — the AI will not run without sign-in."); return null; }
-    return go();
+  return call.then(function (txt) {
+    var sc = parseAiScheme(txt);
+    if (!sc) { say("⚠ No scheme could be created from the AI reply — if the text is written clearly, try again, or use the Manual Editor."); return null; }
+    applyScheme(sc);
+    say("✔ Scheme applied: " + sc.name + " — check the progress below.");
+    return sc;
+  }).catch(function (e) {
+    var um = aiUserMsg(e);
+    if (um) { say(um); return null; }
+    if (isAiLimitError(e)) { say(AI_LIMIT_MSG); return null; }
+    say("⚠ Scheme parse fail: " + (e && e.message ? e.message : e));
+    return null;
   });
 }
 
 /* ================= AI TARJUMA (statements -> Urdu) =================
    Medium badalne se sirf labels/headings badalte hain — statements asal
    zuban mein rehti hain. Owner ki hidayat par ye feature tamam question
-   statements aur MCQ options ka AI (Puter — wohi sign in jo Photo wale
-   hisse ka hai) se Urdu tarjuma karta hai:
+   statements aur MCQ options ka AI (Google Gemini — wohi key jo Photo
+   wale hisse ke AI Key box ki hai) se Urdu tarjuma karta hai:
    - Urdu medium: statement/option ki jagah Urdu tarjuma aa jata hai.
    - Bilingual: har statement/option ke neeche "\n" se Urdu line judti hai
      (paper mein richText use alag line + Nastaliq font mein dikhata hai).
@@ -2041,10 +1931,7 @@ function runTranslate() {
   function say(m) { if (stEl) stEl.textContent = m; }
   var medium = state.setup.medium;
   if (medium !== "ur" && medium !== "bi") { say("⚠ First set the Medium to Urdu or Bilingual."); return Promise.resolve(0); }
-  var eng = aiEngine();
-  if (eng === "gemini" && !geminiSavedKey()) { say("⚠ The AI Engine 'Your Own Gemini Key' is selected but no key is saved — add your Gemini key under the Engine in the Photo section below, or set the Engine to 'Puter (FREE)'."); return Promise.resolve(0); }
-  if (eng === "openai" && !openaiSavedKey()) { say("⚠ The AI Engine 'ChatGPT (OpenAI API Key)' is selected but no key is saved — add your OpenAI key under the Engine in the Photo section below, or set the Engine to 'Puter (FREE)'."); return Promise.resolve(0); }
-  if (eng === "puter" && !puterReady()) { say("⚠ The Puter library did not load — check your internet and refresh the page."); return Promise.resolve(0); }
+  if (!geminiSavedKey()) { say(NO_AI_KEY_MSG); return Promise.resolve(0); }
   var items = collectTranslateItems();
   if (!items.length) { say("⚠ There is no statement in the paper yet — add questions first."); return Promise.resolve(0); }
   function go() {
@@ -2081,18 +1968,12 @@ function runTranslate() {
     }).catch(function (e) {
       var um = aiUserMsg(e);
       if (um) { say(um); return 0; }
-      if (isAiLimitError(e)) { say(PUTER_LIMIT_MSG); return 0; }
+      if (isAiLimitError(e)) { say(AI_LIMIT_MSG); return 0; }
       say("⚠ Translation failed: " + (e && e.message ? e.message : e) + " No change was made to the paper.");
       return 0;
     });
   }
-  if (eng !== "puter") return go();
-  if (puterSignedIn()) return go();
-  say("🔐 A FREE Puter sign in is needed first — opening the popup…");
-  return puterDoSignIn().then(function (ok) {
-    if (!ok) { say("⚠ Sign in with a FREE Puter account first (the Sign In button in the Photo section below) — the AI translation will not run without sign-in."); return 0; }
-    return go();
-  });
+  return go();
 }
 /* Snapshot se asal text byte-for-byte wapas. Returns true agar restore hua. */
 function undoTranslate() {
@@ -3374,14 +3255,12 @@ function downloadPDF(kind) {
 }
 
 /* ================= PHOTO -> QUESTIONS ================= */
-/* Tamam photo generation ab AI Engine dispatch (aiChatPhoto) se hoti
-   hai: Puter (gpt-4o-mini pehle) / Gemini / OpenAI — teeno asli vision
-   models hain jo safha parh kar usi ki content se MCQs (options +
-   sahi jawab), Short aur Long sawal BANA kar dete hain, strict JSON
-   mein. (Purane OCR routes aur Qwen slow route hata diye gaye hain —
-   wo garbled text dete thay aur slow route asal test mein time out
-   ho gaya tha.) Parser truncated JSON se bhi mukammal sawal bacha
-   leta hai (salvage). */
+/* Tamam photo generation ab Gemini dispatch (aiChatPhoto) se hoti
+   hai: Gemini ka vision model safha parh kar usi ki content se MCQs
+   (options + sahi jawab), Short aur Long sawal BANA kar deta hai,
+   strict JSON mein. (Purane OCR routes aur slow route hata diye
+   gaye hain — wo garbled text dete thay.) Parser truncated JSON se
+   bhi mukammal sawal bacha leta hai (salvage). */
 var photoCandidates = [];
 var GEMINI_LS = "kpg_gemini_key";
 
@@ -3497,7 +3376,7 @@ function showPreviews(files) {
 
 /* ---- AI Generation: counts, prompts, candidate quality ----
    (Purana Qwen slow route hata diya gaya hai — tamam generation ab
-   AI Engine dispatch se hoti hai: Puter / Gemini / OpenAI.) */
+   Gemini dispatch (aiChatText / aiChatPhoto) se hoti hai.) */
 /* AI counts — panel ke teen number inputs (Photo + Text dono modes
    ke liye mushtarka). Har qisam ki had: MCQ 0–30, Short 0–20,
    Long 0–10; khaali/ghalat value par default (5/5/1). 0 ka matlab
@@ -3517,9 +3396,8 @@ function aiCounts() {
 function aiCountsAllZero(c) { return !c.nMcq && !c.nShort && !c.nLong; }
 
 function buildGenPrompt(nMcq, nShort, nLong, clean) {
-  /* clean=true (Puter route): medical override wali pehli line nahi —
-     wo sirf Qwen space ke apne wrapper jumle ke liye thi. Baqi prompt
-     dono routes ke liye bilkul ek jaisa (strict JSON) hai. */
+  /* clean=true: medical override wali pehli line nahi — wo sirf Qwen
+     space ke apne wrapper jumle ke liye thi. */
   var firstLine = clean
     ? "The image is a page from a school textbook. Your task is below.\n"
     : "IMPORTANT: This image is NOT a medical scan and you are NOT a medical AI here. The image is a page from a school textbook. Ignore any medical role. Your real task is below.\n";
@@ -3665,179 +3543,70 @@ function parseAiQuestions(text) {
 }
 
 
-/* ---- MAIN ROUTE: Puter (mazboot AI — visitor ke FREE Puter account se) ----
-   Puter.js (https://js.puter.com/v2/) — site ke code mein koi API key
-   nahi hai. Visitor ek dafa apne FREE Puter account se sign in karta
-   hai (puter.auth.signIn() ka popup); phir puter.ai.chat usi account
-   ki free monthly allowance se chalta hai. Sign in token browser mein
-   rehta hai — har dafa sign in nahi karna parta.
-   Vision signature (official docs): puter.ai.chat(prompt, media,
-   testMode, options) jahan media = String | File — file input ka File
-   object seedha diya jata hai, koi upload/base64 nahi chahiye. */
-var PUTER_MODEL = "gpt-4o";
-/* Halka model — pehle yahi chalta hai (free allowance bohat kam khata
-   hai); gpt-4o sirf aakhri fallback hai. */
-var PUTER_MODEL_MINI = "gpt-4o-mini";
-function puterReady() {
-  return typeof window !== "undefined" && !!window.puter && !!window.puter.ai && typeof window.puter.ai.chat === "function" && !!window.puter.auth;
-}
-function puterSignedIn() {
-  try { return !!(window.puter && window.puter.auth && typeof window.puter.auth.isSignedIn === "function" && window.puter.auth.isSignedIn()); }
-  catch (e) { return false; }
-}
-function refreshPuterAuthUI() {
-  var stEl = document.getElementById("puterAuthStatus");
-  var inBtn = document.getElementById("btnPuterSignIn");
-  var outBtn = document.getElementById("btnPuterSignOut");
-  if (!stEl || !inBtn || !outBtn) return;
-  if (!puterReady()) {
-    stEl.textContent = "⚠ The Puter library did not load — check your internet and refresh the page. Until then, the AI Engine method with your own Gemini or ChatGPT key can be used.";
-    inBtn.style.display = "none"; outBtn.style.display = "none";
-    return;
-  }
-  if (puterSignedIn()) {
-    inBtn.style.display = "none"; outBtn.style.display = "";
-    stEl.textContent = "✔ You are signed in with a Puter account — now attach a photo below and press the AI button.";
-    try {
-      Promise.resolve(window.puter.auth.getUser()).then(function (u) {
-        if (u && (u.username || u.email)) stEl.textContent = "✔ Signed in to Puter: " + (u.username || u.email) + " — now attach a photo and press the AI button.";
-      }).catch(function () {});
-    } catch (e) {}
-  } else {
-    inBtn.style.display = ""; outBtn.style.display = "none";
-    stEl.textContent = "ℹ To generate questions with AI, first sign in once with a FREE Puter account (only once — the browser remembers it). If you do not have an account, a new free account can also be created in the same popup.";
-  }
-}
-function puterDoSignIn() {
-  var st = document.getElementById("aiGenStatus");
-  if (!puterReady()) { if (st) st.textContent = "⚠ The Puter library did not load — check your internet and refresh the page."; return Promise.resolve(false); }
-  if (puterSignedIn()) { refreshPuterAuthUI(); return Promise.resolve(true); }
-  return Promise.resolve()
-    .then(function () { return window.puter.auth.signIn(); })
-    .then(function () { refreshPuterAuthUI(); return puterSignedIn(); })
-    .catch(function () {
-      if (st) st.textContent = "⚠ The sign-in did not complete — the popup may have closed. Press the Sign In button above again.";
-      return false;
-    });
-}
-function puterDoSignOut() {
-  try { if (window.puter && window.puter.auth) window.puter.auth.signOut(); } catch (e) {}
-  refreshPuterAuthUI();
-}
-/* Puter ke jawab ki mukhtalif shaklon se text nikalo:
-   string | {message:{content:string}} | content blocks ki array */
-function puterRespText(resp) {
-  if (!resp) return "";
-  if (typeof resp === "string") return resp;
-  var c = resp.message && resp.message.content;
-  if (typeof c === "string") return c;
-  if (Array.isArray(c)) {
-    return c.map(function (p) {
-      if (typeof p === "string") return p;
-      if (p && typeof p === "object") return String(p.text || p.content || "");
-      return "";
-    }).join("");
-  }
-  if (typeof resp.text === "string") return resp.text;
-  try { var s = resp.toString(); if (s && s !== "[object Object]") return s; } catch (e) {}
-  return "";
-}
-/* Ek photo ke liye ek chat call. Model tartib (allowance bachane ke
-   liye): pehle halka gpt-4o-mini, fail ho to Puter ka default, aakhir
-   mein mazboot gpt-4o. Limit/quota error par koi dobara koshish nahi —
-   error seedha upar jata hai (PUTER_LIMIT_MSG wahan dikhta hai). */
-function puterChatOnce(prompt, file) {
-  function attempt(opts) {
-    return Promise.resolve().then(function () { return window.puter.ai.chat(prompt, file, false, opts); })
-      .then(function (resp) {
-        var t = puterRespText(resp);
-        if (!t) throw new Error("The AI returned an empty reply");
-        return t;
-      });
-  }
-  return attempt({ model: PUTER_MODEL_MINI, temperature: 0.4 }).catch(function (e) {
-    if (isAiLimitError(e)) throw e;
-    return attempt({ temperature: 0.4 }).catch(function (e2) {
-      if (isAiLimitError(e2)) throw e2;
-      return attempt({ model: PUTER_MODEL, temperature: 0.4 });
-    });
-  });
-}
-function runPuterGen(files) {
+/* ---- PHOTO GENERATION (Google Gemini) ----
+   Har photo aiChatPhoto (Gemini vision) se jati hai; sawal Review
+   list mein aate hain. Ek photo fail ho to baqi jari rehte hain;
+   limit/quota par chain ruk jati hai aur AI_LIMIT_MSG dikhta hai.
+   Key na ho to koi call NAHI hoti — seedha NO_AI_KEY_MSG. */
+function runPhotoGen(files) {
   var st = document.getElementById("aiGenStatus");
   if (!files || !files.length) { st.textContent = "⚠ Select a photo of the page first."; return Promise.resolve(0); }
   var counts = aiCounts();
   if (aiCountsAllZero(counts)) { st.textContent = AI_ZERO_MSG; return Promise.resolve(0); }
+  if (!geminiSavedKey()) { st.textContent = NO_AI_KEY_MSG; return Promise.resolve(0); }
   var use = files.slice(0, 3);
   if (files.length > 3) st.textContent = "ℹ At most 3 photos at a time — taking the first 3.";
-  function go() {
-    var prompt = buildGenPrompt(counts.nMcq, counts.nShort, counts.nLong, true);
-    st.textContent = "🤖 Sending the photo to the AI…";
-    var all = [], failed = 0, limitHit = false, fatalMsg = "";
-    var chain = Promise.resolve();
-    use.forEach(function (f, i) {
-      chain = chain.then(function () {
-        if (limitHit || fatalMsg) return; /* limit/fatal ke baad baqi photos par koi call nahi */
-        st.textContent = "🤖 Photo " + (i + 1) + "/" + use.length + " — the AI is reading the page and creating questions…";
-        return aiChatPhoto(prompt, f).then(function (txt) {
-          var cands = parseAiQuestions(txt);
-          if (!cands.length) throw new Error("No question could be created from the AI reply — take a clear, close-up photo and try again");
-          all = all.concat(cands);
-        }).catch(function (e) {
-          var um = aiUserMsg(e);
-          if (um) { fatalMsg = um; return; }
-          if (isAiLimitError(e)) { limitHit = true; return; }
-          failed++;
-          st.textContent = "⚠ Photo " + (i + 1) + " failed: " + (e && e.message ? e.message : e) + (use.length > 1 ? " — continuing with the remaining photos…" : "");
-        });
+  var prompt = buildGenPrompt(counts.nMcq, counts.nShort, counts.nLong, true);
+  st.textContent = "🤖 Sending the photo to the AI…";
+  var all = [], failed = 0, limitHit = false, fatalMsg = "";
+  var chain = Promise.resolve();
+  use.forEach(function (f, i) {
+    chain = chain.then(function () {
+      if (limitHit || fatalMsg) return; /* limit/fatal ke baad baqi photos par koi call nahi */
+      st.textContent = "🤖 Photo " + (i + 1) + "/" + use.length + " — the AI is reading the page and creating questions…";
+      return aiChatPhoto(prompt, f).then(function (txt) {
+        var cands = parseAiQuestions(txt);
+        if (!cands.length) throw new Error("No question could be created from the AI reply — take a clear, close-up photo and try again");
+        all = all.concat(cands);
+      }).catch(function (e) {
+        var um = aiUserMsg(e);
+        if (um) { fatalMsg = um; return; }
+        if (isAiLimitError(e)) { limitHit = true; return; }
+        failed++;
+        st.textContent = "⚠ Photo " + (i + 1) + " failed: " + (e && e.message ? e.message : e) + (use.length > 1 ? " — continuing with the remaining photos…" : "");
       });
     });
-    return chain.then(function () {
-      if (fatalMsg) {
-        if (all.length) {
-          setCandidates(all);
-          st.textContent = "✔ " + all.length + " questions created. " + fatalMsg;
-          return all.length;
-        }
-        st.textContent = fatalMsg;
-        return 0;
+  });
+  return chain.then(function () {
+    if (fatalMsg) {
+      if (all.length) {
+        setCandidates(all);
+        st.textContent = "✔ " + all.length + " questions created. " + fatalMsg;
+        return all.length;
       }
-      if (limitHit) {
-        if (all.length) {
-          setCandidates(all);
-          st.textContent = "✔ " + all.length + " questions created. " + PUTER_LIMIT_MSG;
-          return all.length;
-        }
-        st.textContent = PUTER_LIMIT_MSG;
-        return 0;
+      st.textContent = fatalMsg;
+      return 0;
+    }
+    if (limitHit) {
+      if (all.length) {
+        setCandidates(all);
+        st.textContent = "✔ " + all.length + " questions created. " + AI_LIMIT_MSG;
+        return all.length;
       }
-      if (!all.length) {
-        if (!failed) st.textContent = "⚠ The AI could not create any question. Try again with a clear, straight, close-up photo.";
-        else if (use.length === 1) st.textContent += " If this error keeps coming, this month's free allowance may be finished — try again after a while, or try the AI Engine method with your own Gemini/ChatGPT key.";
-        return 0;
-      }
-      setCandidates(all);
-      var nm = all.filter(function (c) { return c.type === "mcq"; }).length;
-      var ns = all.filter(function (c) { return c.type === "short"; }).length;
-      var nl = all.filter(function (c) { return c.type === "long"; }).length;
-      st.textContent = "✔ The AI created " + all.length + " questions (" + nm + " MCQ, " + ns + " Short, " + nl + " Long) — check the questions and correct answers in the Review below and add them to the paper.";
-      return all.length;
-    });
-  }
-  if (aiEngine() === "gemini") {
-    if (!geminiSavedKey()) { refreshEngineUI(); st.textContent = "⚠ The AI Engine 'Your Own Gemini Key' is selected but no key is saved — first add your Gemini key under the Engine (it is FREE), or set the Engine to 'Puter (FREE)'."; return Promise.resolve(0); }
-    return go();
-  }
-  if (aiEngine() === "openai") {
-    if (!openaiSavedKey()) { refreshEngineUI(); st.textContent = "⚠ The AI Engine 'ChatGPT (OpenAI API Key)' is selected but no key is saved — first add your OpenAI key under the Engine, or set the Engine to 'Puter (FREE)'."; return Promise.resolve(0); }
-    return go();
-  }
-  if (!puterReady()) { st.textContent = "⚠ The Puter library did not load — check your internet and refresh the page."; return Promise.resolve(0); }
-  if (puterSignedIn()) return go();
-  st.textContent = "🔐 A FREE Puter sign in is needed first — opening the popup…";
-  return puterDoSignIn().then(function (ok) {
-    if (!ok) { st.textContent = "⚠ Sign in with a FREE Puter account first (the Sign In button above) — the AI will not run without sign-in. The account is completely free; it is created with just an email."; return 0; }
-    return go();
+      st.textContent = AI_LIMIT_MSG;
+      return 0;
+    }
+    if (!all.length) {
+      if (!failed) st.textContent = "⚠ The AI could not create any question. Try again with a clear, straight, close-up photo.";
+      else if (use.length === 1) st.textContent += " If this error keeps coming, check your Gemini key or its free quota at aistudio.google.com.";
+      return 0;
+    }
+    setCandidates(all);
+    var nm = all.filter(function (c) { return c.type === "mcq"; }).length;
+    var ns = all.filter(function (c) { return c.type === "short"; }).length;
+    var nl = all.filter(function (c) { return c.type === "long"; }).length;
+    st.textContent = "✔ The AI created " + all.length + " questions (" + nm + " MCQ, " + ns + " Short, " + nl + " Long) — check the questions and correct answers in the Review below and add them to the paper.";
+    return all.length;
   });
 }
 
@@ -4077,10 +3846,7 @@ function runPaperPhoto(files) {
   function say(m) { if (st) st.textContent = m; }
   files = (files || []).slice(0, 4);
   if (!files.length) { say("⚠ Choose at least 1 photo of the paper first."); return Promise.resolve(0); }
-  var eng = aiEngine();
-  if (eng === "gemini" && !geminiSavedKey()) { say("⚠ The AI Engine 'Your Own Gemini Key' is selected but no key is saved — add your Gemini key under the Engine above, or set the Engine to 'Puter (FREE)'."); return Promise.resolve(0); }
-  if (eng === "openai" && !openaiSavedKey()) { say("⚠ The AI Engine 'ChatGPT (OpenAI API Key)' is selected but no key is saved — add your OpenAI key under the Engine above, or set the Engine to 'Puter (FREE)'."); return Promise.resolve(0); }
-  if (eng === "puter" && !puterReady()) { say("⚠ The Puter library did not load — check your internet and refresh the page."); return Promise.resolve(0); }
+  if (!geminiSavedKey()) { say(NO_AI_KEY_MSG); return Promise.resolve(0); }
   var merged = { setup: {}, sections: [] };
   var chain = Promise.resolve();
   files.forEach(function (f, i) {
@@ -4101,7 +3867,9 @@ function runPaperPhoto(files) {
     if (!merged.sections.length) { say("⚠ The AI could not understand the paper — the photo should be clear and straight, then try again."); return 0; }
     return applyPaperPhoto(merged);
   }).catch(function (e) {
-    if (isAiLimitError(e)) { say(PUTER_LIMIT_MSG); return 0; }
+    var um = aiUserMsg(e);
+    if (um) { say(um); return 0; }
+    if (isAiLimitError(e)) { say(AI_LIMIT_MSG); return 0; }
     say("⚠ The paper could not be created: " + (e && e.message ? e.message : e));
     return 0;
   });
@@ -4242,7 +4010,7 @@ function buildTextGenPrompt(nMcq, nShort, nLong, difficulty) {
     "Return ONLY valid JSON. No explanation, no markdown, no extra text. Format exactly like this:\n" +
     '{"mcqs":[{"q":"question text","options":["opt1","opt2","opt3","opt4"],"answer":0}],"shorts":["short question 1"],"longs":["long question 1"]}';
 }
-function runPuterTextGen(textOverride) {
+function runTextGen(textOverride) {
   var st = document.getElementById("aiGenStatus");
   var text = "";
   if (typeof textOverride === "string") text = textOverride;
@@ -4268,30 +4036,16 @@ function runPuterTextGen(textOverride) {
     }).catch(function (e) {
       var um = aiUserMsg(e);
       if (um) { st.textContent = um; return 0; }
-      if (isAiLimitError(e)) { st.textContent = PUTER_LIMIT_MSG; return 0; }
-      st.textContent = "⚠ AI failed: " + (e && e.message ? e.message : e) + " — please try again. If this error keeps coming, this month's free allowance may be finished — try again after a while.";
+      if (isAiLimitError(e)) { st.textContent = AI_LIMIT_MSG; return 0; }
+      st.textContent = "⚠ AI failed: " + (e && e.message ? e.message : e) + " — please try again. If this error keeps coming, check your Gemini key or its free quota at aistudio.google.com.";
       return 0;
     });
   }
-  if (aiEngine() === "gemini") {
-    if (!geminiSavedKey()) { refreshEngineUI(); st.textContent = "⚠ The AI Engine 'Your Own Gemini Key' is selected but no key is saved — first add your Gemini key under the Engine (it is FREE), or set the Engine to 'Puter (FREE)'."; return Promise.resolve(0); }
-    return go();
-  }
-  if (aiEngine() === "openai") {
-    if (!openaiSavedKey()) { refreshEngineUI(); st.textContent = "⚠ The AI Engine 'ChatGPT (OpenAI API Key)' is selected but no key is saved — first add your OpenAI key under the Engine, or set the Engine to 'Puter (FREE)'."; return Promise.resolve(0); }
-    return go();
-  }
-  if (!puterReady()) { st.textContent = "⚠ The Puter library did not load — check your internet and refresh the page."; return Promise.resolve(0); }
-  if (puterSignedIn()) return go();
-  st.textContent = "🔐 A FREE Puter sign in is needed first — opening the popup…";
-  return puterDoSignIn().then(function (ok) {
-    if (!ok) { st.textContent = "⚠ Sign in with a FREE Puter account first (the Sign In button above) — the AI will not run without sign-in. The account is completely free; it is created with just an email."; return 0; }
-    return go();
-  });
+  if (!geminiSavedKey()) { st.textContent = NO_AI_KEY_MSG; return Promise.resolve(0); }
+  return go();
 }
 
-/* ---- Engine photo helpers: file ko base64 banana (Gemini/OpenAI
-   photo routes ke liye mushtarka) ---- */
+/* ---- Photo helper: file ko base64 banana (Gemini photo route ke liye) ---- */
 function fileToBase64(file) {
   return new Promise(function (resolve, reject) {
     var r = new FileReader();
@@ -4305,28 +4059,57 @@ function fileToBase64(file) {
    (geminiText/geminiPhotoText) isi se jata hai: wahi endpoint, wahi
    model, wahi key. Jawab ka raw text return hota hai; parsing caller
    ka kaam hai. */
-var GEMINI_MODEL = "gemini-2.0-flash";
-function geminiCall(parts, key) {
-  return fetch("https://generativelanguage.googleapis.com/v1beta/models/" + GEMINI_MODEL + ":generateContent?key=" + encodeURIComponent(key), {
+var GEMINI_MODEL = "gemini-2.5-flash";
+var GEMINI_FALLBACK_MODEL = "gemini-2.0-flash";
+function geminiErrorText(j) {
+  if (!j) return "";
+  if (j.error && j.error.message) return String(j.error.message);
+  try { return JSON.stringify(j); } catch (e) { return String(j); }
+}
+/* Model wali nakami: HTTP 404, ya error body/message mein model
+   ka zikar. Sirf aisi ghalti par purane model se EK dobara koshish
+   hoti hai; baqi ghaltiyan (ghalat key, network, server) waisi ki
+   waisi upar jati hain. */
+function isGeminiModelError(e) {
+  if (!e) return false;
+  if (Number(e.status || 0) === 404) return true;
+  var s = (String(e.body || "") + " " + String(e.message || "")).toLowerCase();
+  return s.indexOf("model") >= 0;
+}
+function geminiCallModel(parts, key, model) {
+  return fetch("https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + encodeURIComponent(key), {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ contents: [{ parts: parts }] })
-  }).then(function (r) { if (!r.ok) throw new Error("Gemini did not reply (" + r.status + ") — check the key"); return r.json(); })
-    .then(function (j) {
-      var parts = (((j.candidates || [])[0] || {}).content || {}).parts || [];
-      return parts.map(function (p) { return p.text || ""; }).join("");
+  }).then(function (r) {
+    return r.json().catch(function () { return null; }).then(function (j) {
+      if (!r.ok) {
+        var err = new Error("Gemini did not reply (" + r.status + ") — check the key");
+        err.status = r.status;
+        err.body = geminiErrorText(j);
+        throw err;
+      }
+      var respParts = (((j.candidates || [])[0] || {}).content || {}).parts || [];
+      return respParts.map(function (p) { return p.text || ""; }).join("");
     });
+  });
+}
+function geminiCall(parts, key) {
+  return geminiCallModel(parts, key, GEMINI_MODEL).catch(function (e) {
+    if (!isGeminiModelError(e)) throw e;
+    return geminiCallModel(parts, key, GEMINI_FALLBACK_MODEL);
+  });
 }
 
-/* Engine route (text): Puter wale generation prompts (buildGenPrompt /
+/* Gemini route (text): generation prompts (buildGenPrompt /
    buildTextGenPrompt / translate / scheme) Gemini ko — jawab ka text
-   waisa hi wapas, parsing Puter wala hi (parseAiQuestions waghera). */
+   waisa hi wapas, parsing wahi purana (parseAiQuestions waghera). */
 function geminiText(prompt, key) {
   return geminiCall([{ text: String(prompt || "") }], key).then(function (t) {
     if (!t) throw new Error("Gemini returned an empty reply");
     return t;
   });
 }
-/* Engine route (photo): prompt + photo file Gemini ko, jawab text. */
+/* Gemini route (photo): prompt + photo file Gemini ko, jawab text. */
 function geminiPhotoText(prompt, file, key) {
   return fileToBase64(file).then(function (b64) {
     return geminiCall([{ text: String(prompt || "") }, { inline_data: { mime_type: file.type || "image/jpeg", data: b64 } }], key);
@@ -4335,64 +4118,6 @@ function geminiPhotoText(prompt, file, key) {
     return t;
   });
 }
-/* ---- ChatGPT (OpenAI) engine: owner ki apni API key ----
-   geminiCall ki tarah EK mushtarak helper — OpenAI chat completions
-   ko POST, jawab ka assistant text wapas (parsing purana hi chalta
-   hai: parseAiQuestions waghera). Ghaltiyon par raw error kabhi
-   nahi: 401 par key wala saaf paigham, insufficient_quota/429 par
-   balance wala saaf paigham — dono userMsg flag ke sath, taake panel
-   unhein bilkul waisa hi dikhaye (Puter wali limit wala paigham in
-   par NAHI lagta). Koi retry-loop nahi. */
-var OPENAI_MODEL = "gpt-4o-mini";
-function openaiHttpError(status, j) {
-  var code = (j && j.error) ? String(j.error.code || "") : "";
-  var err;
-  if (status === 401) err = new Error("⚠ The OpenAI key is wrong — check the key and add it again.");
-  else if (status === 429 || code === "insufficient_quota") err = new Error("⚠ The OpenAI key's balance/quota is finished — check the balance at platform.openai.com, or set the Engine to Puter (FREE).");
-  else err = new Error("⚠ OpenAI did not reply (" + status + ") — please try again.");
-  err.userMsg = true;
-  return err;
-}
-function openaiCall(messages, key) {
-  return fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + key },
-    body: JSON.stringify({ model: OPENAI_MODEL, messages: messages })
-  }).then(function (r) {
-    return r.json().catch(function () { return null; }).then(function (j) {
-      if (!r.ok) throw openaiHttpError(r.status, j);
-      var txt = (j && j.choices && j.choices[0] && j.choices[0].message) ? j.choices[0].message.content : "";
-      if (Array.isArray(txt)) txt = txt.map(function (p) { return (p && p.text) || ""; }).join("");
-      return String(txt || "");
-    });
-  }).catch(function (e) {
-    if (e && e.userMsg) throw e;
-    throw new Error("Could not connect to OpenAI — check your internet and try again.");
-  });
-}
-/* Engine route (text): Puter wale generation prompts ChatGPT ko —
-   jawab ka text waisa hi wapas, parsing Puter wala hi. */
-function openaiText(prompt, key) {
-  return openaiCall([{ role: "user", content: String(prompt || "") }], key).then(function (t) {
-    if (!t) throw new Error("ChatGPT returned an empty reply");
-    return t;
-  });
-}
-/* Engine route (photo): prompt + photo (data URL image_url part)
-   ChatGPT ko, jawab text. */
-function openaiPhotoText(prompt, file, key) {
-  return fileToBase64(file).then(function (b64) {
-    var url = "data:" + (file.type || "image/jpeg") + ";base64," + b64;
-    return openaiCall([{ role: "user", content: [
-      { type: "text", text: String(prompt || "") },
-      { type: "image_url", image_url: { url: url } }
-    ] }], key);
-  }).then(function (t) {
-    if (!t) throw new Error("ChatGPT returned an empty reply");
-    return t;
-  });
-}
-
 function bindPhoto() {
   var inp = document.getElementById("photoFiles");
   inp.addEventListener("change", function () { showPreviews(selectedPhotoFiles()); });
@@ -4408,19 +4133,12 @@ function bindPhoto() {
   initDifficultySelect("textDifficulty", DIFFICULTY_TEXT_LS);
   document.getElementById("btnAiGen").addEventListener("click", function () {
     if (aiInputMode === "paper") runPaperPhoto(selectedPaperFiles());
-    else if (aiInputMode === "text") runPuterTextGen();
-    else runPuterGen(selectedPhotoFiles());
+    else if (aiInputMode === "text") runTextGen();
+    else runPhotoGen(selectedPhotoFiles());
   });
-  document.getElementById("btnPuterSignIn").addEventListener("click", function () { puterDoSignIn(); });
-  document.getElementById("btnPuterSignOut").addEventListener("click", function () { puterDoSignOut(); });
-  refreshPuterAuthUI();
-  var engSel = document.getElementById("aiEngineSel");
-  if (engSel) engSel.addEventListener("change", function () { setAiEngine(engSel.value); });
   var engSave = document.getElementById("btnEngineKeySave");
   if (engSave) engSave.addEventListener("click", function () { saveEngineGeminiKey(); });
-  var engSaveO = document.getElementById("btnEngineOpenaiSave");
-  if (engSaveO) engSaveO.addEventListener("click", function () { saveEngineOpenaiKey(); });
-  refreshEngineUI();
+  refreshAiKeyUI();
   var list = document.getElementById("candList");
   list.addEventListener("input", function (e) {
     var row = e.target.closest("[data-cand]"); if (!row) return;
@@ -5971,9 +5689,9 @@ function renderBookPageImage(pdfDoc, pageNum) {
   });
 }
 /* Photo pipeline ko tasveer bhejna: asal rasta aiChatPhoto hai —
-   data URL ko File/Blob bana kar diya jata hai taake teeno engines
-   (Puter/Gemini/OpenAI) usay photo ki tarah lein. Tests
-   setBookAiPhoto se dispatch badal sakte hain. */
+   data URL ko File/Blob bana kar diya jata hai taake Gemini usay
+   photo ki tarah le. Tests setBookAiPhoto se dispatch badal sakte
+   hain. */
 function dataUrlToBlob(dataUrl) {
   var s = String(dataUrl || "");
   var comma = s.indexOf(",");
@@ -6043,26 +5761,13 @@ function runBookGenTopic(topic) {
     }).catch(function (e) {
       var um = aiUserMsg(e);
       if (um) { say(um); return 0; }
-      if (isAiLimitError(e)) { say(PUTER_LIMIT_MSG); return 0; }
+      if (isAiLimitError(e)) { say(AI_LIMIT_MSG); return 0; }
       say("⚠ AI failed: " + (e && e.message ? e.message : e) + " — please try again.");
       return 0;
     });
   }
-  if (aiEngine() === "gemini") {
-    if (!geminiSavedKey()) { refreshEngineUI(); say("⚠ The AI Engine 'Your Own Gemini Key' is selected but no key is saved — first add your Gemini key under the Engine (it is FREE), or set the Engine to 'Puter (FREE)'."); return Promise.resolve(0); }
-    return go();
-  }
-  if (aiEngine() === "openai") {
-    if (!openaiSavedKey()) { refreshEngineUI(); say("⚠ The AI Engine 'ChatGPT (OpenAI API Key)' is selected but no key is saved — first add your OpenAI key under the Engine, or set the Engine to 'Puter (FREE)'."); return Promise.resolve(0); }
-    return go();
-  }
-  if (!puterReady()) { say("⚠ The Puter library did not load — check your internet and refresh the page."); return Promise.resolve(0); }
-  if (puterSignedIn()) return go();
-  say("🔐 A FREE Puter sign in is needed first — opening the popup…");
-  return puterDoSignIn().then(function (ok) {
-    if (!ok) { say("⚠ Sign in with a FREE Puter account first (the Sign In button in the 📷 section above) — the AI will not run without sign-in."); return 0; }
-    return go();
-  });
+  if (!geminiSavedKey()) { say(NO_AI_KEY_MSG); return Promise.resolve(0); }
+  return go();
 }
 
 /* ---- TEXT rasta: Text Paste wala hi prompt/dispatch ----
@@ -6093,33 +5798,20 @@ function runBookGenText(plan) {
     }).catch(function (e) {
       var um = aiUserMsg(e);
       if (um) { say(um); return 0; }
-      if (isAiLimitError(e)) { say(PUTER_LIMIT_MSG); return 0; }
+      if (isAiLimitError(e)) { say(AI_LIMIT_MSG); return 0; }
       say("⚠ AI failed: " + (e && e.message ? e.message : e) + " — please try again.");
       return 0;
     });
   }
-  if (aiEngine() === "gemini") {
-    if (!geminiSavedKey()) { refreshEngineUI(); say("⚠ The AI Engine 'Your Own Gemini Key' is selected but no key is saved — first add your Gemini key under the Engine (it is FREE), or set the Engine to 'Puter (FREE)'."); return Promise.resolve(0); }
-    return go();
-  }
-  if (aiEngine() === "openai") {
-    if (!openaiSavedKey()) { refreshEngineUI(); say("⚠ The AI Engine 'ChatGPT (OpenAI API Key)' is selected but no key is saved — first add your OpenAI key under the Engine, or set the Engine to 'Puter (FREE)'."); return Promise.resolve(0); }
-    return go();
-  }
-  if (!puterReady()) { say("⚠ The Puter library did not load — check your internet and refresh the page."); return Promise.resolve(0); }
-  if (puterSignedIn()) return go();
-  say("🔐 A FREE Puter sign in is needed first — opening the popup…");
-  return puterDoSignIn().then(function (ok) {
-    if (!ok) { say("⚠ Sign in with a FREE Puter account first (the Sign In button in the 📷 section above) — the AI will not run without sign-in."); return 0; }
-    return go();
-  });
+  if (!geminiSavedKey()) { say(NO_AI_KEY_MSG); return Promise.resolve(0); }
+  return go();
 }
 
 /* ---- PAGE-IMAGE rasta: scanned book ke pages ki tasveerein ----
    Har select kiye hue page (zyada se zyada 4) ki tasveer bana kar
    PHOTO wala prompt (buildGenPrompt — counts + alamat ke usool) aur
    wahi photo dispatch (aiChatPhoto) istemal hota hai; sawal usi
-   Review list mein jate hain. Ghalti/limit ka bartao runPuterGen
+   Review list mein jate hain. Ghalti/limit ka bartao runPhotoGen
    jaisa hai: ek page fail ho to baqi jari, limit par ruk jata hai. */
 function runBookGenImages(plan) {
   function say(m) { bookMsg("bookStatus", m); }
@@ -6158,8 +5850,8 @@ function runBookGenImages(plan) {
         return 0;
       }
       if (limitHit) {
-        if (all.length) { setCandidates(all); say("✔ " + all.length + " questions created. " + PUTER_LIMIT_MSG + tail); return all.length; }
-        say(PUTER_LIMIT_MSG);
+        if (all.length) { setCandidates(all); say("✔ " + all.length + " questions created. " + AI_LIMIT_MSG + tail); return all.length; }
+        say(AI_LIMIT_MSG);
         return 0;
       }
       if (!all.length) {
@@ -6174,21 +5866,8 @@ function runBookGenImages(plan) {
       return all.length;
     });
   }
-  if (aiEngine() === "gemini") {
-    if (!geminiSavedKey()) { refreshEngineUI(); say("⚠ The AI Engine 'Your Own Gemini Key' is selected but no key is saved — first add your Gemini key under the Engine (it is FREE), or set the Engine to 'Puter (FREE)'."); return Promise.resolve(0); }
-    return go();
-  }
-  if (aiEngine() === "openai") {
-    if (!openaiSavedKey()) { refreshEngineUI(); say("⚠ The AI Engine 'ChatGPT (OpenAI API Key)' is selected but no key is saved — first add your OpenAI key under the Engine, or set the Engine to 'Puter (FREE)'."); return Promise.resolve(0); }
-    return go();
-  }
-  if (!puterReady()) { say("⚠ The Puter library did not load — check your internet and refresh the page."); return Promise.resolve(0); }
-  if (puterSignedIn()) return go();
-  say("🔐 A FREE Puter sign in is needed first — opening the popup…");
-  return puterDoSignIn().then(function (ok) {
-    if (!ok) { say("⚠ Sign in with a FREE Puter account first (the Sign In button in the 📷 section above) — the AI will not run without sign-in."); return 0; }
-    return go();
-  });
+  if (!geminiSavedKey()) { say(NO_AI_KEY_MSG); return Promise.resolve(0); }
+  return go();
 }
 
 function bindBooks() {
@@ -6259,8 +5938,8 @@ window.KPG = {
   getCandidates: function () { return photoCandidates; },
   setCandidates: setCandidates,
   addSelectedCandidates: addSelectedCandidates,
-  runPuterGen: runPuterGen, puterChatOnce: puterChatOnce, puterRespText: puterRespText,
-  buildTextGenPrompt: buildTextGenPrompt, runPuterTextGen: runPuterTextGen,
+  runPhotoGen: runPhotoGen,
+  buildTextGenPrompt: buildTextGenPrompt, runTextGen: runTextGen,
   normalizePasteText: normalizePasteText, fixLatexSymbols: fixLatexSymbols, SYMBOL_RULES: SYMBOL_RULES,
   setAiInputMode: setAiInputMode, getAiInputMode: function () { return aiInputMode; },
   buildPaperPhotoPrompt: buildPaperPhotoPrompt, parsePaperPhotoJson: parsePaperPhotoJson,
@@ -6270,7 +5949,6 @@ window.KPG = {
   aiCounts: aiCounts, aiCountsAllZero: aiCountsAllZero, AI_ZERO_MSG: AI_ZERO_MSG,
   AI_COUNT_LIMITS: AI_COUNT_LIMITS,
   blankQuestion: blankQuestion, addBlankQuestions: addBlankQuestions,
-  puterSignedIn: puterSignedIn, refreshPuterAuthUI: refreshPuterAuthUI, PUTER_MODEL: PUTER_MODEL,
   renderAll: renderAll, renderSetup: renderSetup, renderSections: renderSections, renderPreview: renderPreview,
   buildPdfClone: buildPdfClone, removePdfStage: removePdfStage,
   downloadPDF: downloadPDF, printHTML: printHTML, pdfStatus: pdfStatus,
@@ -6280,12 +5958,12 @@ window.KPG = {
   layoutChoice: layoutChoice, effectiveLayout: effectiveLayout, layoutStatusText: layoutStatusText,
   splitForBack: splitForBack, paperHeadHTML: paperHeadHTML, paperContHeadHTML: paperContHeadHTML, paperSectionHTML: paperSectionHTML,
   fitScaleForHeight: fitScaleForHeight, applyPaperFit: applyPaperFit, FIT_MIN: FIT_MIN, LAYOUT_FRONT_MAX_MARKS: LAYOUT_FRONT_MAX_MARKS,
-  getAiEngine: aiEngine, setAiEngine: setAiEngine, refreshEngineUI: refreshEngineUI, saveEngineGeminiKey: saveEngineGeminiKey,
-  saveEngineOpenaiKey: saveEngineOpenaiKey, openaiSavedKey: openaiSavedKey, aiUserMsg: aiUserMsg,
-  openaiCall: openaiCall, openaiText: openaiText, openaiPhotoText: openaiPhotoText, OPENAI_MODEL: OPENAI_MODEL, OPENAI_LS: OPENAI_LS,
-  isAiLimitError: isAiLimitError, PUTER_LIMIT_MSG: PUTER_LIMIT_MSG, PUTER_MODEL_MINI: PUTER_MODEL_MINI,
+  refreshAiKeyUI: refreshAiKeyUI, saveEngineGeminiKey: saveEngineGeminiKey, NO_AI_KEY_MSG: NO_AI_KEY_MSG,
+  aiUserMsg: aiUserMsg,
+  isAiLimitError: isAiLimitError, AI_LIMIT_MSG: AI_LIMIT_MSG,
   aiChatText: aiChatText, aiChatPhoto: aiChatPhoto, geminiSavedKey: geminiSavedKey,
-  geminiCall: geminiCall, geminiText: geminiText, geminiPhotoText: geminiPhotoText, GEMINI_MODEL: GEMINI_MODEL, GEMINI_LS: GEMINI_LS,
+  geminiCall: geminiCall, geminiText: geminiText, geminiPhotoText: geminiPhotoText, GEMINI_MODEL: GEMINI_MODEL, GEMINI_FALLBACK_MODEL: GEMINI_FALLBACK_MODEL,
+  isGeminiModelError: isGeminiModelError, geminiCallModel: geminiCallModel, GEMINI_LS: GEMINI_LS,
   mxRunIsSymbolOnly: mxRunIsSymbolOnly, optIsoHtml: optIsoHtml,
   biStyleChoice: biStyleChoice, isSideBySide: isSideBySide, splitBiText: splitBiText, biHalfSections: biHalfSections,
   paperHalfHeadHTML: paperHalfHeadHTML, renderBiStyleBox: renderBiStyleBox,
@@ -6321,7 +5999,7 @@ window.KPG = {
   getActiveScheme: getActiveScheme, schemeChapters: schemeChapters, schemeProgress: schemeProgress,
   renderSchemeProgress: renderSchemeProgress,
   getMySchemes: getMySchemes, saveMyScheme: saveMyScheme, deleteMyScheme: deleteMyScheme,
-  pdfFileToText: pdfFileToText, puterChatText: puterChatText, runSchemeAiParse: runSchemeAiParse,
+  pdfFileToText: pdfFileToText, runSchemeAiParse: runSchemeAiParse,
   TR_LS: TR_LS, collectTranslateItems: collectTranslateItems, buildTranslatePrompt: buildTranslatePrompt,
   parseTranslateReply: parseTranslateReply, runTranslate: runTranslate, undoTranslate: undoTranslate,
   renderTranslateBox: renderTranslateBox, hasTranslateSnapshot: hasTranslateSnapshot,
