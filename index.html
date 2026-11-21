@@ -5340,24 +5340,82 @@ function outlineToChapters(pdf, outline) {
    har page par pehli match hi li jati hai. Shape site wali hai
    ({title, page}) aur end_page bhi sath hai (agla chapter − 1;
    aakhri chapter ka end = aakhri page). Urdu script ke headings
-   is regex se nahi milte. */
+   is regex se nahi milte.
+   SAKHTI (page-start rule): asal kitabon mein heading aksar lambi
+   line ke shuru mein chipki hoti hai (line rule miss kar deta
+   hai) — is liye agar kisi page ka text hi heading se shuru ho
+   aur pehle 80 characters ke andar jumla-khatma (. ! ?) ya label
+   wale ke baad wala colon ajaye to heading phrase (80 tak) ko
+   chapter title maan lo. Baghair delimiter wali lambi line
+   (masalan "Chapter 9: yyy…" wali guard line) phir bhi nahi
+   milti. Line rule pehle chalti hai; ye sirf fallback hai. */
 var CHAPTER_HEADING_RE = /^\s*(?:chapter|unit)\s+(\d+|[ivxlc]+)\b.*$/i;
+var CHAPTER_START_RE = /^(?:chapter|unit)\s+(?:\d+|[ivxlc]+)\b/i;
+function pageStartHeadingTitle(pageText) {
+  var t = String(pageText == null ? "" : pageText).trim();
+  var m = CHAPTER_START_RE.exec(t);
+  if (!m) return null;
+  var phrase = t.slice(0, 80);
+  var after = phrase.slice(m[0].length);
+  var sent = after.search(/[.!?](?=\s|$)/);
+  var colon = after.indexOf(":", 2);
+  var cut = -1;
+  if (sent >= 0) cut = m[0].length + sent;
+  if (colon >= 0 && (cut < 0 || m[0].length + colon < cut)) cut = m[0].length + colon;
+  if (cut < 0) return null;
+  var title = phrase.slice(0, cut).trim();
+  return title || null;
+}
 function detectChaptersFromText(pages) {
   var list = Array.isArray(pages) ? pages : [];
   var found = [];
   list.forEach(function (pageText, i) {
-    var lines = String(pageText == null ? "" : pageText).split(/\r?\n/);
+    var text = String(pageText == null ? "" : pageText);
+    var lines = text.split(/\r?\n/);
+    var title = null;
     for (var li = 0; li < lines.length; li++) {
       if (CHAPTER_HEADING_RE.test(lines[li]) && lines[li].trim().length < 100) {
-        found.push({ title: lines[li].trim(), page: i + 1, end_page: list.length });
+        title = lines[li].trim();
         break;
       }
     }
+    if (title == null) title = pageStartHeadingTitle(text);
+    if (title) found.push({ title: title, page: i + 1, end_page: list.length });
   });
   found.forEach(function (ch, idx) {
     ch.end_page = (idx + 1 < found.length) ? found[idx + 1].page - 1 : list.length;
   });
   return found;
+}
+/* ---- pdf.js text items -> page text (lines mehfooz) ----
+   Har item ke transform[5] (Y) se line pehchani jati hai: line
+   ke pehle item ke Y se farq ~2px ke andar ho to item usi line
+   mein " " se judta hai, Y badle to nayi line ("\n") shuru hoti
+   hai. Y na mile (purane/fake items) to item " " se judta hai —
+   purana rawayya. Isi wajah se asal headings apni line par
+   rehti hain aur detectChaptersFromText unhein dhoond pata hai. */
+function pageItemsToText(items) {
+  var out = "";
+  var anchorY = null;
+  var started = false;
+  (Array.isArray(items) ? items : []).forEach(function (it) {
+    var s = (it && it.str != null) ? String(it.str) : "";
+    var y = (it && it.transform && typeof it.transform[5] === "number") ? it.transform[5] : null;
+    if (!started) {
+      out = s;
+      anchorY = y;
+      started = true;
+      return;
+    }
+    if (y !== null && anchorY !== null && Math.abs(y - anchorY) > 2) {
+      out += "\n" + s;
+      anchorY = y;
+    } else {
+      out += " " + s;
+      if (anchorY === null && y !== null) anchorY = y;
+    }
+  });
+  return out;
 }
 function extractBookFromPdf(file, onProgress) {
   return loadPdfJsDoc(file).then(function (pdf) {
@@ -5373,7 +5431,7 @@ function extractBookFromPdf(file, onProgress) {
           seq = seq.then(function () {
             if (typeof onProgress === "function") onProgress(pn, pdf.numPages);
             return pdf.getPage(pn).then(function (page) { return page.getTextContent(); }).then(function (tc) {
-              pages[pn - 1] = tc.items.map(function (it) { return it.str; }).join(" ");
+              pages[pn - 1] = pageItemsToText(tc.items);
             }).catch(function () { pages[pn - 1] = ""; });
           });
         })(i);
@@ -6293,6 +6351,7 @@ window.KPG = {
   runBookGenText: runBookGenText, runBookGenImages: runBookGenImages,
   saveBookFromUpload: saveBookFromUpload, runBookGen: runBookGen, bindBooks: bindBooks,
   detectChaptersFromText: detectChaptersFromText, CHAPTER_HEADING_RE: CHAPTER_HEADING_RE,
+  pageItemsToText: pageItemsToText, pageStartHeadingTitle: pageStartHeadingTitle,
   topicText: topicText, countOccurrences: countOccurrences,
   bookTopicValue: bookTopicValue, bookTotalTextChars: bookTotalTextChars,
   BOOK_TOPIC_SCANNED_MSG: BOOK_TOPIC_SCANNED_MSG, runBookGenTopic: runBookGenTopic,
