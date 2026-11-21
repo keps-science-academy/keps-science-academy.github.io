@@ -1803,10 +1803,13 @@ function saveEngineGeminiKey() {
   runGeminiKeyCheck(key);
   return true;
 }
-/* Key check ki teen suratein — Save aur Test Key dono yahi linein
+/* Key check ki suratein — Save aur Test Key dono yahi linein
    dikhate hain (discoverGeminiModel ka natija). */
 var GEMINI_NO_MODELS_MSG = "⚠ This key has no Gemini models available. Please create the key at aistudio.google.com/apikey with 'Create API key' — keys made in Google Cloud Console often do not work.";
 function geminiKeyReadyMsg(model) { return "✔ Key saved — Gemini model ready: " + model; }
+function geminiNoWorkingModelMsg(snippet) {
+  return "⚠ No working Gemini model was found on this key" + (snippet ? " — Google: " + snippet : "");
+}
 function geminiKeyCheckFailMsg(status, snippet) {
   return "⚠ Key check failed (" + status + ")" + (snippet ? " — " + snippet : "");
 }
@@ -1819,6 +1822,10 @@ function runGeminiKeyCheck(key) {
     if (res && res.model) {
       geminiRememberModel(res.model);
       if (st) st.textContent = geminiKeyReadyMsg(res.model);
+    } else if (res && res.limit) {
+      if (st) st.textContent = AI_LIMIT_MSG;
+    } else if (res && res.empty && res.noWorkingModel) {
+      if (st) st.textContent = geminiNoWorkingModelMsg(res.snippet);
     } else if (res && res.empty) {
       if (st) st.textContent = GEMINI_NO_MODELS_MSG;
     } else if (st) {
@@ -4109,11 +4116,18 @@ function fileToBase64(file) {
 /* Gemini ka EK mushtarak call helper — Engine route
    (geminiText/geminiPhotoText) isi se jata hai: wahi endpoint, wahi
    key. Jawab ka raw text return hota hai; parsing caller ka kaam hai.
-   SELF-DIAGNOSIS (ListModels): model ke naam ka andaza lagana khatam —
-   yaad-shuda model na ho to pehle key se KHUD poochha jata hai ke us
-   par kaun se models hain (discoverGeminiModel), aur sab se pasandeeda
-   generateContent wala model chun kar yaad kar liya jata hai.
-   MODEL CHAIN (backup): 2.5-flash → 2.0-flash → 1.5-flash. Chain SIRF
+   SELF-DIAGNOSIS (ListModels + LIVE PROBE): model ke naam ka andaza
+   lagana khatam — yaad-shuda model na ho to pehle key se KHUD
+   poochha jata hai ke us par kaun se models hain (ListModels), phir
+   ummeedwaron ko EK EK karke asal chhoti si call ("Say OK") se
+   PROBE kiya jata hai: jo model asal mein jawab de, wohi chuna aur
+   yaad kiya jata hai. Ye is liye zaroori hai ke NAYE users ke liye
+   Google ne poori 2.x/1.5 flash line band kar di hai — ListModels
+   un ke naam phir bhi dikhata hai, lekin generateContent 404 deta
+   hai ("This model ... is no longer available to new users") —
+   naam dekh kar chunna ab kaafi nahi, CHAL kar dekhna parta hai.
+   MODEL CHAIN (backup): 3-flash-preview → 3.1-flash-lite →
+   2.5-flash → flash-latest → 2.0-flash → 1.5-flash. Chain SIRF
    HTTP 404 par agle model par jati hai — error body mein model ka
    naam ana koi wajah NAHI (ek 400 jo photo ki khami batata hai aur
    model ka naam bhi leta hai, pehle model par hi rukta hai taake ASAL
@@ -4127,14 +4141,14 @@ function fileToBase64(file) {
    poori chain na chalni pare.
    API VERSION (backup): pehle v1beta; us par poori chain 404 ho jaye
    to EK dafa "v1" par dobara koshish (tartib: yaad/discover shuda
-   model, 2.5-flash, flash-latest). Chalne wala version bhi
+   model, phir chain ke pehle do naam). Chalne wala version bhi
    localStorage (kpg_gemini_apiver) mein yaad rehta hai aur agli
    calls mein pehle wohi lagta hai — kul had: 2 versions × chain,
    loop mumkin nahi. Chain khatam hone ka error PEHLI koshish ka
    status/snippet rakhta hai (sab se zyada maloomati wajah). */
 var GEMINI_MODEL = "gemini-2.5-flash";
 var GEMINI_FALLBACK_MODEL = "gemini-2.0-flash";
-var GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+var GEMINI_MODELS = ["gemini-3-flash-preview", "gemini-3.1-flash-lite", "gemini-2.5-flash", "gemini-flash-latest", "gemini-2.0-flash", "gemini-1.5-flash"];
 var GEMINI_MODEL_LS = "kpg_gemini_model";
 var GEMINI_APIVER_LS = "kpg_gemini_apiver";
 /* Poori chain nakam ho jaye to EK saaf paigham. 404 MODEL ki
@@ -4188,26 +4202,68 @@ function geminiRememberApiVer(v) {
 /* Is call ke liye pasandeeda version: yaad-shuda, warna v1beta. */
 function geminiApiVer() { return geminiRememberedApiVer() || "v1beta"; }
 function geminiOtherApiVer(v) { return v === "v1" ? "v1beta" : "v1"; }
-/* ================= MODEL DISCOVERY (ListModels) =================
+/* ================= MODEL DISCOVERY (ListModels + PROBE) =================
    Key se khud poochho ke us par kya hai: GET /<version>/models?key=...
    (key waisa hi query param mein jaisa geminiCallModel bhejta hai;
    pehla version HTTP nakam ho to doosra version bhi EK dafa try
    hota hai — discoverGeminiModel dekho).
-   Sirf generateContent wale models; pasandeeda tartib neeche hai,
-   us ke baad koi bhi "flash" wala, aakhir mein koi bhi baqi (pro
-   waghera). "models/" prefix hata kar saaf naam milta hai.
-   Kamyabi: {model} — HTTP nakami: {error, status, snippet} —
-   list khali/generateContent wala koi nahi: {empty:true}. */
-var GEMINI_DISCOVERY_PREFS = ["gemini-2.5-flash", "gemini-flash-latest", "gemini-2.0-flash", "gemini-2.5-flash-lite", "gemini-flash-lite-latest", "gemini-2.0-flash-lite", "gemini-1.5-flash"];
+   Sirf generateContent wale models; "models/" prefix hata kar saaf
+   naam milta hai. Ummeedwaron ki tartib (orderGeminiCandidates):
+   pehle gemini-3 wale — "gemini-3-flash-preview", phir
+   "gemini-3.1-flash-lite", phir baqi gemini-3+flash (list ki
+   tartib mein), phir baqi gemini-3 (pro waghera) — phir purani
+   pasandeeda tartib (2.5-flash, flash-latest, 2.0-flash, lite
+   wale, 1.5-flash), phir koi bhi "flash" wala, aakhir mein koi
+   bhi baqi.
+   Phir LIVE PROBE: pehle GEMINI_PROBE_MAX (4) ummeedwaron ko ek
+   ek karke asal chhoti si generateContent call ("Say OK",
+   maxOutputTokens 8) bheji jati hai — jo pehle 200 + candidates
+   ke sath jawab de, wohi model jeet-ta hai. Probe ke natije:
+   404 → agla ummeedwar; 429 → ruk, {limit:true}; 400/403 → ruk,
+   {error, final:true} (key ka masla); network throw → ruk,
+   {error, status:0, final:true}. Sare probe 404 ho jayen to
+   {empty:true, noWorkingModel:true, snippet: pehle probe ki wajah}.
+   ListModels HTTP nakami: {error, status, snippet} — list khali/
+   generateContent wala koi nahi: {empty:true}. */
+var GEMINI_DISCOVERY_PREFS = ["gemini-3-flash-preview", "gemini-3.1-flash-lite", "gemini-2.5-flash", "gemini-flash-latest", "gemini-2.0-flash", "gemini-2.5-flash-lite", "gemini-flash-lite-latest", "gemini-2.0-flash-lite", "gemini-1.5-flash"];
+var GEMINI_PROBE_MAX = 4;
+function orderGeminiCandidates(names) {
+  var out = [];
+  function push(nm) { if (nm && names.indexOf(nm) >= 0 && out.indexOf(nm) < 0) out.push(nm); }
+  push("gemini-3-flash-preview");
+  push("gemini-3.1-flash-lite");
+  names.forEach(function (nm) { if (nm.indexOf("gemini-3") === 0 && nm.indexOf("flash") >= 0) push(nm); });
+  names.forEach(function (nm) { if (nm.indexOf("gemini-3") === 0) push(nm); });
+  GEMINI_DISCOVERY_PREFS.forEach(push);
+  names.forEach(function (nm) { if (nm.indexOf("flash") >= 0) push(nm); });
+  names.forEach(push);
+  return out;
+}
 function pickDiscoveredGeminiModel(names) {
-  var i;
-  for (i = 0; i < GEMINI_DISCOVERY_PREFS.length; i++) {
-    if (names.indexOf(GEMINI_DISCOVERY_PREFS[i]) >= 0) return GEMINI_DISCOVERY_PREFS[i];
-  }
-  for (i = 0; i < names.length; i++) {
-    if (names[i].indexOf("flash") >= 0) return names[i];
-  }
-  return names.length ? names[0] : "";
+  var c = orderGeminiCandidates(names);
+  return c.length ? c[0] : "";
+}
+/* Ek ummeedwar ko asal call se aazmao. Kamyabi: {ok:true} (HTTP
+   200 aur candidates maujood). Nakami par status/snippet/body —
+   network throw par {network:true, status:0}. */
+function probeGeminiModel(key, version, model) {
+  var url = "https://generativelanguage.googleapis.com/" + version + "/models/" + model + ":generateContent?key=" + encodeURIComponent(key);
+  return fetch(url, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ contents: [{ parts: [{ text: "Say OK" }] }], generationConfig: { maxOutputTokens: 8 } })
+  }).then(function (r) {
+    return r.json().catch(function () { return null; }).then(function (j) {
+      if (r.ok) {
+        var cands = (j && j.candidates) || [];
+        return cands.length ? { ok: true } : { ok: false, soft: true, status: r.status, snippet: "empty reply" };
+      }
+      var body = geminiErrorText(j);
+      return { ok: false, status: r.status, snippet: geminiErrSnippet(body), body: body };
+    });
+  }).catch(function (e) {
+    var msg = String((e && e.message) || e || "Network error");
+    return { ok: false, network: true, status: 0, snippet: geminiErrSnippet(msg) };
+  });
 }
 function discoverGeminiModelOn(key, version) {
   var url = "https://generativelanguage.googleapis.com/" + version + "/models?key=" + encodeURIComponent(key);
@@ -4225,7 +4281,21 @@ function discoverGeminiModelOn(key, version) {
         if (nm) names.push(nm);
       });
       if (!names.length) return { empty: true };
-      return { model: pickDiscoveredGeminiModel(names) };
+      var cands = orderGeminiCandidates(names).slice(0, GEMINI_PROBE_MAX);
+      function probeNext(idx, firstSnippet) {
+        if (idx >= cands.length) {
+          return { empty: true, noWorkingModel: true, status: 404, snippet: firstSnippet };
+        }
+        return probeGeminiModel(key, version, cands[idx]).then(function (pr) {
+          if (pr.ok) return { model: cands[idx] };
+          var sn = firstSnippet || pr.snippet || "";
+          if (pr.network) return { error: pr.snippet || "Network error", status: 0, snippet: pr.snippet, final: true };
+          if (pr.status === 429) return { limit: true, status: 429, snippet: pr.snippet };
+          if (pr.status === 404 || pr.soft) return probeNext(idx + 1, sn);
+          return { error: geminiWithSnippet("Gemini did not reply (" + pr.status + ")", pr.body), status: pr.status, snippet: pr.snippet, body: pr.body, final: true };
+        });
+      }
+      return probeNext(0, "");
     });
   }).catch(function (e) {
     var msg = String((e && e.message) || e || "Network error");
@@ -4242,7 +4312,10 @@ function discoverGeminiModel(key, version) {
   var pref = geminiApiVer();
   return discoverGeminiModelOn(key, pref).then(function (res) {
     if (res && res.model) { geminiRememberApiVer(pref); return res; }
-    if (!res || !res.error) return res;
+    /* Version SIRF ListModels ki HTTP nakami par badalta hai —
+       probe ke aakhri natije (limit / key ghalti / koi kaam ka
+       model nahi) har version par waisa hi hoga, dobara try bekar. */
+    if (!res || !res.error || res.final || res.limit) return res;
     var other = geminiOtherApiVer(pref);
     return discoverGeminiModelOn(key, other).then(function (res2) {
       if (res2 && res2.model) { geminiRememberApiVer(other); return res2; }
@@ -4382,15 +4455,15 @@ function geminiCall(parts, key) {
     var versions = [prefVer, geminiOtherApiVer(prefVer)];
     /* Pehla version: poori chain (yaad-shuda model pehle). Wo sirf
        404s par khatam (modelExhausted) ho to doosra version EK dafa
-       mukhtasar tartib se: yaad/discover shuda model, 2.5-flash,
-       flash-latest. Doosra version bhi khatam ho to error PEHLE
+       mukhtasar tartib se: yaad/discover shuda model, phir chain ke
+       pehle do naam. Doosra version bhi khatam ho to error PEHLE
        version wala hi rehta hai — us ki pehli wajah sab se zyada
        maloomati hai. Kul had: 2 versions, koi loop nahi. */
     return geminiChainOnVersion(parts, key, versions[0], geminiModelOrder(), primary, true)
       .then(null, function (e) {
         if (!e || !e.modelExhausted) throw e;
         var order2 = [];
-        [primary, "gemini-2.5-flash", "gemini-flash-latest"].forEach(function (m) {
+        [primary, GEMINI_MODELS[0], GEMINI_MODELS[1]].forEach(function (m) {
           if (m && order2.indexOf(m) < 0) order2.push(m);
         });
         return geminiChainOnVersion(parts, key, versions[1], order2, "", false)
@@ -6328,6 +6401,7 @@ window.KPG = {
   geminiModelOrder: geminiModelOrder, geminiRememberedModel: geminiRememberedModel, geminiErrSnippet: geminiErrSnippet,
   isGeminiModelError: isGeminiModelError, geminiChainAdvances: geminiChainAdvances, geminiCallModel: geminiCallModel, GEMINI_LS: GEMINI_LS,
   discoverGeminiModel: discoverGeminiModel, discoverGeminiModelOn: discoverGeminiModelOn, pickDiscoveredGeminiModel: pickDiscoveredGeminiModel, GEMINI_DISCOVERY_PREFS: GEMINI_DISCOVERY_PREFS,
+  orderGeminiCandidates: orderGeminiCandidates, probeGeminiModel: probeGeminiModel, GEMINI_PROBE_MAX: GEMINI_PROBE_MAX, geminiNoWorkingModelMsg: geminiNoWorkingModelMsg,
   geminiDiscoveryOnce: geminiDiscoveryOnce, resetGeminiDiscovery: resetGeminiDiscovery, geminiForgetModel: geminiForgetModel,
   runGeminiKeyCheck: runGeminiKeyCheck, testGeminiKey: testGeminiKey, GEMINI_NO_MODELS_MSG: GEMINI_NO_MODELS_MSG,
   geminiKeyReadyMsg: geminiKeyReadyMsg, geminiKeyCheckFailMsg: geminiKeyCheckFailMsg,
