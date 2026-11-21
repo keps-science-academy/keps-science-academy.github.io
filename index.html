@@ -109,6 +109,17 @@ input:focus,select:focus,textarea:focus{outline:2px solid #9ec7e8;border-color:v
    em mein hain taake --fit scale (applyPaperFit, 1 se 0.72 tak) lagte hi
    poora paper mutanاسب (proportional) chhota ho kar ek A4 par aa jaye.
    --fit na ho to 1 — purani shakal bilkul waisi hi. */
+/* Font Size option (Paper Setup): ghane paper par owner ko text
+   chhota karne ka ikhtiyar — .paper ki base font-size par ek aur
+   multiplier. Normal par koi class nahi (purani shakal bilkul
+   waisi hi); Small ≈ 90%, Extra Small ≈ 82%. Andar ke tamam size
+   em mein hain is liye poora paper (header, info table, section
+   bands, MCQ table, key) mutanاسب chhota hota hai — frame,
+   borders aur RTL rules waise hi rehte hain. --fit (Front-only
+   auto fit) is ke UPAR bhi lagta hai: dono multipliers ikatthe
+   chalte hain. */
+.paper.fs-small{font-size:calc(13.5px * var(--fit,1) * .9)}
+.paper.fs-xsmall{font-size:calc(13.5px * var(--fit,1) * .82)}
 /* Front + Back mode: do .paper pages ke upar screen-only labels —
    print/PDF mein kabhi nahi aate (.page-tag print rule + PDF clone
    inhein strip karta hai). */
@@ -384,6 +395,13 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
         <option value="back">Front + Back (2 pages)</option>
       </select>
       <div class="hint" id="layoutStatus"></div>
+      <label class="fl" for="inFontSize">Font Size</label>
+      <select id="inFontSize">
+        <option value="normal">Normal</option>
+        <option value="small">Small</option>
+        <option value="xsmall">Extra Small</option>
+      </select>
+      <div class="hint">Smaller text fits more questions on a single page.</div>
       <div id="twoUpTopBox" style="margin-top:7px">
         <label style="display:flex;gap:8px;align-items:center;cursor:pointer;font-size:13.5px">
           <input type="checkbox" id="inTwoUpTop">
@@ -889,7 +907,8 @@ function defaultState() {
       clazz: "", subject: "", code: "", date: "", time: "2 Hours", medium: "en",
       layout: "auto", /* page layout: "auto" | "front" | "back" — purane drafts mein na ho to "auto" */
       biStyle: "line", /* bilingual presentation: "line" (purana) | "side" (Side by Side) — purane drafts mein na ho to "line" */
-      twoUp: false /* ✂ Ek page par 2 test: paper PDF/print ek landscape sheet par 2 copies mein — purane drafts mein na ho to false */
+      twoUp: false, /* ✂ Ek page par 2 test: paper PDF/print ek landscape sheet par 2 copies mein — purane drafts mein na ho to false */
+      fontSize: "normal" /* paper ka font size: "normal" | "small" | "xsmall" — purane drafts mein na ho to standing pasand (kpg_font_size), warna "normal" */
     },
     sections: [makeSection("mcq"), makeSection("short"), makeSection("long")],
     scheme: null /* active pairing scheme (ya null) — drafts/persist ke sath rehta hai */
@@ -1140,7 +1159,7 @@ function loadPersisted() {
     var raw = localStorage.getItem(LS_CUR);
     if (!raw) return false;
     var s = JSON.parse(raw);
-    if (s && s.setup && Array.isArray(s.sections)) { state = s; if (state.scheme === undefined) state.scheme = null; if (state.setup.layout === undefined) state.setup.layout = "auto"; if (state.setup.biStyle === undefined) state.setup.biStyle = "line"; if (state.setup.twoUp === undefined) state.setup.twoUp = false; return true; }
+    if (s && s.setup && Array.isArray(s.sections)) { state = s; if (state.scheme === undefined) state.scheme = null; if (state.setup.layout === undefined) state.setup.layout = "auto"; if (state.setup.biStyle === undefined) state.setup.biStyle = "line"; if (state.setup.twoUp === undefined) state.setup.twoUp = false; if (state.setup.fontSize === undefined) state.setup.fontSize = savedFontSize(); return true; }
   } catch (e) {}
   return false;
 }
@@ -1173,6 +1192,7 @@ function loadDraft(name) {
   if (state.setup && state.setup.layout === undefined) state.setup.layout = "auto"; /* purane drafts mein layout nahi hota — Auto mana jata hai */
   if (state.setup && state.setup.biStyle === undefined) state.setup.biStyle = "line"; /* purane drafts mein biStyle nahi hota — line-by-line mana jata hai */
   if (state.setup && state.setup.twoUp === undefined) state.setup.twoUp = false; /* purane drafts mein twoUp nahi hota — OFF mana jata hai */
+  if (state.setup && state.setup.fontSize === undefined) state.setup.fontSize = savedFontSize(); /* purane drafts mein fontSize nahi hota — standing pasand (kpg_font_size) lagti hai */
   editCtx = null; formBuf = {}; bulkBuf = {};
   persist();
   return true;
@@ -2122,6 +2142,36 @@ function layoutStatusText(st) {
     ? "Current: Front + Back will be used (total marks " + t.marks + ")"
     : "Current: Front Side Only will be used (total marks " + t.marks + ")";
 }
+/* ---- Paper Font Size ----
+   Owner ki hidayat: ghana paper ho to text chhota karne ka option
+   Paper Setup mein "Font Size" select hai — Normal / Small /
+   Extra Small. Choice setup.fontSize mein rehti hai (drafts ke
+   sath save/load hoti hai) AUR device ki standing pasand ke taur
+   par localStorage "kpg_font_size" mein bhi; purane drafts/state
+   (baghair fontSize) par wahi standing pasand lagti hai, wo bhi
+   na ho to "normal". Paper ke .paper root par fs-small /
+   fs-xsmall class lagti hai aur CSS mein base font-size par
+   multiplier (Small 0.9, Extra Small 0.82) hai — andar ke tamam
+   size em hone ki wajah se poora paper mutanاسب chhota hota
+   hai. Normal par koi class nahi — purani shakal byte-compat. */
+var FONT_SIZE_LS = "kpg_font_size";
+var FONT_SCALES = { normal: 1, small: 0.9, xsmall: 0.82 };
+function savedFontSize() {
+  var v = "";
+  try { v = localStorage.getItem(FONT_SIZE_LS) || ""; } catch (e) {}
+  return (v === "small" || v === "xsmall") ? v : "normal";
+}
+function fontSizeChoice(st) {
+  var v = st && st.setup ? st.setup.fontSize : "";
+  return (v === "small" || v === "xsmall") ? v : "normal";
+}
+function fontScale(st) {
+  return FONT_SCALES[fontSizeChoice(st || state)] || 1;
+}
+function paperFontClass(st) {
+  var c = fontSizeChoice(st);
+  return c === "normal" ? "" : " fs-" + c;
+}
 /* ---- Bilingual Presentation: Line-by-line (purana) ya Side-by-Side ----
    Owner ki hidayat: Bilingual medium mein agar "Side by Side" chuna
    ho to paper EK A4 LANDSCAPE sheet par do hison mein ata hai —
@@ -2388,22 +2438,22 @@ function paperHTML(st) {
     var enHalf = '<div class="bi-half bi-half-en">' + paperHalfHeadHTML(st, t) +
       enEntries.map(function (e) { return paperSectionHTML(e.sec, e.idx, "en"); }).join("") +
       (enEntries.length ? paperEndHTML() : "") + "</div>";
-    return '<div class="land-scroll"><div class="paper paper-land" dir="ltr"' + paperFitAttr(st) + '><div class="p-frame"><div class="bi-sheet">' +
+    return '<div class="land-scroll"><div class="paper paper-land' + paperFontClass(st) + '" dir="ltr"' + paperFitAttr(st) + '><div class="p-frame"><div class="bi-sheet">' +
       urHalf + '<div class="bi-cut"></div>' + enHalf + "</div></div></div></div>";
   }
   if (effectiveLayout(st) === "back" && shown.length > 1) {
     var entries = shown.map(function (sec, i) { return { sec: sec, idx: i }; });
     var split = splitForBack(entries);
     if (split.front.length && split.back.length) {
-      var p1 = '<div class="paper" dir="ltr"><div class="p-frame">' + paperHeadHTML(st, t) +
+      var p1 = '<div class="paper' + paperFontClass(st) + '" dir="ltr"><div class="p-frame">' + paperHeadHTML(st, t) +
         split.front.map(function (e) { return paperSectionHTML(e.sec, e.idx, su.medium); }).join("") + "</div></div>";
-      var p2 = '<div class="paper paper-page2" dir="ltr"><div class="p-frame">' + paperContHeadHTML(st) +
+      var p2 = '<div class="paper paper-page2' + paperFontClass(st) + '" dir="ltr"><div class="p-frame">' + paperContHeadHTML(st) +
         split.back.map(function (e) { return paperSectionHTML(e.sec, e.idx, su.medium); }).join("") + paperEndHTML() + "</div></div>";
       return '<div class="page-tag" aria-hidden="true">FRONT SIDE</div>' + p1 +
         '<div class="page-tag" aria-hidden="true">BACK SIDE</div>' + p2;
     }
   }
-  var h = '<div class="paper" dir="ltr"' + paperFitAttr(st) + ">";
+  var h = '<div class="paper' + paperFontClass(st) + '" dir="ltr"' + paperFitAttr(st) + ">";
   h += '<div class="p-frame">';
   h += paperHeadHTML(st, t);
   if (!shown.length) {
@@ -2422,7 +2472,7 @@ function keyHTML(st) {
      LTR rehta hai; letter wali table bhi LTR. Urdu medium mein section
      headings aur jawab wali text list RTL ho jati hai (paper ki tarah),
      taake Urdu jawab sahi tartib mein parha jaye. */
-  var h = '<div class="paper" dir="ltr"><div class="p-frame">';
+  var h = '<div class="paper' + paperFontClass(st) + '" dir="ltr"><div class="p-frame">';
   h += '<div class="p-head">' + schoolBlockHTML(su, false);
   h += '<div class="p-band">' + (L.urdu ? '<span class="urdu-text" dir="auto">' + L.keyWord + "</span>" : L.keyWord) +
     " — <span" + langAttrs(su.subject) + ">" + esc(su.subject || "—") + "</span>" +
@@ -2599,6 +2649,7 @@ function renderSetup() {
   document.getElementById("inTime").value = su.time || "";
   document.getElementById("inMedium").value = su.medium || "en";
   document.getElementById("inLayout").value = layoutChoice(state);
+  document.getElementById("inFontSize").value = fontSizeChoice(state);
   renderBiStyleBox();
 }
 function renderDrafts() {
@@ -2614,7 +2665,7 @@ function refreshLight() { renderPreview(); persist(); renderSchemeProgress(); re
 
 /* ================= EVENTS: SETUP ================= */
 function bindSetup() {
-  var map = { inSchool: "school", inClass: "clazz", inSubject: "subject", inCode: "code", inDate: "date", inTime: "time", inMedium: "medium", inLayout: "layout", inBiStyle: "biStyle" };
+  var map = { inSchool: "school", inClass: "clazz", inSubject: "subject", inCode: "code", inDate: "date", inTime: "time", inMedium: "medium", inLayout: "layout", inBiStyle: "biStyle", inFontSize: "fontSize" };
   Object.keys(map).forEach(function (id) {
     var el = document.getElementById(id);
     el.addEventListener("input", function () {
@@ -2629,6 +2680,15 @@ function bindSetup() {
       }
       refreshLight();
     });
+  });
+  /* Font Size ki choice device ki standing pasand ke taur par
+     localStorage (kpg_font_size) mein bhi rehti hai — purane
+     drafts/state par wahi dobara lagti hai. setup.fontSize upar
+     wale generic map (inFontSize) se set hota hai. */
+  var fsEl = document.getElementById("inFontSize");
+  if (fsEl) fsEl.addEventListener("change", function () {
+    var v = (fsEl.value === "small" || fsEl.value === "xsmall") ? fsEl.value : "normal";
+    try { localStorage.setItem(FONT_SIZE_LS, v); } catch (e) {}
   });
   document.getElementById("btnAutoCode").addEventListener("click", function () {
     state.setup.code = autoCode(state.setup.subject, state.setup.clazz);
@@ -6388,6 +6448,8 @@ window.KPG = {
   pdfCheckCaptureImage: pdfCheckCaptureImage, attemptPdfCapture: attemptPdfCapture,
   pdfPageSlices: pdfPageSlices, pdfDocFromImage: pdfDocFromImage, pdfDocFromPageImages: pdfDocFromPageImages, loadPngImage: loadPngImage,
   layoutChoice: layoutChoice, effectiveLayout: effectiveLayout, layoutStatusText: layoutStatusText,
+  fontSizeChoice: fontSizeChoice, fontScale: fontScale, paperFontClass: paperFontClass,
+  FONT_SCALES: FONT_SCALES, FONT_SIZE_LS: FONT_SIZE_LS, savedFontSize: savedFontSize,
   splitForBack: splitForBack, paperHeadHTML: paperHeadHTML, paperContHeadHTML: paperContHeadHTML, paperSectionHTML: paperSectionHTML,
   fitScaleForHeight: fitScaleForHeight, applyPaperFit: applyPaperFit, FIT_MIN: FIT_MIN, LAYOUT_FRONT_MAX_MARKS: LAYOUT_FRONT_MAX_MARKS,
   refreshAiKeyUI: refreshAiKeyUI, saveEngineGeminiKey: saveEngineGeminiKey, NO_AI_KEY_MSG: NO_AI_KEY_MSG,
@@ -6488,7 +6550,7 @@ window.KPG = {
 
 /* ================= INIT ================= */
 function init() {
-  if (!loadPersisted()) { state = defaultState(); persist(); }
+  if (!loadPersisted()) { state = defaultState(); state.setup.fontSize = savedFontSize(); persist(); }
   renderAll();
   bindSetup(); bindSections(); bindActions(); bindPhoto(); bindScheme(); bindBooks();
   bindAuth(); applyAuthUI(); authVerifySessionOnce();
