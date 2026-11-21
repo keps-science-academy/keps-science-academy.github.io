@@ -2260,7 +2260,35 @@ function applyPaperFit(el) {
      unchai = chaudi x 210/297. Baaqi sab portrait (297/210). */
   var isLand = el.classList && typeof el.classList.contains === "function" && el.classList.contains("paper-land");
   var target = Math.round((el.offsetWidth || PDF_A4_W) * (isLand ? PDF_A4_RATIO_LAND : PDF_A4_RATIO));
-  var s = fitScaleForHeight(el.scrollHeight, target);
+  /* FONT SIZE CORRECTION (live bug, Nov 2026): element par fs-small /
+     fs-xsmall class pehle se lagi hoti hai, is liye scrollHeight
+     CHHOTE font par napta hai — seedha fit lagane se fit takreeban
+     1/scale barh jata tha aur Font Size ka asar bilkul khatam ho
+     jata tha (live par Normal/Small/Extra Small teeno ~11px).
+     Fix: nap ko pehle NORMAL scale par wapas le jate hain —
+     maujooda effective scale = current --fit x fontScale(); height
+     ko us se taqseem kar ke Normal (fit 1, scale 1) ki height milti
+     hai, fit usi par lagta hai aur wahi --fit set hota hai. CSS
+     class phir apna scale sirf IK dafa lagati hai: asal font =
+     13.5px x fit(1) x scale. _lastFitScale mein bhi yahi corrected
+     --fit rehta hai, is liye paperFitAttr se Print / 2-up / PDF
+     clone (jo dobara napte bhi hain — attemptPdfCapture yahi
+     function chalata hai) sab par wahi asar milta hai. Normal
+     (scale 1) par hisaab pehle jaisa hi hai.
+     FLOOR KA FAISLA: FIT_MIN (0.72) NORMAL fit par lagta hai
+     (fitScaleForHeight ke andar, aur guard loop bhi --fit ko
+     FIT_MIN se neeche nahi le jata) — scale us ke BAAD lagta hai,
+     yani Extra Small par asal asar 0.72 x 0.82 tak ja sakta hai;
+     ye owner ki wazeh khwahish hai (font kam karna hi maqsad hai). */
+  var scale = fontScale();
+  var curFit = 1;
+  if (typeof el.style.getPropertyValue === "function") {
+    var cv = parseFloat(el.style.getPropertyValue("--fit"));
+    if (cv > 0 && isFinite(cv)) curFit = cv;
+  }
+  var eNow = curFit * scale;
+  var hNorm = eNow > 0 ? el.scrollHeight / eNow : el.scrollHeight;
+  var s = fitScaleForHeight(hNorm, target);
   el.style.setProperty("--fit", String(s));
   var guard = 0;
   while (el.scrollHeight > target && s > FIT_MIN && guard < 20) {
