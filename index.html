@@ -1735,8 +1735,9 @@ function pdfFileToText(file) {
    engine ya route NAHI hai. Photo, Text Paste, Paper ki Photo, Urdu
    Tarjuma, Pairing Scheme parse aur Books — sab isi ek dispatch
    (aiChatText / aiChatPhoto) se jate hain, jo seedha geminiCall ko
-   jata hai (primary gemini-2.5-flash, model wali ghalti par
-   gemini-2.0-flash se ek fallback).
+   jata hai (model chain 2.5-flash → 2.0-flash → 1.5-flash; model
+   wali ghalti par chain agle model par jati hai, aur chalne wala
+   model yaad rehta hai taake agli calls pehle usi se shuru hon).
    KEY NA HO to dispatch network call se PEHLE ruk jata hai: promise
    NO_AI_KEY_MSG wale userMsg error se reject hoti hai, aur har panel
    wahi ek paigham apni status line mein dikhata hai. */
@@ -3558,7 +3559,7 @@ function runPhotoGen(files) {
   if (files.length > 3) st.textContent = "ℹ At most 3 photos at a time — taking the first 3.";
   var prompt = buildGenPrompt(counts.nMcq, counts.nShort, counts.nLong, true);
   st.textContent = "🤖 Sending the photo to the AI…";
-  var all = [], failed = 0, limitHit = false, fatalMsg = "";
+  var all = [], failed = 0, limitHit = false, fatalMsg = "", lastFailErr = null;
   var chain = Promise.resolve();
   use.forEach(function (f, i) {
     chain = chain.then(function () {
@@ -3573,6 +3574,7 @@ function runPhotoGen(files) {
         if (um) { fatalMsg = um; return; }
         if (isAiLimitError(e)) { limitHit = true; return; }
         failed++;
+        lastFailErr = e;
         st.textContent = "⚠ Photo " + (i + 1) + " failed: " + (e && e.message ? e.message : e) + (use.length > 1 ? " — continuing with the remaining photos…" : "");
       });
     });
@@ -3598,7 +3600,7 @@ function runPhotoGen(files) {
     }
     if (!all.length) {
       if (!failed) st.textContent = "⚠ The AI could not create any question. Try again with a clear, straight, close-up photo.";
-      else if (use.length === 1) st.textContent += " If this error keeps coming, check your Gemini key or its free quota at aistudio.google.com.";
+      else if (use.length === 1 && !isGeminiModelError(lastFailErr)) st.textContent += " If this error keeps coming, check your Gemini key or its free quota at aistudio.google.com.";
       return 0;
     }
     setCandidates(all);
@@ -4037,7 +4039,11 @@ function runTextGen(textOverride) {
       var um = aiUserMsg(e);
       if (um) { st.textContent = um; return 0; }
       if (isAiLimitError(e)) { st.textContent = AI_LIMIT_MSG; return 0; }
-      st.textContent = "⚠ AI failed: " + (e && e.message ? e.message : e) + " — please try again. If this error keeps coming, check your Gemini key or its free quota at aistudio.google.com.";
+      /* Model wali nakami (404) par "check the key" NAHI — wo model ki
+         dastiyabi ka masla hai; key/quota ki taraf sirf aam ghaltiyon
+         par ishara hota hai. */
+      st.textContent = "⚠ AI failed: " + (e && e.message ? e.message : e) + " — please try again." +
+        (isGeminiModelError(e) ? "" : " If this error keeps coming, check your Gemini key or its free quota at aistudio.google.com.");
       return 0;
     });
   }
@@ -4057,24 +4063,73 @@ function fileToBase64(file) {
 
 /* Gemini ka EK mushtarak call helper — Engine route
    (geminiText/geminiPhotoText) isi se jata hai: wahi endpoint, wahi
-   model, wahi key. Jawab ka raw text return hota hai; parsing caller
-   ka kaam hai. */
+   key. Jawab ka raw text return hota hai; parsing caller ka kaam hai.
+   MODEL CHAIN: 2.5-flash → 2.0-flash → 1.5-flash. Model wali nakami
+   (HTTP 404, ya error body/message mein "model") par chain agle model
+   par jati hai; baqi ghaltiyan (ghalat key 400/403, quota 429, server
+   500) foran ruk jati hain — koi dobara koshish nahi. Jo model ek
+   dafa chal jaye wo localStorage (kpg_gemini_model) mein yaad rehta
+   hai aur agli calls mein SAB SE PEHLE wohi try hota hai, taake ek
+   hi run ki baqi photos ko har dafa poori chain na chalni pare. */
 var GEMINI_MODEL = "gemini-2.5-flash";
 var GEMINI_FALLBACK_MODEL = "gemini-2.0-flash";
+var GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+var GEMINI_MODEL_LS = "kpg_gemini_model";
+/* Poori chain nakam ho jaye to EK saaf paigham. 404 MODEL ki
+   dastiyabi ka masla hai, key ka NAHI — is liye is mein "check the
+   key" nahi likha jata; wo jumla sirf asal key ghaltiyon (400/403)
+   ke liye hai. */
+var GEMINI_MODEL_EXHAUSTED_MSG = "Gemini model not available on this key (404) — try a fresh key from aistudio.google.com/apikey";
 function geminiErrorText(j) {
   if (!j) return "";
   if (j.error && j.error.message) return String(j.error.message);
   try { return JSON.stringify(j); } catch (e) { return String(j); }
 }
+/* Google ke apne error ka saaf-suthra chhota tukda (pehle ~120
+   characters) — nakami wali line mein asal wajah nazar ane ke liye. */
+function geminiErrSnippet(body) {
+  var s = String(body || "").replace(/[<>\u0000-\u001f]+/g, " ").replace(/\s+/g, " ").trim();
+  return s.slice(0, 120);
+}
+function geminiWithSnippet(msg, body) {
+  var sn = geminiErrSnippet(body);
+  return sn ? msg + " — Google: " + sn : msg;
+}
+/* Pichhli dafa chalne wala model — localStorage se; chain se bahar
+   ka ya khali ho to "". */
+function geminiRememberedModel() {
+  try {
+    var m = String(localStorage.getItem(GEMINI_MODEL_LS) || "").trim();
+    return GEMINI_MODELS.indexOf(m) >= 0 ? m : "";
+  } catch (e) { return ""; }
+}
+function geminiRememberModel(model) {
+  try { localStorage.setItem(GEMINI_MODEL_LS, model); } catch (e) {}
+}
+/* Is call ki koshishon ki tartib: yaad-shuda model sab se pehle,
+   phir baqi chain apni asal tartib mein (koi model do dafa nahi). */
+function geminiModelOrder() {
+  var out = [];
+  var rem = geminiRememberedModel();
+  if (rem) out.push(rem);
+  GEMINI_MODELS.forEach(function (m) { if (out.indexOf(m) < 0) out.push(m); });
+  return out;
+}
 /* Model wali nakami: HTTP 404, ya error body/message mein model
-   ka zikar. Sirf aisi ghalti par purane model se EK dobara koshish
-   hoti hai; baqi ghaltiyan (ghalat key, network, server) waisi ki
-   waisi upar jati hain. */
+   ka zikar. */
 function isGeminiModelError(e) {
   if (!e) return false;
   if (Number(e.status || 0) === 404) return true;
   var s = (String(e.body || "") + " " + String(e.message || "")).toLowerCase();
   return s.indexOf("model") >= 0;
+}
+/* Chain agle model par jaye ya nahi: SIRF model wali nakami par —
+   quota/limit (402/429) hamesha foran rukta hai, chahe error mein
+   model ka naam hi kyun na aya ho. */
+function geminiChainAdvances(e) {
+  if (!isGeminiModelError(e)) return false;
+  var st = Number(e && e.status || 0);
+  return st !== 402 && st !== 429;
 }
 function geminiCallModel(parts, key, model) {
   return fetch("https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + encodeURIComponent(key), {
@@ -4083,9 +4138,17 @@ function geminiCallModel(parts, key, model) {
   }).then(function (r) {
     return r.json().catch(function () { return null; }).then(function (j) {
       if (!r.ok) {
-        var err = new Error("Gemini did not reply (" + r.status + ") — check the key");
+        var body = geminiErrorText(j);
+        /* "Check the key" SIRF asal key ghaltiyon (400/403) par —
+           404 model ki dastiyabi ka masla hai, key ka nahi. Har
+           nakami ke sath Google ka apna error (snippet) bhi jata
+           hai taake failure line mein asal wajah nazar aye. */
+        var base = (r.status === 400 || r.status === 403)
+          ? "Gemini did not reply (" + r.status + ") — check the key"
+          : "Gemini did not reply (" + r.status + ")";
+        var err = new Error(geminiWithSnippet(base, body));
         err.status = r.status;
-        err.body = geminiErrorText(j);
+        err.body = body;
         throw err;
       }
       var respParts = (((j.candidates || [])[0] || {}).content || {}).parts || [];
@@ -4094,10 +4157,27 @@ function geminiCallModel(parts, key, model) {
   });
 }
 function geminiCall(parts, key) {
-  return geminiCallModel(parts, key, GEMINI_MODEL).catch(function (e) {
-    if (!isGeminiModelError(e)) throw e;
-    return geminiCallModel(parts, key, GEMINI_FALLBACK_MODEL);
-  });
+  var order = geminiModelOrder();
+  var i = 0;
+  function attempt() {
+    var model = order[i];
+    return geminiCallModel(parts, key, model).then(function (t) {
+      geminiRememberModel(model); /* chalne wala model yaad — agli calls pehle isi se shuru hongi */
+      return t;
+    }, function (e) {
+      if (geminiChainAdvances(e) && i < order.length - 1) { i++; return attempt(); }
+      if (geminiChainAdvances(e)) {
+        /* Poori chain khatam: koi bhi model is key par dastiyab nahi. */
+        var ex = new Error(geminiWithSnippet(GEMINI_MODEL_EXHAUSTED_MSG, e.body));
+        ex.status = e.status;
+        ex.body = e.body;
+        ex.modelExhausted = true;
+        throw ex;
+      }
+      throw e;
+    });
+  }
+  return attempt();
 }
 
 /* Gemini route (text): generation prompts (buildGenPrompt /
@@ -5963,6 +6043,8 @@ window.KPG = {
   isAiLimitError: isAiLimitError, AI_LIMIT_MSG: AI_LIMIT_MSG,
   aiChatText: aiChatText, aiChatPhoto: aiChatPhoto, geminiSavedKey: geminiSavedKey,
   geminiCall: geminiCall, geminiText: geminiText, geminiPhotoText: geminiPhotoText, GEMINI_MODEL: GEMINI_MODEL, GEMINI_FALLBACK_MODEL: GEMINI_FALLBACK_MODEL,
+  GEMINI_MODELS: GEMINI_MODELS, GEMINI_MODEL_LS: GEMINI_MODEL_LS, GEMINI_MODEL_EXHAUSTED_MSG: GEMINI_MODEL_EXHAUSTED_MSG,
+  geminiModelOrder: geminiModelOrder, geminiRememberedModel: geminiRememberedModel, geminiErrSnippet: geminiErrSnippet,
   isGeminiModelError: isGeminiModelError, geminiCallModel: geminiCallModel, GEMINI_LS: GEMINI_LS,
   mxRunIsSymbolOnly: mxRunIsSymbolOnly, optIsoHtml: optIsoHtml,
   biStyleChoice: biStyleChoice, isSideBySide: isSideBySide, splitBiText: splitBiText, biHalfSections: biHalfSections,
