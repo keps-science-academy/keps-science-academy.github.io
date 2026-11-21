@@ -533,6 +533,14 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
         <textarea id="pasteText" rows="8" placeholder="Paste the book text or questions here — the AI will separate MCQs, Short and Long questions and add them to the paper."></textarea>
         <div class="hint">Paste up to <b>~8000 characters</b> at a time; for a large chapter, paste in parts. If the text already contains questions/exercises, the AI will extract those same questions <b>word for word</b>; if it is only chapter text, the AI will generate questions from it. The questions will be in the same language as the text.</div>
         <div class="hint" id="pasteCount" style="margin-top:2px">0 characters</div>
+        <div style="margin-top:8px;max-width:260px">
+          <label class="fl" for="textDifficulty">Difficulty</label>
+          <select id="textDifficulty">
+            <option value="Easy">Easy</option>
+            <option value="Medium" selected>Medium</option>
+            <option value="Hard">Hard</option>
+          </select>
+        </div>
       </div>
       <div id="paperModeBox" style="display:none">
         <label class="fl" for="paperFiles">Paper Photos (1–4, in page order)</label>
@@ -623,6 +631,9 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
           <div><label class="fl" for="bookPageTo">To Page</label>
             <input type="number" id="bookPageTo" min="1" step="1" value="1"></div>
         </div>
+        <label class="fl" for="bookTopic">Topic (optional — searched in the whole book)</label>
+        <input type="text" id="bookTopic" placeholder="e.g. Photosynthesis">
+        <div class="hint">If a topic is written here, it is used <b>instead of the page range</b> — the best-matching paragraphs from the whole book are sent to the AI.</div>
         <label class="fl" for="bookPreview">Text of the selected part (preview)</label>
         <textarea id="bookPreview" rows="5" readonly></textarea>
         <div class="hint" id="bookSelInfo"></div>
@@ -633,6 +644,14 @@ body.kpg-locked .wrap,body.kpg-locked footer.appfoot,body.kpg-locked #userBar,bo
             <input type="number" id="bookShortCount" min="0" max="20" step="1" value="5"></div>
           <div><label class="fl" for="bookLongCount">How many Long?</label>
             <input type="number" id="bookLongCount" min="0" max="10" step="1" value="1"></div>
+        </div>
+        <div style="margin-top:8px;max-width:260px">
+          <label class="fl" for="bookDifficulty">Difficulty</label>
+          <select id="bookDifficulty">
+            <option value="Easy">Easy</option>
+            <option value="Medium" selected>Medium</option>
+            <option value="Hard">Hard</option>
+          </select>
         </div>
         <button type="button" class="btn big" id="btnBookGen" style="margin-top:10px">✨ Generate Questions from This Part</button>
         <div class="hint" id="bookStatus"></div>
@@ -4179,7 +4198,38 @@ function normalizePasteText(s) {
    jaisi hi (parseAiQuestions dono ko parhta hai). Farq sirf itna:
    text pehle se sawal/mashq ho to EXTRACT lafz-ba-lafz; warna
    chapter text se sawal banao. Zuban text ki apni rehti hai. */
-function buildTextGenPrompt(nMcq, nShort, nLong) {
+/* ---- Difficulty: prompt mein ek line ("Difficulty: Medium.") ----
+   Do jagah ke select hain — Books open view (bookDifficulty) aur
+   Text Paste (textDifficulty); value localStorage mein bhi rehti
+   hai taake agli dafa wahi mile. Na mile to Medium (purana bartao). */
+var DIFFICULTY_BOOK_LS = "kpg_difficulty_book";
+var DIFFICULTY_TEXT_LS = "kpg_difficulty_text";
+function normalizeDifficulty(v) {
+  var s = String(v == null ? "" : v).trim().toLowerCase();
+  if (s === "easy") return "Easy";
+  if (s === "hard") return "Hard";
+  return "Medium";
+}
+function difficultyFromUI(selectId, lsKey) {
+  var el = document.getElementById(selectId);
+  if (el && el.value) return normalizeDifficulty(el.value);
+  try { var v = localStorage.getItem(lsKey); if (v) return normalizeDifficulty(v); } catch (e) {}
+  return "Medium";
+}
+function bookDifficulty() { return difficultyFromUI("bookDifficulty", DIFFICULTY_BOOK_LS); }
+function textDifficulty() { return difficultyFromUI("textDifficulty", DIFFICULTY_TEXT_LS); }
+function initDifficultySelect(selectId, lsKey) {
+  var el = document.getElementById(selectId);
+  if (!el) return;
+  try {
+    var v = localStorage.getItem(lsKey);
+    if (v) el.value = normalizeDifficulty(v);
+  } catch (e) {}
+  el.addEventListener("change", function () {
+    try { localStorage.setItem(lsKey, normalizeDifficulty(el.value)); } catch (e) {}
+  });
+}
+function buildTextGenPrompt(nMcq, nShort, nLong, difficulty) {
   return "You are given TEXT pasted from a school textbook or its exercise (it appears at the end, between the markers). Your task is below.\n" +
     "FIRST decide what kind of text it is:\n" +
     "- If the text ALREADY contains questions (an exercise, a question list, MCQs with options, an answer key, etc.): EXTRACT those questions word-for-word — do NOT invent, reword, translate or summarise them. Keep each MCQ's options exactly as given. Mark the correct answer ONLY when the text makes it determinable (for example an answer key in the text, a tick mark, or an unambiguous fact in the text); if the correct answer cannot be determined from the text, use -1 as that MCQ's answer.\n" +
@@ -4187,6 +4237,7 @@ function buildTextGenPrompt(nMcq, nShort, nLong) {
     "When extracting, return as many real questions of each type as the text actually contains, up to " + nMcq + " MCQs, " + nShort + " short questions and " + nLong + " long questions. If a count is 0, return NO questions of that type at all.\n" +
     "For each MCQ give exactly 4 options and the correct answer index (0, 1, 2 or 3), or -1 when it cannot be determined from the text. Keep every option short (a few words).\n" +
     "Keep the language of the text: if the text is in Urdu, write the questions in Urdu script; if it is in English, write in English; if mixed, keep the same mix. Copy math, formulas, units and numbers EXACTLY as written.\n" +
+    "Difficulty: " + normalizeDifficulty(difficulty) + ".\n" +
     SYMBOL_RULES + "\n" +
     "Return ONLY valid JSON. No explanation, no markdown, no extra text. Format exactly like this:\n" +
     '{"mcqs":[{"q":"question text","options":["opt1","opt2","opt3","opt4"],"answer":0}],"shorts":["short question 1"],"longs":["long question 1"]}';
@@ -4202,7 +4253,7 @@ function runPuterTextGen(textOverride) {
   if (aiCountsAllZero(counts)) { st.textContent = AI_ZERO_MSG; return Promise.resolve(0); }
   function go() {
     var clipped = text.slice(0, 8000);
-    var prompt = buildTextGenPrompt(counts.nMcq, counts.nShort, counts.nLong) +
+    var prompt = buildTextGenPrompt(counts.nMcq, counts.nShort, counts.nLong, textDifficulty()) +
       "\n\n===== PASTED TEXT =====\n" + clipped + "\n===== END OF PASTED TEXT =====";
     st.textContent = "🤖 The AI is reading the text and creating questions…" + (text.length > 8000 ? " (the text was long — the first 8000 characters have been sent)" : "");
     return aiChatText(prompt).then(function (txt) {
@@ -4354,6 +4405,7 @@ function bindPhoto() {
   var ptEl = document.getElementById("pasteText");
   if (ptEl) ptEl.addEventListener("input", updatePasteCount);
   updatePasteCount();
+  initDifficultySelect("textDifficulty", DIFFICULTY_TEXT_LS);
   document.getElementById("btnAiGen").addEventListener("click", function () {
     if (aiInputMode === "paper") runPaperPhoto(selectedPaperFiles());
     else if (aiInputMode === "text") runPuterTextGen();
@@ -5281,6 +5333,32 @@ function outlineToChapters(pdf, outline) {
     return chapters;
   });
 }
+/* ---- Chapters extracted text se (outline na ho to fallback) ----
+   Python wale detect_chapters() ka JS port: kisi page ki koi line
+   "Chapter N" / "Chapter IV" / "Unit N" se shuru ho aur us ki
+   trimmed lambai 100 se kam ho to wahan chapter shuru hota hai —
+   har page par pehli match hi li jati hai. Shape site wali hai
+   ({title, page}) aur end_page bhi sath hai (agla chapter − 1;
+   aakhri chapter ka end = aakhri page). Urdu script ke headings
+   is regex se nahi milte. */
+var CHAPTER_HEADING_RE = /^\s*(?:chapter|unit)\s+(\d+|[ivxlc]+)\b.*$/i;
+function detectChaptersFromText(pages) {
+  var list = Array.isArray(pages) ? pages : [];
+  var found = [];
+  list.forEach(function (pageText, i) {
+    var lines = String(pageText == null ? "" : pageText).split(/\r?\n/);
+    for (var li = 0; li < lines.length; li++) {
+      if (CHAPTER_HEADING_RE.test(lines[li]) && lines[li].trim().length < 100) {
+        found.push({ title: lines[li].trim(), page: i + 1, end_page: list.length });
+        break;
+      }
+    }
+  });
+  found.forEach(function (ch, idx) {
+    ch.end_page = (idx + 1 < found.length) ? found[idx + 1].page - 1 : list.length;
+  });
+  return found;
+}
 function extractBookFromPdf(file, onProgress) {
   return loadPdfJsDoc(file).then(function (pdf) {
     var metaTitle = "";
@@ -5307,6 +5385,14 @@ function extractBookFromPdf(file, onProgress) {
         if (!ol || !ol.length) return [];
         return outlineToChapters(pdf, ol);
       }).catch(function () { return []; }).then(function (chapters) {
+        if (!chapters.length) {
+          /* Outline nahi mili — extracted text ke headings se
+             chapters dhoondo (site wali {title, page} shape mein). */
+          var detected = detectChaptersFromText(pages);
+          if (detected.length) {
+            chapters = detected.map(function (c) { return { title: c.title, page: c.page }; });
+          }
+        }
         return { pages: pages, chapters: chapters, metaTitle: metaTitle, totalPages: pdf.numPages, pdf: pdf };
       });
     });
@@ -5337,6 +5423,56 @@ function bookAssembleSelection(book, from, to) {
     fullText: full, totalChars: full.length, truncated: truncated,
     from: f, to: t, emptyPages: empty
   };
+}
+
+/* ---- Topic mode: poori book mein keyword-scored paragraphs ----
+   Python wale topic_text() ka faithful JS port: topic ke alfaaz
+   (lambai > 2) nikalo, har paragraph (blank line par taqseem) ko
+   kul keyword occurrences par score karo, top 15 lo, phir asal
+   reading order mein wapas jodo. Ghalti par Error throw hota hai
+   jis ka paigham UI seedha dikhati hai. */
+function countOccurrences(haystack, needle) {
+  if (!needle) return 0;
+  return String(haystack).split(needle).length - 1;
+}
+function topicText(pages, topic) {
+  var rawWords = String(topic == null ? "" : topic).match(/[\p{L}\p{N}_]+/gu) || [];
+  var words = [];
+  rawWords.forEach(function (w) {
+    var lw = w.toLowerCase();
+    if (lw.length > 2) words.push(lw);
+  });
+  if (!words.length) throw new Error("This topic has no usable words.");
+  var paragraphs = [];
+  (Array.isArray(pages) ? pages : []).forEach(function (pageText) {
+    String(pageText == null ? "" : pageText).split(/\n\s*\n/).forEach(function (para) {
+      var p = para.trim();
+      if (p) paragraphs.push(p);
+    });
+  });
+  var scored = [];
+  paragraphs.forEach(function (para, idx) {
+    var low = para.toLowerCase();
+    var score = 0;
+    words.forEach(function (w) { score += countOccurrences(low, w); });
+    if (score) scored.push({ score: score, idx: idx, para: para });
+  });
+  if (!scored.length) throw new Error("This topic was not found in this book.");
+  scored.sort(function (a, b) { return (b.score - a.score) || (b.idx - a.idx); });
+  var top = scored.slice(0, 15);
+  top.sort(function (a, b) { return a.idx - b.idx; });
+  return top.map(function (s) { return s.para; }).join("\n\n");
+}
+var BOOK_TOPIC_SCANNED_MSG = "⚠ This is a scanned book — topic search needs text. Select pages instead (they are read as page images).";
+function bookTopicValue() {
+  var el = document.getElementById("bookTopic");
+  return el ? String(el.value || "").trim() : "";
+}
+function bookTotalTextChars(book) {
+  var pages = (book && Array.isArray(book.pages)) ? book.pages : [];
+  var n = 0;
+  pages.forEach(function (p) { n += String(p == null ? "" : p).trim().length; });
+  return n;
 }
 
 /* ---- Book counts: Photo card wale counts jaisi hi hadood ---- */
@@ -5576,10 +5712,27 @@ function renderBookOpen() {
   var tEl = document.getElementById("bookPageTo");
   if (fEl) fEl.value = "1";
   if (tEl) tEl.value = String(currentBook.totalPages);
+  var topicEl = document.getElementById("bookTopic");
+  if (topicEl) topicEl.value = "";
   updateBookPreview();
 }
 function updateBookPreview() {
   if (!currentBook) return;
+  var topic = bookTopicValue();
+  if (topic) {
+    /* Topic mode: preview mein topic text hi dikhta hai — wahi
+       text Generate par jayega (page range ki jagah). */
+    var prevT = document.getElementById("bookPreview");
+    try {
+      var tt = topicText(currentBook.pages, topic);
+      if (prevT) prevT.value = tt.slice(0, 600);
+      bookMsg("bookSelInfo", "Topic: " + topic + " • total " + tt.length + " characters selected");
+    } catch (e) {
+      if (prevT) prevT.value = "";
+      bookMsg("bookSelInfo", e && e.message ? e.message : String(e));
+    }
+    return null;
+  }
   var fEl = document.getElementById("bookPageFrom");
   var tEl = document.getElementById("bookPageTo");
   var sel = bookAssembleSelection(currentBook, fEl ? fEl.value : 1, tEl ? tEl.value : currentBook.totalPages);
@@ -5594,6 +5747,8 @@ function updateBookPreview() {
 }
 function selectBookChapter(ix) {
   if (!currentBook || !currentBook.chapters || !currentBook.chapters[ix]) return;
+  var topicEl = document.getElementById("bookTopic");
+  if (topicEl) topicEl.value = "";
   var ch = currentBook.chapters[ix];
   var next = currentBook.chapters[ix + 1];
   var fEl = document.getElementById("bookPageFrom");
@@ -5788,11 +5943,68 @@ function bookAiPhoto(prompt, dataUrl) {
 function runBookGen() {
   function say(m) { bookMsg("bookStatus", m); }
   if (!currentBook) { say("⚠ First open a book from 📚 My Books."); return Promise.resolve(0); }
+  var topic = bookTopicValue();
+  if (topic) return runBookGenTopic(topic);
   var fEl = document.getElementById("bookPageFrom");
   var tEl = document.getElementById("bookPageTo");
   var plan = bookGenPlan(currentBook, fEl ? fEl.value : 1, tEl ? tEl.value : currentBook.totalPages);
   if (plan.route === "images") return runBookGenImages(plan);
   return runBookGenText(plan);
+}
+
+/* ---- TOPIC rasta: topicText() ke paragraphs, wahi TEXT pipeline ----
+   Topic likha ho to page range ki jagah poori book ke best-matching
+   paragraphs (topicText) jate hain — baqi sab runBookGenText jaisa:
+   24,000 cap, buildTextGenPrompt, aiChatText, Review list. Scanned
+   book (kul text 200 se kam) par topic nahi chal sakta — saaf
+   paigham, koi AI call nahi. */
+function runBookGenTopic(topic) {
+  function say(m) { bookMsg("bookStatus", m); }
+  if (bookTotalTextChars(currentBook) < BOOK_TEXT_ROUTE_MIN) { say(BOOK_TOPIC_SCANNED_MSG); return Promise.resolve(0); }
+  var raw;
+  try { raw = topicText(currentBook.pages, topic); }
+  catch (e) { say("⚠ " + (e && e.message ? e.message : e)); return Promise.resolve(0); }
+  var counts = bookCounts();
+  if (aiCountsAllZero(counts)) { say(AI_ZERO_MSG); return Promise.resolve(0); }
+  var truncated = raw.length > BOOK_TEXT_CAP;
+  var text = normalizePasteText(truncated ? raw.slice(0, BOOK_TEXT_CAP) : raw).trim();
+  if (!text) { say(BOOK_EMPTY_MSG); return Promise.resolve(0); }
+  function go() {
+    var prompt = buildTextGenPrompt(counts.nMcq, counts.nShort, counts.nLong, bookDifficulty()) +
+      "\n\n===== BOOK TEXT (Topic: " + topic + ") =====\n" + text + "\n===== END OF BOOK TEXT =====";
+    say("🤖 The AI is reading the topic part and creating questions…" + (truncated ? " " + BOOK_TRUNC_MSG : ""));
+    return aiChatText(prompt).then(function (txt) {
+      var cands = parseAiQuestions(txt);
+      if (!cands.length) { say("⚠ No question could be created from the AI reply — try another topic and try again."); return 0; }
+      setCandidates(cands);
+      var nm = cands.filter(function (c) { return c.type === "mcq"; }).length;
+      var ns = cands.filter(function (c) { return c.type === "short"; }).length;
+      var nl = cands.filter(function (c) { return c.type === "long"; }).length;
+      say("✔ The AI created " + cands.length + " questions (" + nm + " MCQ, " + ns + " Short, " + nl + " Long) — check the questions and correct answers in the Review list of the 📷 section above and add them to the paper." + (truncated ? " " + BOOK_TRUNC_MSG : ""));
+      return cands.length;
+    }).catch(function (e) {
+      var um = aiUserMsg(e);
+      if (um) { say(um); return 0; }
+      if (isAiLimitError(e)) { say(PUTER_LIMIT_MSG); return 0; }
+      say("⚠ AI failed: " + (e && e.message ? e.message : e) + " — please try again.");
+      return 0;
+    });
+  }
+  if (aiEngine() === "gemini") {
+    if (!geminiSavedKey()) { refreshEngineUI(); say("⚠ The AI Engine 'Your Own Gemini Key' is selected but no key is saved — first add your Gemini key under the Engine (it is FREE), or set the Engine to 'Puter (FREE)'."); return Promise.resolve(0); }
+    return go();
+  }
+  if (aiEngine() === "openai") {
+    if (!openaiSavedKey()) { refreshEngineUI(); say("⚠ The AI Engine 'ChatGPT (OpenAI API Key)' is selected but no key is saved — first add your OpenAI key under the Engine, or set the Engine to 'Puter (FREE)'."); return Promise.resolve(0); }
+    return go();
+  }
+  if (!puterReady()) { say("⚠ The Puter library did not load — check your internet and refresh the page."); return Promise.resolve(0); }
+  if (puterSignedIn()) return go();
+  say("🔐 A FREE Puter sign in is needed first — opening the popup…");
+  return puterDoSignIn().then(function (ok) {
+    if (!ok) { say("⚠ Sign in with a FREE Puter account first (the Sign In button in the 📷 section above) — the AI will not run without sign-in."); return 0; }
+    return go();
+  });
 }
 
 /* ---- TEXT rasta: Text Paste wala hi prompt/dispatch ----
@@ -5808,7 +6020,7 @@ function runBookGenText(plan) {
   var counts = bookCounts();
   if (aiCountsAllZero(counts)) { say(AI_ZERO_MSG); return Promise.resolve(0); }
   function go() {
-    var prompt = buildTextGenPrompt(counts.nMcq, counts.nShort, counts.nLong) +
+    var prompt = buildTextGenPrompt(counts.nMcq, counts.nShort, counts.nLong, bookDifficulty()) +
       "\n\n===== BOOK TEXT (Page " + sel.from + "–" + sel.to + ") =====\n" + text + "\n===== END OF BOOK TEXT =====";
     say("🤖 The AI is reading the book part and creating questions…" + (sel.truncated ? " " + BOOK_TRUNC_MSG : ""));
     return aiChatText(prompt).then(function (txt) {
@@ -5959,6 +6171,9 @@ function bindBooks() {
     var el = document.getElementById(id);
     if (el) { el.addEventListener("input", updateBookPreview); el.addEventListener("change", updateBookPreview); }
   });
+  var topicEl = document.getElementById("bookTopic");
+  if (topicEl) { topicEl.addEventListener("input", updateBookPreview); topicEl.addEventListener("change", updateBookPreview); }
+  initDifficultySelect("bookDifficulty", DIFFICULTY_BOOK_LS);
   var chBox = document.getElementById("bookChapters");
   if (chBox) chBox.addEventListener("click", function (e) {
     var t = e.target || {};
@@ -6077,6 +6292,13 @@ window.KPG = {
   dataUrlToBlob: dataUrlToBlob, bookAiPhoto: bookAiPhoto, setBookAiPhoto: setBookAiPhoto,
   runBookGenText: runBookGenText, runBookGenImages: runBookGenImages,
   saveBookFromUpload: saveBookFromUpload, runBookGen: runBookGen, bindBooks: bindBooks,
+  detectChaptersFromText: detectChaptersFromText, CHAPTER_HEADING_RE: CHAPTER_HEADING_RE,
+  topicText: topicText, countOccurrences: countOccurrences,
+  bookTopicValue: bookTopicValue, bookTotalTextChars: bookTotalTextChars,
+  BOOK_TOPIC_SCANNED_MSG: BOOK_TOPIC_SCANNED_MSG, runBookGenTopic: runBookGenTopic,
+  normalizeDifficulty: normalizeDifficulty, bookDifficulty: bookDifficulty, textDifficulty: textDifficulty,
+  DIFFICULTY_BOOK_LS: DIFFICULTY_BOOK_LS, DIFFICULTY_TEXT_LS: DIFFICULTY_TEXT_LS,
+  initDifficultySelect: initDifficultySelect,
   GH_REPO_LS: GH_REPO_LS, GH_TOKEN_LS: GH_TOKEN_LS, GH_DEFAULT_REPO: GH_DEFAULT_REPO,
   ghRepo: ghRepo, ghToken: ghToken, ghRepoValid: ghRepoValid, ghConfigured: ghConfigured,
   ghSaveSettings: ghSaveSettings, ghTestConnection: ghTestConnection,
