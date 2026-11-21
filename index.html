@@ -4113,20 +4113,30 @@ function fileToBase64(file) {
    yaad-shuda model na ho to pehle key se KHUD poochha jata hai ke us
    par kaun se models hain (discoverGeminiModel), aur sab se pasandeeda
    generateContent wala model chun kar yaad kar liya jata hai.
-   MODEL CHAIN (backup): 2.5-flash → 2.0-flash → 1.5-flash. Model wali
-   nakami (HTTP 404, ya error body/message mein "model") par chain agle
-   model par jati hai; yaad/discover shuda model nakam ho to yaad saaf
-   karke EK dafa dobara discovery hoti hai, phir chain jari rehti hai
-   (flag ki wajah se loop mumkin nahi). Baqi ghaltiyan (ghalat key
-   400/403, quota 429, server 500) foran ruk jati hain — koi dobara
-   koshish nahi. Jo model ek dafa chal jaye wo localStorage
+   MODEL CHAIN (backup): 2.5-flash → 2.0-flash → 1.5-flash. Chain SIRF
+   HTTP 404 par agle model par jati hai — error body mein model ka
+   naam ana koi wajah NAHI (ek 400 jo photo ki khami batata hai aur
+   model ka naam bhi leta hai, pehle model par hi rukta hai taake ASAL
+   wajah user ko nazar aye). Yaad/discover shuda model 404 de to yaad
+   saaf karke EK dafa dobara discovery hoti hai, phir chain jari
+   rehti hai (flag ki wajah se loop mumkin nahi). Baqi ghaltiyan
+   (ghalat key 400/403, quota 429, server 500) foran ruk jati hain —
+   koi dobara koshish nahi. Jo model ek dafa chal jaye wo localStorage
    (kpg_gemini_model) mein yaad rehta hai aur agli calls mein SAB SE
    PEHLE wohi try hota hai, taake ek hi run ki baqi photos ko har dafa
-   poori chain na chalni pare. */
+   poori chain na chalni pare.
+   API VERSION (backup): pehle v1beta; us par poori chain 404 ho jaye
+   to EK dafa "v1" par dobara koshish (tartib: yaad/discover shuda
+   model, 2.5-flash, flash-latest). Chalne wala version bhi
+   localStorage (kpg_gemini_apiver) mein yaad rehta hai aur agli
+   calls mein pehle wohi lagta hai — kul had: 2 versions × chain,
+   loop mumkin nahi. Chain khatam hone ka error PEHLI koshish ka
+   status/snippet rakhta hai (sab se zyada maloomati wajah). */
 var GEMINI_MODEL = "gemini-2.5-flash";
 var GEMINI_FALLBACK_MODEL = "gemini-2.0-flash";
 var GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
 var GEMINI_MODEL_LS = "kpg_gemini_model";
+var GEMINI_APIVER_LS = "kpg_gemini_apiver";
 /* Poori chain nakam ho jaye to EK saaf paigham. 404 MODEL ki
    dastiyabi ka masla hai, key ka NAHI — is liye is mein "check the
    key" nahi likha jata; wo jumla sirf asal key ghaltiyon (400/403)
@@ -4163,9 +4173,26 @@ function geminiRememberModel(model) {
 function geminiForgetModel() {
   try { localStorage.removeItem(GEMINI_MODEL_LS); } catch (e) {}
 }
+/* Chalne wala API version — localStorage se. Sirf "v1"/"v1beta"
+   qabool hain; kuch yaad na ho to "" (matlab: default v1beta pehle). */
+function geminiRememberedApiVer() {
+  try {
+    var v = String(localStorage.getItem(GEMINI_APIVER_LS) || "").trim();
+    return (v === "v1" || v === "v1beta") ? v : "";
+  } catch (e) { return ""; }
+}
+function geminiRememberApiVer(v) {
+  if (v !== "v1" && v !== "v1beta") return;
+  try { localStorage.setItem(GEMINI_APIVER_LS, v); } catch (e) {}
+}
+/* Is call ke liye pasandeeda version: yaad-shuda, warna v1beta. */
+function geminiApiVer() { return geminiRememberedApiVer() || "v1beta"; }
+function geminiOtherApiVer(v) { return v === "v1" ? "v1beta" : "v1"; }
 /* ================= MODEL DISCOVERY (ListModels) =================
-   Key se khud poochho ke us par kya hai: GET /v1beta/models?key=...
-   (key waisa hi query param mein jaisa geminiCallModel bhejta hai).
+   Key se khud poochho ke us par kya hai: GET /<version>/models?key=...
+   (key waisa hi query param mein jaisa geminiCallModel bhejta hai;
+   pehla version HTTP nakam ho to doosra version bhi EK dafa try
+   hota hai — discoverGeminiModel dekho).
    Sirf generateContent wale models; pasandeeda tartib neeche hai,
    us ke baad koi bhi "flash" wala, aakhir mein koi bhi baqi (pro
    waghera). "models/" prefix hata kar saaf naam milta hai.
@@ -4182,8 +4209,8 @@ function pickDiscoveredGeminiModel(names) {
   }
   return names.length ? names[0] : "";
 }
-function discoverGeminiModel(key) {
-  var url = "https://generativelanguage.googleapis.com/v1beta/models?key=" + encodeURIComponent(key);
+function discoverGeminiModelOn(key, version) {
+  var url = "https://generativelanguage.googleapis.com/" + version + "/models?key=" + encodeURIComponent(key);
   return fetch(url).then(function (r) {
     return r.json().catch(function () { return null; }).then(function (j) {
       if (!r.ok) {
@@ -4203,6 +4230,25 @@ function discoverGeminiModel(key) {
   }).catch(function (e) {
     var msg = String((e && e.message) || e || "Network error");
     return { error: msg, status: 0, snippet: geminiErrSnippet(msg) };
+  });
+}
+/* Discovery ka darwaza: version diya ho to sirf wohi; na diya ho to
+   pehle pasandeeda version (yaad-shuda, warna v1beta) — wo HTTP nakam
+   ho to EK dafa doosra version bhi try hota hai, phir hi nakami
+   report hoti hai. Kamyabi wala version yaad ho jata hai. Khali list
+   (empty) HTTP nakami NAHI hai — us par version NAHI badalta. */
+function discoverGeminiModel(key, version) {
+  if (version) return discoverGeminiModelOn(key, version);
+  var pref = geminiApiVer();
+  return discoverGeminiModelOn(key, pref).then(function (res) {
+    if (res && res.model) { geminiRememberApiVer(pref); return res; }
+    if (!res || !res.error) return res;
+    var other = geminiOtherApiVer(pref);
+    return discoverGeminiModelOn(key, other).then(function (res2) {
+      if (res2 && res2.model) { geminiRememberApiVer(other); return res2; }
+      if (res2 && res2.empty) return res2;
+      return res; /* dono nakam: pehle (asal) version ki wajah hi report hoti hai */
+    });
   });
 }
 /* Discovery EK dafa per page load, per key — promise cache. Isi
@@ -4227,24 +4273,26 @@ function geminiModelOrder() {
   GEMINI_MODELS.forEach(function (m) { if (out.indexOf(m) < 0) out.push(m); });
   return out;
 }
-/* Model wali nakami: HTTP 404, ya error body/message mein model
-   ka zikar. */
+/* Model wali nakami: SIRF HTTP 404. (Pehle error body mein "model"
+   ka zikar bhi model-error mana jata tha — wo qaidah khatam: ek 400
+   jo photo ki khami batata hai aur model ka naam bhi leta hai, asal
+   mein PHOTO ki ghalti hai, model ki dastiyabi ki nahi. Use chain
+   par ghaseetne se asal wajah chhup jati thi.) */
 function isGeminiModelError(e) {
   if (!e) return false;
-  if (Number(e.status || 0) === 404) return true;
-  var s = (String(e.body || "") + " " + String(e.message || "")).toLowerCase();
-  return s.indexOf("model") >= 0;
+  return Number(e.status || 0) === 404;
 }
-/* Chain agle model par jaye ya nahi: SIRF model wali nakami par —
-   quota/limit (402/429) hamesha foran rukta hai, chahe error mein
-   model ka naam hi kyun na aya ho. */
+/* Chain agle model par jaye ya nahi: SIRF 404 par — quota/limit
+   (402/429) hamesha foran rukta hai, chahe error mein model ka naam
+   hi kyun na aya ho. */
 function geminiChainAdvances(e) {
   if (!isGeminiModelError(e)) return false;
   var st = Number(e && e.status || 0);
   return st !== 402 && st !== 429;
 }
-function geminiCallModel(parts, key, model) {
-  return fetch("https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + encodeURIComponent(key), {
+function geminiCallModel(parts, key, model, version) {
+  var ver = (version === "v1" || version === "v1beta") ? version : geminiApiVer();
+  return fetch("https://generativelanguage.googleapis.com/" + ver + "/models/" + model + ":generateContent?key=" + encodeURIComponent(key), {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ contents: [{ parts: parts }] })
   }).then(function (r) {
@@ -4268,6 +4316,56 @@ function geminiCallModel(parts, key, model) {
     });
   });
 }
+/* EK API version par poori model chain. Kamyabi par model AUR
+   version dono yaad ho jate hain. Chain SIRF 404 par aage barhti
+   hai; koi aur ghalti foran bahar jati hai. Chain khatam ho to
+   modelExhausted error — us mein PEHLI koshish ka status/body hota
+   hai, aakhri ka nahi (pehli wajah sab se zyada maloomati hai). */
+function geminiChainOnVersion(parts, key, version, order, primary, allowRediscovery) {
+  var i = 0;
+  var rediscovered = false; /* dobara discovery is chain mein EK dafa se zyada NAHI — loop mumkin nahi */
+  var firstErr = null;
+  function exhausted() {
+    var e0 = firstErr || {};
+    var ex = new Error(geminiWithSnippet(GEMINI_MODEL_EXHAUSTED_MSG, e0.body));
+    ex.status = e0.status;
+    ex.body = e0.body;
+    ex.modelExhausted = true;
+    return ex;
+  }
+  function attempt() {
+    var model = order[i];
+    return geminiCallModel(parts, key, model, version).then(function (t) {
+      geminiRememberModel(model); /* chalne wala model yaad — agli calls pehle isi se shuru hongi */
+      geminiRememberApiVer(version); /* chalne wala version bhi yaad — agli calls pehle isi par jayengi */
+      return t;
+    }, function (e) {
+      if (!firstErr) firstErr = e;
+      if (!geminiChainAdvances(e)) throw e;
+      /* Yaad/discover shuda model hi 404 de: yaad saaf karke EK
+         dafa dobara discovery, phir chain jari. Naya model mile aur
+         abhi try na hua ho to tartib mein agla wohi lagta hai. */
+      if (allowRediscovery && !rediscovered && primary && model === primary) {
+        rediscovered = true;
+        geminiForgetModel();
+        resetGeminiDiscovery();
+        return geminiDiscoveryOnce(key).then(function (res) {
+          if (res && res.model && order.indexOf(res.model) < 0) order.splice(i + 1, 0, res.model);
+          i++;
+          if (i >= order.length) throw exhausted();
+          return attempt();
+        }, function () {
+          i++;
+          if (i >= order.length) throw exhausted();
+          return attempt();
+        });
+      }
+      if (i < order.length - 1) { i++; return attempt(); }
+      throw exhausted();
+    });
+  }
+  return attempt();
+}
 function geminiCall(parts, key) {
   /* Pehla model: yaad-shuda ho to wohi (discovery NAHI chalti);
      warna EK dafa discovery (cached promise) — model mile to yaad
@@ -4280,47 +4378,27 @@ function geminiCall(parts, key) {
         return "";
       }, function () { return ""; });
   return start.then(function (primary) {
-    var order = geminiModelOrder();
-    var i = 0;
-    var rediscovered = false; /* dobara discovery is call mein EK dafa se zyada NAHI — loop mumkin nahi */
-    function exhausted(e) {
-      /* Poori chain khatam: koi bhi model is key par dastiyab nahi. */
-      var ex = new Error(geminiWithSnippet(GEMINI_MODEL_EXHAUSTED_MSG, e.body));
-      ex.status = e.status;
-      ex.body = e.body;
-      ex.modelExhausted = true;
-      return ex;
-    }
-    function attempt() {
-      var model = order[i];
-      return geminiCallModel(parts, key, model).then(function (t) {
-        geminiRememberModel(model); /* chalne wala model yaad — agli calls pehle isi se shuru hongi */
-        return t;
-      }, function (e) {
-        if (!geminiChainAdvances(e)) throw e;
-        /* Yaad/discover shuda model hi nakam hua: yaad saaf karke EK
-           dafa dobara discovery, phir chain jari. Naya model mile aur
-           abhi try na hua ho to tartib mein agla wohi lagta hai. */
-        if (!rediscovered && primary && model === primary) {
-          rediscovered = true;
-          geminiForgetModel();
-          resetGeminiDiscovery();
-          return geminiDiscoveryOnce(key).then(function (res) {
-            if (res && res.model && order.indexOf(res.model) < 0) order.splice(i + 1, 0, res.model);
-            i++;
-            if (i >= order.length) throw exhausted(e);
-            return attempt();
-          }, function () {
-            i++;
-            if (i >= order.length) throw exhausted(e);
-            return attempt();
+    var prefVer = geminiApiVer();
+    var versions = [prefVer, geminiOtherApiVer(prefVer)];
+    /* Pehla version: poori chain (yaad-shuda model pehle). Wo sirf
+       404s par khatam (modelExhausted) ho to doosra version EK dafa
+       mukhtasar tartib se: yaad/discover shuda model, 2.5-flash,
+       flash-latest. Doosra version bhi khatam ho to error PEHLE
+       version wala hi rehta hai — us ki pehli wajah sab se zyada
+       maloomati hai. Kul had: 2 versions, koi loop nahi. */
+    return geminiChainOnVersion(parts, key, versions[0], geminiModelOrder(), primary, true)
+      .then(null, function (e) {
+        if (!e || !e.modelExhausted) throw e;
+        var order2 = [];
+        [primary, "gemini-2.5-flash", "gemini-flash-latest"].forEach(function (m) {
+          if (m && order2.indexOf(m) < 0) order2.push(m);
+        });
+        return geminiChainOnVersion(parts, key, versions[1], order2, "", false)
+          .then(null, function (e2) {
+            if (e2 && e2.modelExhausted) throw e;
+            throw e2;
           });
-        }
-        if (i < order.length - 1) { i++; return attempt(); }
-        throw exhausted(e);
       });
-    }
-    return attempt();
   });
 }
 
@@ -4333,10 +4411,65 @@ function geminiText(prompt, key) {
     return t;
   });
 }
-/* Gemini route (photo): prompt + photo file Gemini ko, jawab text. */
+/* Photo ko Gemini par bhejne se pehle saaf/hafif karo: canvas par
+   dobara encode — sab se lamba rukh zyada se zyada 1600px, JPEG
+   quality 0.85. Phone ki asal photos (4000px+, PNG/HEIC-ajeeb
+   formats, bohat bari files) Gemini ko aksar 400 deti hain; ek
+   mamooli JPEG hamesha qabool hoti hai. Koi bhi nakami — decode
+   error, canvas/Image support na ho, object URL na bane — to ASAL
+   file raw bhejna hai (purana bartao), taake ye safai kabhi khud
+   rukawat na bane. Photo aur Paper Photo dono flows yahi rasta
+   (geminiPhotoText) istemal karte hain, is liye dono ko faida hai.
+   (Books ke scanned pages pehle hi ~1100px JPEG bante hain — un ka
+   renderer nahi chheda gaya.) */
+function photoToJpegBase64(file) {
+  function raw() {
+    return fileToBase64(file).then(function (b64) {
+      return { data: b64, mime: (file && file.type) || "image/jpeg" };
+    });
+  }
+  try {
+    if (!file || typeof file !== "object" ||
+        typeof Image === "undefined" ||
+        typeof document === "undefined" || !document.createElement ||
+        typeof URL === "undefined" || !URL.createObjectURL) return raw();
+    return new Promise(function (resolve) {
+      var url = null, done = false;
+      function finish(v) {
+        if (done) return;
+        done = true;
+        try { if (url) URL.revokeObjectURL(url); } catch (e) {}
+        resolve(v);
+      }
+      try { url = URL.createObjectURL(file); } catch (e) { finish(null); return; }
+      var img = new Image();
+      img.onload = function () {
+        try {
+          var w = img.naturalWidth || img.width || 0;
+          var h = img.naturalHeight || img.height || 0;
+          if (!w || !h) { finish(null); return; }
+          var scale = Math.min(1, 1600 / Math.max(w, h));
+          var canvas = document.createElement("canvas");
+          canvas.width = Math.max(1, Math.round(w * scale));
+          canvas.height = Math.max(1, Math.round(h * scale));
+          var ctx = canvas.getContext ? canvas.getContext("2d") : null;
+          if (!ctx || !canvas.toDataURL) { finish(null); return; }
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          var b64 = String(canvas.toDataURL("image/jpeg", 0.85) || "").split(",")[1] || "";
+          finish(b64 ? { data: b64, mime: "image/jpeg" } : null);
+        } catch (e) { finish(null); }
+      };
+      img.onerror = function () { finish(null); };
+      img.src = url;
+    }).then(function (v) { return v || raw(); });
+  } catch (e) { return raw(); }
+}
+/* Gemini route (photo): prompt + photo file Gemini ko, jawab text.
+   Photo pehle photoToJpegBase64 se saaf hoti hai (canvas JPEG);
+   safai nakam ho to asal file raw jati hai. */
 function geminiPhotoText(prompt, file, key) {
-  return fileToBase64(file).then(function (b64) {
-    return geminiCall([{ text: String(prompt || "") }, { inline_data: { mime_type: file.type || "image/jpeg", data: b64 } }], key);
+  return photoToJpegBase64(file).then(function (img) {
+    return geminiCall([{ text: String(prompt || "") }, { inline_data: { mime_type: img.mime, data: img.data } }], key);
   }).then(function (t) {
     if (!t) throw new Error("Gemini returned an empty reply");
     return t;
@@ -6190,9 +6323,11 @@ window.KPG = {
   aiChatText: aiChatText, aiChatPhoto: aiChatPhoto, geminiSavedKey: geminiSavedKey,
   geminiCall: geminiCall, geminiText: geminiText, geminiPhotoText: geminiPhotoText, GEMINI_MODEL: GEMINI_MODEL, GEMINI_FALLBACK_MODEL: GEMINI_FALLBACK_MODEL,
   GEMINI_MODELS: GEMINI_MODELS, GEMINI_MODEL_LS: GEMINI_MODEL_LS, GEMINI_MODEL_EXHAUSTED_MSG: GEMINI_MODEL_EXHAUSTED_MSG,
+  GEMINI_APIVER_LS: GEMINI_APIVER_LS, geminiRememberedApiVer: geminiRememberedApiVer, geminiApiVer: geminiApiVer,
+  geminiChainOnVersion: geminiChainOnVersion, photoToJpegBase64: photoToJpegBase64,
   geminiModelOrder: geminiModelOrder, geminiRememberedModel: geminiRememberedModel, geminiErrSnippet: geminiErrSnippet,
-  isGeminiModelError: isGeminiModelError, geminiCallModel: geminiCallModel, GEMINI_LS: GEMINI_LS,
-  discoverGeminiModel: discoverGeminiModel, pickDiscoveredGeminiModel: pickDiscoveredGeminiModel, GEMINI_DISCOVERY_PREFS: GEMINI_DISCOVERY_PREFS,
+  isGeminiModelError: isGeminiModelError, geminiChainAdvances: geminiChainAdvances, geminiCallModel: geminiCallModel, GEMINI_LS: GEMINI_LS,
+  discoverGeminiModel: discoverGeminiModel, discoverGeminiModelOn: discoverGeminiModelOn, pickDiscoveredGeminiModel: pickDiscoveredGeminiModel, GEMINI_DISCOVERY_PREFS: GEMINI_DISCOVERY_PREFS,
   geminiDiscoveryOnce: geminiDiscoveryOnce, resetGeminiDiscovery: resetGeminiDiscovery, geminiForgetModel: geminiForgetModel,
   runGeminiKeyCheck: runGeminiKeyCheck, testGeminiKey: testGeminiKey, GEMINI_NO_MODELS_MSG: GEMINI_NO_MODELS_MSG,
   geminiKeyReadyMsg: geminiKeyReadyMsg, geminiKeyCheckFailMsg: geminiKeyCheckFailMsg,
